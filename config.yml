@@ -1,0 +1,8 @@
+# This is used to customize the parameters for run SPRUCE.
+
+path:
+    root_dir:    # the root dir for the TECO-SPRUCE code
+    input_dir:   # set the input dir of the TECO-SPRUCE
+    obs_dir:     # set the observation file path
+    work_dir:    # 
+
