@@ -3,4 +3,4 @@ It is modified based on Ma et al., 2023. ERC. Thermal acclimation of plant photo
 
 1. which observations are used to do data assimilation
 2. How to run TECO_SPRUCE_v2.21
-3. 
+3. what
