@@ -67,6 +67,7 @@ module mod_mcmc
         write(*,*)"Start to run mcmc ..."
 
         do iDAsimu = 1, nDAsimu
+            call initialize() ! in TECO model initialize 
             ! generate parameters 
             call generate_newPar()
             ! update the parameters
@@ -120,6 +121,7 @@ module mod_mcmc
             ! nsc     = nsc_initial
             ! QC      = QC_initial
             ! Maybe need to add other method to return the initial values
+            
 
             ! updates of the covariance matrix
             if (covexist .eq. 0 .and. mod(upgraded, ncov).eq.0 .and. upgraded .ne. 0)then
