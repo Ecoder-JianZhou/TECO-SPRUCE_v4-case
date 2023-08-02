@@ -1,6 +1,8 @@
 module mod_mcmc
     use driver
     use mod_data
+    use mcmc_functions
+
     implicit none
     integer npar4DA, nDAsimu, do_cov4newpar, covexist
     real, allocatable :: DAparmin(:), DAparmax(:),  DAparidx(:),  DApar(:), DApar_old(:)
@@ -9,16 +11,23 @@ module mod_mcmc
 
 
     contains
-    subroutine init_mcmc(npar, parmin, parmax, parval)!, df_search_scale)
+    ! subroutine init_mcmc(npar, parmin, parmax, parval)!, df_search_scale)
+    subroutine init_mcmc()
         implicit none
-        integer npar, ipar
-        real, dimension(npar) :: parmin, parmax, parval
+        integer ipar
+        ! real, dimension(npar) :: parmin, parmax, parval
         real, allocatable :: temp_parmin(:), temp_parmax(:), temp_paridx(:), temp_parval(:)
         ! real df_search_scale
 
-        allocate(temp_parmin(npar), temp_parmax(npar))
-        allocate(temp_paridx(npar), temp_parval(npar))
-        allocate(MDparval(npar))        ! record the parameters set for model simulation
+        ! read the nml file of MCMC configs (eg. TECO_MCMC_configs.nml)
+        call readConfsNml()
+        ! read the observational data
+        call readObsData() ! return a type array of vars4MCMC
+
+        ! handle the parameters for MCMC
+        allocate(temp_parmin(npar), temp_parmax(npar))  ! allocate the temporary parmin value
+        allocate(temp_paridx(npar), temp_parval(npar))  ! mark the index of parameters for MCMC
+        allocate(MDparval(npar))                        ! record the parameters set for model simulation
 
         MDparval = parval
         npar4DA  = 0 ! record the number of parameters for data assimilation
@@ -43,6 +52,7 @@ module mod_mcmc
 
         deallocate(temp_parmin, temp_parmax, temp_parval, temp_paridx)
 
+        ! give some values to the parameters for MCMC
         search_scale  = 0.05                 ! df_search_scale
         nDAsimu       = 50000                ! how many time to do data assimilation
         covexist      = 0
@@ -50,12 +60,6 @@ module mod_mcmc
         fact_rejet    = 2.4/sqrt(real(npar4DA))
 
     end subroutine init_mcmc
-
-    subroutine check_mcmc()
-    ! deallocate some variables and summary the information of MCMC
-        implicit none
-        deallocate(DAparmin, DAparmax, DAparidx, DApar, DApar_old, MDparval)
-    end subroutine check_mcmc
 
     subroutine run_mcmc()
         implicit none
@@ -74,7 +78,8 @@ module mod_mcmc
             do ipar = 1, npar4DA
                 parval(DAparidx(ipar)) = DApar(ipar)
             enddo
-            ! call update parameters
+            ! call update parameters in TECO model
+            call renewMDpars()
 
             ! run the model
             call teco_simu()
@@ -152,10 +157,31 @@ module mod_mcmc
         deallocate(DApar)
     end subroutine run_mcmc
 
-    subroutine read_obs()
+    subroutine check_mcmc()
+    ! deallocate some variables and summary the information of MCMC
         implicit none
-        ! write(*,*)dfsdf
-    end subroutine read_obs
+        if(allocated(DAparmin)) deallocate(DAparmin)
+        if(allocated(DAparmax)) deallocate(DAparmax)
+        if(allocated(DAparidx)) deallocate(DAparidx)
+        if(allocated(DApar)) deallocate(DApar)
+        if(allocated(DApar_old)) deallocate(DApar_old)
+        if(allocated(MDparval)) deallocate(MDparval)
+
+        if(allocated(parval)) deallocate(parval)
+        if(allocated(parmin)) deallocate(parmin)
+        if(allocated(parmax)) deallocate(parmax)
+        
+        if(allocated(vars4MCMC%gpp_d%data))  deallocate(vars4MCMC%gpp_d%data)
+        if(allocated(vars4MCMC%gpp_d%data))  deallocate(vars4MCMC%gpp_d%data)
+        if(allocated(vars4MCMC%nee_d%data))  deallocate(vars4MCMC%nee_d%data)
+        if(allocated(vars4MCMC%reco_d%data)) deallocate(vars4MCMC%reco_d%data)
+        if(allocated(vars4MCMC%gpp_h%data))  deallocate(vars4MCMC%gpp_h%data)
+        if(allocated(vars4MCMC%nee_h%data))  deallocate(vars4MCMC%nee_h%data)
+        if(allocated(vars4MCMC%reco_h%data)) deallocate(vars4MCMC%reco_h%data)
+        if(allocated(vars4MCMC%ch4_h%data))  deallocate(vars4MCMC%ch4_h%data)
+        if(allocated(vars4MCMC%cleaf%data))  deallocate(vars4MCMC%cleaf%data)
+        if(allocated(vars4MCMC%cwood%data))  deallocate(vars4MCMC%cwood%data)
+    end subroutine check_mcmc
 
     subroutine generate_newPar()
         implicit none
@@ -299,4 +325,5 @@ module mod_mcmc
         mean=mean_tt
     End Function
     
+
 end module mod_mcmc

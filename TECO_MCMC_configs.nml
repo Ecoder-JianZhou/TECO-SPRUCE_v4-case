@@ -1,0 +1,85 @@
+&nml_obsfiles
+    obsfile_gpp_d   =
+    obsfile_nee_d   =
+    obsfile_reco_d  =
+    obsfile_gpp_h   =
+    obsfile_nee_h   =
+    obsfile_reco_h  =
+    ! methane   
+    obsfile_ch4_h   =
+    ! c pools
+    obsfile_cleaf   = ! foliage
+    obsfile_cwood   =
+&end
+
+&nml_parval      ! This is for default parameters
+    mc_lat         = 47.5
+    mc_Longitude   = -93.45
+    mc_wsmax       = 95.3
+    mc_wsmin       = 2.2														
+    mc_LAIMAX	   = 8
+    mc_LAIMIN	   = 0.3
+    mc_rdepth	   = 150
+    mc_Rootmax	   = 500
+    mc_Stemmax	   = 1000											
+    mc_SapR        = 0.9
+    mc_SapS        = 0.5
+    mc_SLA	       = 33
+    mc_GLmax       = 15
+    mc_GRmax	   = 19.8763
+    mc_Gsmax	   = 10.4987
+    mc_stom_n	   = 2											
+    mc_a1          = 8
+    mc_Ds0	       = 2000
+    mc_Vcmx0	   = 22.5
+    mc_extkU	   = 0.51
+    mc_xfang	   = 0
+    mc_alpha	   = 0.385							
+    mc_Tau_Leaf    = 0.52
+    mc_Tau_Wood    = 1.1
+    mc_Tau_Root    = 0.7
+    mc_Tau_F       = 0.3252
+    mc_Tau_C       = 3.8995
+    mc_Tau_Micro   = 0.4226
+    mc_Tau_SlowSOM = 70.5
+    mc_Tau_Passive = 1243.5643							
+    mc_gddonset    = 123.2568
+    mc_Q10         = 2.5
+    mc_Rl0         = 40.5
+    mc_Rs0         = 9
+    mc_Rr0		   = 13.9						
+    mc_r_me        = 0.1
+    mc_Q10pro      = 1.4973
+    mc_kCH4        = 5
+    mc_Omax        = 6.8279
+    mc_CH4_thre    = 1400
+    mc_Tveg        = 1.9
+    mc_Tpro_me     = 10
+    mc_Toxi        = 10					
+    mc_f           = 0.31
+    mc_bubprob     = 0.0708
+    mc_Vmaxfraction = 0.1697  											
+    mc_Q10rh        = 2.99
+    mc_JV           = 1.5
+    mc_Entrpy		= 660.5								
+    mc_etaL         = 0.6
+    mc_etaW        = 0.15
+    mc_etaR        = 0.85
+    mc_f_F2M       = 0.55
+    mc_f_C2M       = 0.275
+    mc_f_C2S       = 0.275
+    mc_f_M2S       = 0.3
+    mc_f_M2P       = 0.1
+    mc_f_S2P       = 0.2
+    mc_f_S2M       = 0.5
+    mc_f_P2M       = 0.45								
+&end
+
+&nml_parmin
+
+&end
+
+&nml_parmax
+
+&end
+

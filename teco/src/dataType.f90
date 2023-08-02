@@ -84,7 +84,7 @@ module mod_data
     real Tau_F,Tau_C                                        ! turnover rate of litter carbon pools: fine, coarse 
     real Tau_Micro, Tau_slowSOM,Tau_Passive                 ! turnover rate of soil carbon pools  : fast, slow, passive 
     real gddonset
-    real Q10
+    real Q10, Q10rh                                         ! Q10rh modified from Ma et al.,2023 for aclimate study, change in transfer module of Q10h
     real Rl0, Rs0, Rr0
     ! added for parameters in methane module   
     real r_me
@@ -97,6 +97,10 @@ module mod_data
     real Toxi
     ! add based on Ma et al., 2022
     real f, bubprob, Vmaxfraction
+    ! add based on Ma et al., 2023
+    real JV, Entrpy
+    real etaL,etaW,etaR  ! etaL and etaR are not used.
+    real f_F2M,f_C2M,f_C2S,f_M2S,f_M2P,f_S2P,f_S2M,f_P2M
     ! end of read parameters --------------------------------
     real, parameter:: times_storage_use=3*720.   ! 720 hours, 30 days
 
@@ -139,7 +143,7 @@ module mod_data
     real :: Edvm    = 202900.                       ! J/mol  (deactivation energy)
     real :: Eajm    = 79500.                        ! J/mol  (activation energy) 
     real :: Edjm    = 201000.                       ! J/mol  (deactivation energy)
-    real :: Entrpy  = 650.                          ! J/mol/K (entropy term, for Jmax & Vcmax)
+    ! real :: Entrpy  = 650.                          ! J/mol/K (entropy term, for Jmax & Vcmax)
     ! parameters for temperature dependence of gamma* (revised from von Caemmerer et al 1993)
     real :: gam0    = 28.0e-6                       ! mol mol^-1 @ 20C = 36.9 @ 25C
     real :: gam1    = .0509

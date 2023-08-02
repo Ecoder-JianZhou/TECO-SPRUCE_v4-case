@@ -154,7 +154,8 @@ module driver
             endif
             ! update vcmx0 and eJmx0 according to C/N of leaves
             Vcmx0 = Vcmax0*SNvcmax*1.0e-6
-            eJmx0 = 1.67*Vcmx0 ! Weng 02/21/2011 Medlyn et al. 2002     
+            eJmx0 = 1.67*Vcmx0 ! Weng 02/21/2011 Medlyn et al. 2002 
+            eJmx0 = JV*Vcmx0   ! added for acclimation study,replace 1.67 with JV Feb 19 2019 Shuang    
             ! run canopy module
             call canopy()
             ! run soil water processes

@@ -1,8 +1,8 @@
 module mod_transfer
     use mod_data
     implicit none
-    real etaL,etaW,etaR 
-    real f_F2M,f_C2M,f_C2S,f_M2S,f_M2P,f_S2P,f_S2M,f_P2M
+    ! real etaL,etaW,etaR 
+    ! real f_F2M,f_C2M,f_C2S,f_M2S,f_M2P,f_S2P,f_S2M,f_P2M
     real S_omega    !  average values of the moisture scaling functions
     real S_t(5)     !  average values of temperature scaling functions
       
@@ -45,7 +45,9 @@ module mod_transfer
         frac_soc    = (/0.75,0.2,0.02,0.015,0.005,0.0,0.0,0.0,0.0,0.0/)
         ! temperature sensitivity of Rh_pools
         ! Q10h=(/2.0,2.0,2.0,2.0,2.0/)  ! for Oak Ridge
-        Q10h        = (/Q10,Q10,Q10,Q10,Q10/)
+        ! Q10h        = (/Q10,Q10,Q10,Q10,Q10/)
+        Q10h=(/Q10rh,Q10rh,Q10rh,Q10rh,Q10rh/) 
+
         Qroot0      = 500.
         Nfix0       = 1./60.   ! maximum N fix ratio, N/C
         Nup0        = 0.02     ! nitrogen uptake rate
@@ -63,17 +65,17 @@ module mod_transfer
         NSNmax      = QN(1) + 0.2*QN(2) + QN(3)  ! 15.0
         NSNmin      = 0.01
         ! partitioning coefficients
-        etaL  = 0.6         ! 60% of foliage litter is fine, didn't use
-        etaW  = 0.15        ! 15% of woody litter is fine
-        etaR  = 0.85        ! 85% of root litter is fine  , didn't use    
-        f_F2M = 0.55        ! *exp((CN0(4)-CN_fine)*0.1)
-        f_C2M = 0.275       ! *exp((CN0(5)-CN_coarse)*0.1)
-        f_C2S = 0.275       ! *exp((CN0(5)-CN_coarse)*0.1)
-        f_M2S = 0.3
-        f_M2P = 0.1
-        f_S2P = 0.2         ! 0.03 Change by Jiang Jiang 10/10/2015
-        f_S2M = 0.5
-        f_P2M = 0.45
+        ! etaL  = 0.6         ! 60% of foliage litter is fine, didn't use
+        ! etaW  = 0.15        ! 15% of woody litter is fine
+        ! etaR  = 0.85        ! 85% of root litter is fine  , didn't use    
+        ! f_F2M = 0.55        ! *exp((CN0(4)-CN_fine)*0.1)
+        ! f_C2M = 0.275       ! *exp((CN0(5)-CN_coarse)*0.1)
+        ! f_C2S = 0.275       ! *exp((CN0(5)-CN_coarse)*0.1)
+        ! f_M2S = 0.3
+        ! f_M2P = 0.1
+        ! f_S2P = 0.2         ! 0.03 Change by Jiang Jiang 10/10/2015
+        ! f_S2M = 0.5
+        ! f_P2M = 0.45
         ! calculating soil scaling factors, S_omega and S_tmperature
         S_w_min = 0.08 !minimum decomposition rate at zero soil moisture
         S_omega = S_w_min + (1.-S_w_min) * Amin1(1.0, 0.3*omega)
