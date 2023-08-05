@@ -293,6 +293,8 @@ module driver
                 i_record = i_record+1
             end if
             call update_summary_monthly()
+            
+            if (do_mcmc) call GetSimuData(iyear, iday, ihour)
                  
             if (iforcing < nforcing)then
                 if (forcing%year(iforcing+1)>iyear) then            

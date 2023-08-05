@@ -243,7 +243,7 @@ module mod_data
     ! hourly: in order to avoid the mistake for hourly or half hour simulation, we define new variable for hourly outputs
     ! -------------------------------------------------------------------------------------------------------------------
     ! carbon fluxes (Kg C m-2 s-1)
-    real gpp_h
+    real gpp_h, nee_h
     real npp_h, nppLeaf_h, nppWood_h, nppStem_h, nppRoot_h, nppOther_h   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
     real ra_h,  raLeaf_h,  raStem_h,  raRoot_h,  raOther_h
     real rMaint_h, rGrowth_h                                             ! maintenance respiration and growth respiration

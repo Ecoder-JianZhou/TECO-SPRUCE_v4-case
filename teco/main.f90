@@ -60,8 +60,10 @@ program TECO
         call deallo_spinup_variables()
     endif 
     if (do_mcmc) then
-        call read_obs()
+        ! call read_obs()
+        call init_mcmc()
         call run_mcmc()
+        call check_mcmc()
     endif
     
     itest = 1

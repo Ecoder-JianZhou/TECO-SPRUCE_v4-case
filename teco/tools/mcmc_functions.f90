@@ -52,7 +52,8 @@ module mcmc_functions
     type interCostVariable
         character(200) :: filepath
         logical :: existOrNot
-        real, allocatable :: data(:,:)
+        real, allocatable :: obsData(:,:)
+        real, allocatable :: mdData(:,:)
     end type interCostVariable
 
     type allCostVariables
@@ -73,7 +74,29 @@ module mcmc_functions
 
     type(allCostVariables) :: vars4MCMC      ! define a allCostVariables first
 
+    ! variables for marking the cycle number
+    integer mc_itime_gpp_d, mc_itime_nee_d, mc_itime_reco_d
+    integer mc_itime_gpp_h, mc_itime_nee_h, mc_itime_reco_h
+    integer mc_itime_ch4_h, mc_itime_cleaf, mc_itime_cwood
+    integer mc_iyear,  mc_iday, mc_ihour
+
     contains
+
+    subroutine mcmc_functions_init()
+        implicit none
+        mc_itime_gpp_d  = 0
+        mc_itime_nee_d  = 0 
+        mc_itime_reco_d = 0
+        mc_itime_gpp_h  = 0
+        mc_itime_nee_h  = 0
+        mc_itime_reco_h = 0
+        mc_itime_ch4_h  = 0
+        mc_itime_cleaf  = 0
+        mc_itime_cwood  = 0
+        mc_iyear = 0
+        mc_iday  = 0
+        mc_ihour = 0
+    end subroutine mcmc_functions_init
 
     subroutine readConfsNml()
     ! default nml file name of "TECO_MCMC_configs.nml"
@@ -155,16 +178,91 @@ module mcmc_functions
 
     subroutine readObsData()
         implicit none
+        logical toExistOrNot
+        integer toCountLines
         ! existornot, data 
-        call giveValues2var(vars4MCMC%gpp_d%filepath,  vars4MCMC%gpp_d%existOrNot,  vars4MCMC%gpp_d%data)
-        call giveValues2var(vars4MCMC%nee_d%filepath,  vars4MCMC%nee_d%existOrNot,  vars4MCMC%nee_d%data)
-        call giveValues2var(vars4MCMC%reco_d%filepath, vars4MCMC%reco_d%existOrNot, vars4MCMC%reco_d%data)
-        call giveValues2var(vars4MCMC%gpp_h%filepath,  vars4MCMC%gpp_h%existOrNot,  vars4MCMC%gpp_h%data)
-        call giveValues2var(vars4MCMC%nee_h%filepath,  vars4MCMC%nee_h%existOrNot,  vars4MCMC%nee_h%data)
-        call giveValues2var(vars4MCMC%reco_h%filepath, vars4MCMC%reco_h%existOrNot, vars4MCMC%reco_h%data)
-        call giveValues2var(vars4MCMC%ch4_h%filepath,  vars4MCMC%ch4_h%existOrNot,  vars4MCMC%ch4_h%data)
-        call giveValues2var(vars4MCMC%cleaf%filepath,  vars4MCMC%cleaf%existOrNot,  vars4MCMC%cleaf%data)
-        call giveValues2var(vars4MCMC%cwood%filepath,  vars4MCMC%cwood%existOrNot,  vars4MCMC%cwood%data)
+
+        ! gpp_d
+        INQUIRE(FILE=vars4MCMC%gpp_d%filepath, EXIST=toExistOrNot)
+        vars4MCMC%gpp_d%existOrNot = toExistOrNot
+        if (vars4MCMC%gpp_d%existOrNot) then
+            call ReadLineNumFromObsFile(vars4MCMC%gpp_d%filepath, toCountLines)
+            allocate(vars4MCMC%gpp_d%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%gpp_d%filepath, toCountLines, vars4MCMC%gpp_d%obsData)
+            allocate(vars4MCMC%gpp_d%mdData(toCountLines, 4))
+        endif
+        ! nee_d
+        INQUIRE(FILE=vars4MCMC%nee_d%filepath, EXIST=toExistOrNot)
+        vars4MCMC%nee_d%existOrNot = toExistOrNot
+        if (vars4MCMC%nee_d%existOrNot) then
+            call ReadLineNumFromObsFile(vars4MCMC%nee_d%filepath, toCountLines)
+            allocate(vars4MCMC%nee_d%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%nee_d%filepath, toCountLines, vars4MCMC%nee_d%obsData)
+            allocate(vars4MCMC%nee_d%mdData(toCountLines, 4))
+        endif
+        ! reco_d
+        INQUIRE(FILE=vars4MCMC%reco_d%filepath, EXIST=toExistOrNot)
+        vars4MCMC%reco_d%existOrNot = toExistOrNot
+        if (vars4MCMC%reco_d%existOrNot) then
+            call ReadLineNumFromObsFile(vars4MCMC%reco_d%filepath, toCountLines)
+            allocate(vars4MCMC%reco_d%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%reco_d%filepath, toCountLines, vars4MCMC%reco_d%obsData)
+            allocate(vars4MCMC%reco_d%mdData(toCountLines, 4))
+        endif
+        ! gpp_h
+        INQUIRE(FILE=vars4MCMC%gpp_h%filepath, EXIST=toExistOrNot)
+        vars4MCMC%gpp_h%existOrNot = toExistOrNot
+        if (vars4MCMC%gpp_h%existOrNot) then
+            call ReadLineNumFromObsFile(vars4MCMC%gpp_h%filepath, toCountLines)
+            allocate(vars4MCMC%gpp_h%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%gpp_h%filepath, toCountLines, vars4MCMC%gpp_h%obsData)
+            allocate(vars4MCMC%gpp_h%mdData(toCountLines, 4))
+        endif
+        ! nee_h
+        INQUIRE(FILE=vars4MCMC%nee_h%filepath, EXIST=toExistOrNot)
+        vars4MCMC%nee_h%existOrNot = toExistOrNot
+        if (vars4MCMC%nee_h%existOrNot) then
+            call ReadLineNumFromObsFile(vars4MCMC%nee_h%filepath, toCountLines)
+            allocate(vars4MCMC%nee_h%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%nee_h%filepath, toCountLines, vars4MCMC%nee_h%obsData)
+            allocate(vars4MCMC%nee_h%mdData(toCountLines, 4))
+        endif
+        ! reco_h
+        INQUIRE(FILE=vars4MCMC%reco_h%filepath, EXIST=toExistOrNot)
+        vars4MCMC%reco_h%existOrNot = toExistOrNot
+        if (vars4MCMC%reco_h%existOrNot) then
+            call ReadLineNumFromObsFile(vars4MCMC%reco_h%filepath, toCountLines)
+            allocate(vars4MCMC%reco_h%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%reco_h%filepath, toCountLines, vars4MCMC%reco_h%obsData)
+            allocate(vars4MCMC%reco_h%mdData(toCountLines, 4))
+        endif
+        ! ch4_h
+        INQUIRE(FILE=vars4MCMC%ch4_h%filepath, EXIST=toExistOrNot)
+        vars4MCMC%ch4_h%existOrNot = toExistOrNot
+        if (vars4MCMC%ch4_h%existOrNot) then
+            call ReadLineNumFromObsFile(vars4MCMC%ch4_h%filepath, toCountLines)
+            allocate(vars4MCMC%ch4_h%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%ch4_h%filepath, toCountLines, vars4MCMC%ch4_h%obsData)
+            allocate(vars4MCMC%ch4_h%mdData(toCountLines, 4))
+        endif
+        ! cleaf
+        INQUIRE(FILE=vars4MCMC%cleaf%filepath, EXIST=toExistOrNot)
+        vars4MCMC%cleaf%existOrNot = toExistOrNot
+        if (vars4MCMC%cleaf%existOrNot) then
+            call ReadLineNumFromObsFile(vars4MCMC%cleaf%filepath, toCountLines)
+            allocate(vars4MCMC%cleaf%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%cleaf%filepath, toCountLines, vars4MCMC%cleaf%obsData)
+            allocate(vars4MCMC%cleaf%mdData(toCountLines, 4))
+        endif
+        ! cwood
+        INQUIRE(FILE=vars4MCMC%cwood%filepath, EXIST=toExistOrNot)
+        vars4MCMC%cwood%existOrNot = toExistOrNot
+        if (vars4MCMC%cwood%existOrNot) then
+            call ReadLineNumFromObsFile(vars4MCMC%cwood%filepath, toCountLines)
+            allocate(vars4MCMC%cwood%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%cwood%filepath, toCountLines, vars4MCMC%cwood%obsData)
+            allocate(vars4MCMC%cwood%mdData(toCountLines, 4))
+        endif
         
     end subroutine readObsData
 
@@ -233,21 +331,21 @@ module mcmc_functions
     end subroutine renewMDpars
 
 
-    subroutine giveValues2var(filepath, existOrNot, data)
-        implicit none
-        character(500) filepath
-        logical existOrNot
-        real, allocatable :: data(:, :)
-        integer count_lines
+    ! subroutine giveValues2var(filepath, existOrNot, data)
+    !     implicit none
+    !     character(500) filepath
+    !     logical existOrNot
+    !     real, allocatable :: data(:, :)
+    !     integer count_lines
 
-        INQUIRE(FILE=filepath, EXIST=existOrNot)
-        if(existOrNot)then
-            call ReadLineNumFromObsFile(filepath, count_lines)
-            allocate(data(count_lines, 5))
-            call ReadObsDataFromFile(filepath, count_lines, data)
-        end if
-        return
-    end subroutine giveValues2var
+    !     INQUIRE(FILE=filepath, EXIST=existOrNot)
+    !     if(existOrNot)then
+    !         call ReadLineNumFromObsFile(filepath, count_lines)
+    !         allocate(data(count_lines, 5))
+    !         call ReadObsDataFromFile(filepath, count_lines, data)
+    !     end if
+    !     return
+    ! end subroutine giveValues2var
 
     subroutine giveValues2par(arr_par)
         implicit none
@@ -316,31 +414,121 @@ module mcmc_functions
 
     end subroutine giveValues2par
 
-    subroutine CalculateCost(datMod4MCMC, datObs4MCMC, stdObs4MCMC, JCost)
-        ! calculate the cost of the observation and simulation, and update the number of updated
+    
+
+    subroutine GetSimuData(mc_iyear, mc_iday, mc_ihour)
         implicit none
-        real, intent(in) :: datMod4MCMC(:), datObs4MCMC(:), stdObs4MCMC(:)
-        integer nLine, iLine, nCost
-        real JCost, dObsSimu
+        ! vars4MCMC%
 
-        nLine = size(datObs4MCMC)
-        nCost = 0
-        JCost = 0.
-
-        do iLine = 1, nLine
-            if(datObs4MCMC(iLine) .gt. -9999)then
-                nCost    = nCost + 1   
-                dObsSimu = datMod4MCMC(iLine) - datObs4MCMC(iLine) 
-                JCost    = J_cost + (dObsSimu*dObsSimu)/(2*stdObs4MCMC(iLine))
+        ! gpp_d
+        if(vars4MCMC%gpp_d%existOrNot)then
+            if(vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 1) .eq. mc_iyear .and. &
+               vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 2) .eq. mc_iday  .and. &
+               vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 3) .eq. mc_ihour) then
+                mc_itime_gpp_d = mc_itime_gpp_d + 1
+                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 1) = mc_iyear
+                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 2) = mc_iday
+                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 3) = mc_ihour
+                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 4) = gpp_d
             endif
-        enddo
-        if(nCost .gt. 0) JCost=JCost/real(nCost)
-        return ! JCost
-    end subroutine CalculateCost
-
-    subroutine GetSimuData()
-        implicit none
-        
+        endif
+        ! nee_d
+        if(vars4MCMC%nee_d%existOrNot)then
+            if(vars4MCMC%nee_d%obsData(mc_itime_nee_d, 1) .eq. mc_iyear .and. &
+               vars4MCMC%nee_d%obsData(mc_itime_nee_d, 2) .eq. mc_iday  .and. &
+               vars4MCMC%nee_d%obsData(mc_itime_nee_d, 3) .eq. mc_ihour) then
+                mc_itime_nee_d = mc_itime_nee_d + 1
+                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 1) = mc_iyear
+                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 2) = mc_iday
+                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 3) = mc_ihour
+                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 4) = nbp_d    ! the same in TECO model
+            endif
+        endif
+        ! reco_d
+        if(vars4MCMC%reco_d%existOrNot)then
+            if(vars4MCMC%reco_d%obsData(mc_itime_reco_d, 1) .eq. mc_iyear .and. &
+               vars4MCMC%reco_d%obsData(mc_itime_reco_d, 2) .eq. mc_iday  .and. &
+               vars4MCMC%reco_d%obsData(mc_itime_reco_d, 3) .eq. mc_ihour) then
+                mc_itime_reco_d = mc_itime_reco_d + 1
+                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 1) = mc_iyear
+                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 2) = mc_iday
+                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 3) = mc_ihour
+                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 4) = rh_d + ra_d
+            endif
+        endif
+        ! gpp_h
+        if(vars4MCMC%gpp_h%existOrNot)then
+            if(vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 1) .eq. mc_iyear .and. &
+               vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 2) .eq. mc_iday  .and. &
+               vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 3) .eq. mc_ihour) then
+                mc_itime_gpp_h = mc_itime_gpp_h + 1
+                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 1) = mc_iyear
+                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 2) = mc_iday
+                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 3) = mc_ihour
+                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 4) = gpp_h
+            endif
+        endif
+        ! nee_h
+        if(vars4MCMC%nee_h%existOrNot)then
+            if(vars4MCMC%nee_h%obsData(mc_itime_nee_h, 1) .eq. mc_iyear .and. &
+               vars4MCMC%nee_h%obsData(mc_itime_nee_h, 2) .eq. mc_iday  .and. &
+               vars4MCMC%nee_h%obsData(mc_itime_nee_h, 3) .eq. mc_ihour) then
+                mc_itime_nee_h = mc_itime_nee_h + 1
+                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 1) = mc_iyear
+                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 2) = mc_iday
+                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 3) = mc_ihour
+                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 4) = nbp_h
+            endif
+        endif
+        ! reco_h
+        if(vars4MCMC%reco_h%existOrNot)then
+            if(vars4MCMC%reco_h%obsData(mc_itime_reco_h, 1) .eq. mc_iyear .and. &
+               vars4MCMC%reco_h%obsData(mc_itime_reco_h, 2) .eq. mc_iday  .and. &
+               vars4MCMC%reco_h%obsData(mc_itime_reco_h, 3) .eq. mc_ihour) then
+                mc_itime_reco_h = mc_itime_reco_h + 1
+                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 1) = mc_iyear
+                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 2) = mc_iday
+                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 3) = mc_ihour
+                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 4) = rh_h + ra_h
+            endif
+        endif
+        ! ch4_h
+        if(vars4MCMC%ch4_h%existOrNot)then
+            if(vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 1) .eq. mc_iyear .and. &
+               vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 2) .eq. mc_iday  .and. &
+               vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 3) .eq. mc_ihour) then
+                mc_itime_ch4_h = mc_itime_ch4_h + 1
+                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 1) = mc_iyear
+                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 2) = mc_iday
+                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 3) = mc_ihour
+                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 4) = ch4_h
+            endif
+        endif
+        ! cleaf
+        if(vars4MCMC%cleaf%existOrNot)then
+            if(vars4MCMC%cleaf%obsData(mc_itime_cleaf, 1) .eq. mc_iyear .and. &
+               vars4MCMC%cleaf%obsData(mc_itime_cleaf, 2) .eq. mc_iday  .and. &
+               vars4MCMC%cleaf%obsData(mc_itime_cleaf, 3) .eq. mc_ihour) then
+                mc_itime_cleaf = mc_itime_cleaf + 1
+                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 1) = mc_iyear
+                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 2) = mc_iday
+                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 3) = mc_ihour
+                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 4) = Q(1) 
+            endif
+        endif
+        ! cwood
+        if(vars4MCMC%cwood%existOrNot)then
+            if(vars4MCMC%cwood%obsData(mc_itime_cwood, 1) .eq. mc_iyear .and. &
+               vars4MCMC%cwood%obsData(mc_itime_cwood, 2) .eq. mc_iday  .and. &
+               vars4MCMC%cwood%obsData(mc_itime_cwood, 3) .eq. mc_ihour) then
+                mc_itime_cwood = mc_itime_cwood + 1
+                vars4MCMC%cwood%mdData(mc_itime_cwood, 1) = mc_iyear
+                vars4MCMC%cwood%mdData(mc_itime_cwood, 2) = mc_iday
+                vars4MCMC%cwood%mdData(mc_itime_cwood, 3) = mc_ihour
+                vars4MCMC%cwood%mdData(mc_itime_cwood, 4) = Q(2)
+            endif
+        endif
+           
     end subroutine GetSimuData
 
     

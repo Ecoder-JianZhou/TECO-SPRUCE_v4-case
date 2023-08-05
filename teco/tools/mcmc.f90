@@ -8,6 +8,7 @@ module mod_mcmc
     real, allocatable :: DAparmin(:), DAparmax(:),  DAparidx(:),  DApar(:), DApar_old(:)
     real, allocatable :: MDparval(:), gamma(:,:), gamnew(:,:)
     real seach_scale, fact_rejet
+    real J_last, J_new
 
 
     contains
@@ -58,7 +59,7 @@ module mod_mcmc
         covexist      = 0
         do_cov4newpar = 1
         fact_rejet    = 2.4/sqrt(real(npar4DA))
-
+        
     end subroutine init_mcmc
 
     subroutine run_mcmc()
@@ -71,6 +72,7 @@ module mod_mcmc
         write(*,*)"Start to run mcmc ..."
 
         do iDAsimu = 1, nDAsimu
+            call mcmc_functions_init()  ! initialize the mc_itime ... variables
             call initialize() ! in TECO model initialize 
             ! generate parameters 
             call generate_newPar()
@@ -157,32 +159,6 @@ module mod_mcmc
         deallocate(DApar)
     end subroutine run_mcmc
 
-    subroutine check_mcmc()
-    ! deallocate some variables and summary the information of MCMC
-        implicit none
-        if(allocated(DAparmin)) deallocate(DAparmin)
-        if(allocated(DAparmax)) deallocate(DAparmax)
-        if(allocated(DAparidx)) deallocate(DAparidx)
-        if(allocated(DApar)) deallocate(DApar)
-        if(allocated(DApar_old)) deallocate(DApar_old)
-        if(allocated(MDparval)) deallocate(MDparval)
-
-        if(allocated(parval)) deallocate(parval)
-        if(allocated(parmin)) deallocate(parmin)
-        if(allocated(parmax)) deallocate(parmax)
-        
-        if(allocated(vars4MCMC%gpp_d%data))  deallocate(vars4MCMC%gpp_d%data)
-        if(allocated(vars4MCMC%gpp_d%data))  deallocate(vars4MCMC%gpp_d%data)
-        if(allocated(vars4MCMC%nee_d%data))  deallocate(vars4MCMC%nee_d%data)
-        if(allocated(vars4MCMC%reco_d%data)) deallocate(vars4MCMC%reco_d%data)
-        if(allocated(vars4MCMC%gpp_h%data))  deallocate(vars4MCMC%gpp_h%data)
-        if(allocated(vars4MCMC%nee_h%data))  deallocate(vars4MCMC%nee_h%data)
-        if(allocated(vars4MCMC%reco_h%data)) deallocate(vars4MCMC%reco_h%data)
-        if(allocated(vars4MCMC%ch4_h%data))  deallocate(vars4MCMC%ch4_h%data)
-        if(allocated(vars4MCMC%cleaf%data))  deallocate(vars4MCMC%cleaf%data)
-        if(allocated(vars4MCMC%cwood%data))  deallocate(vars4MCMC%cwood%data)
-    end subroutine check_mcmc
-
     subroutine generate_newPar()
         implicit none
         integer igenPar, parflag
@@ -221,6 +197,101 @@ module mod_mcmc
         endif
         return
     end subroutine generate_newPar
+
+    subroutine costFuncObs()
+        implicit none
+        real J_cost, delta_J, cs_rand, accept_rate
+        J_new = 0
+        ! vars4MCMC
+        ! gpp_d
+        if(vars4MCMC%gpp_d%existOrNot)then
+            call CalculateCost(vars4MCMC%gpp_d%mdData(:,4), vars4MCMC%gpp_d%obsData(:,4),&
+                 vars4MCMC%gpp_d%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        ! nee_d
+        if(vars4MCMC%nee_d%existOrNot)then
+            call CalculateCost(vars4MCMC%nee_d%mdData(:,4), vars4MCMC%nee_d%obsData(:,4),&
+                 vars4MCMC%nee_d%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        ! reco_d
+        if(vars4MCMC%reco_d%existOrNot)then
+            call CalculateCost(vars4MCMC%reco_d%mdData(:,4), vars4MCMC%reco_d%obsData(:,4),&
+                 vars4MCMC%reco_d%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        ! gpp_h
+        if(vars4MCMC%gpp_h%existOrNot)then
+            call CalculateCost(vars4MCMC%gpp_h%mdData(:,4), vars4MCMC%gpp_h%obsData(:,4),&
+                 vars4MCMC%gpp_h%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        ! nee_h
+        if(vars4MCMC%nee_h%existOrNot)then
+            call CalculateCost(vars4MCMC%nee_h%mdData(:,4), vars4MCMC%nee_h%obsData(:,4),&
+                 vars4MCMC%nee_h%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        ! reco_h
+        if(vars4MCMC%reco_h%existOrNot)then
+            call CalculateCost(vars4MCMC%reco_h%mdData(:,4), vars4MCMC%reco_h%obsData(:,4),&
+                 vars4MCMC%reco_h%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        ! ch4_h
+        if(vars4MCMC%ch4_h%existOrNot)then
+            call CalculateCost(vars4MCMC%ch4_h%mdData(:,4), vars4MCMC%ch4_h%obsData(:,4),&
+                 vars4MCMC%ch4_h%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        ! cleaf
+        if(vars4MCMC%cleaf%existOrNot)then
+            call CalculateCost(vars4MCMC%cleaf%mdData(:,4), vars4MCMC%cleaf%obsData(:,4),&
+                 vars4MCMC%cleaf%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        ! cwood
+        if(vars4MCMC%cwood%existOrNot)then
+            call CalculateCost(vars4MCMC%cwood%mdData(:,4), vars4MCMC%cwood%obsData(:,4),&
+                 vars4MCMC%cwood%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+
+        if(J_new .eq. 0) then ! no data is available
+            delta_J = -0.1
+        else
+            delta_J = J_new - J_last
+        endif
+        call random_number(cs_rand)
+        if(AMIN1(1.0, exp(-delta_J)) .gt. cs_rand)then
+            upgraded = upgraded + 1
+            J_last = J_new
+        endif
+        accept_rate = real(updated)/real(iDAsimu)
+    end subroutine costFuncObs
+
+    subroutine CalculateCost(datMod4MCMC, datObs4MCMC, stdObs4MCMC, JCost)
+        ! calculate the cost of the observation and simulation, and update the number of updated
+        implicit none
+        real, intent(in) :: datMod4MCMC(:), datObs4MCMC(:), stdObs4MCMC(:)
+        integer nLine, iLine, nCost
+        real JCost, dObsSimu
+
+        nLine = size(datObs4MCMC)
+        nCost = 0
+        JCost = 0.
+
+        do iLine = 1, nLine
+            if(datObs4MCMC(iLine) .gt. -9999)then
+                nCost    = nCost + 1   
+                dObsSimu = datMod4MCMC(iLine) - datObs4MCMC(iLine) 
+                JCost    = J_cost + (dObsSimu*dObsSimu)/(2*stdObs4MCMC(iLine))
+            endif
+        enddo
+        if(nCost .gt. 0) JCost=JCost/real(nCost)
+        return ! JCost
+    end subroutine CalculateCost
 
     subroutine generate_newPar_cov()
         implicit none
@@ -325,5 +396,39 @@ module mod_mcmc
         mean=mean_tt
     End Function
     
+    subroutine check_mcmc()
+    ! deallocate some variables and summary the information of MCMC
+        implicit none
+        if(allocated(DAparmin)) deallocate(DAparmin)
+        if(allocated(DAparmax)) deallocate(DAparmax)
+        if(allocated(DAparidx)) deallocate(DAparidx)
+        if(allocated(DApar)) deallocate(DApar)
+        if(allocated(DApar_old)) deallocate(DApar_old)
+        if(allocated(MDparval)) deallocate(MDparval)
 
+        if(allocated(parval)) deallocate(parval)
+        if(allocated(parmin)) deallocate(parmin)
+        if(allocated(parmax)) deallocate(parmax)
+        
+        if(allocated(vars4MCMC%gpp_d%obsData))  deallocate(vars4MCMC%gpp_d%obsData)
+        if(allocated(vars4MCMC%nee_d%obsData))  deallocate(vars4MCMC%nee_d%obsData)
+        if(allocated(vars4MCMC%reco_d%obsData)) deallocate(vars4MCMC%reco_d%obsData)
+        if(allocated(vars4MCMC%gpp_h%obsData))  deallocate(vars4MCMC%gpp_h%obsData)
+        if(allocated(vars4MCMC%nee_h%obsData))  deallocate(vars4MCMC%nee_h%obsData)
+        if(allocated(vars4MCMC%reco_h%obsData)) deallocate(vars4MCMC%reco_h%obsData)
+        if(allocated(vars4MCMC%ch4_h%obsData))  deallocate(vars4MCMC%ch4_h%obsData)
+        if(allocated(vars4MCMC%cleaf%obsData))  deallocate(vars4MCMC%cleaf%obsData)
+        if(allocated(vars4MCMC%cwood%obsData))  deallocate(vars4MCMC%cwood%obsData)
+
+        if(allocated(vars4MCMC%gpp_d%mdData))  deallocate(vars4MCMC%gpp_d%mdData)
+        if(allocated(vars4MCMC%nee_d%mdData))  deallocate(vars4MCMC%nee_d%mdData)
+        if(allocated(vars4MCMC%reco_d%mdData)) deallocate(vars4MCMC%reco_d%mdData)
+        if(allocated(vars4MCMC%gpp_h%mdData))  deallocate(vars4MCMC%gpp_h%mdData)
+        if(allocated(vars4MCMC%nee_h%mdData))  deallocate(vars4MCMC%nee_h%mdData)
+        if(allocated(vars4MCMC%reco_h%mdData)) deallocate(vars4MCMC%reco_h%mdData)
+        if(allocated(vars4MCMC%ch4_h%mdData))  deallocate(vars4MCMC%ch4_h%mdData)
+        if(allocated(vars4MCMC%cleaf%mdData))  deallocate(vars4MCMC%cleaf%mdData)
+        if(allocated(vars4MCMC%cwood%mdData))  deallocate(vars4MCMC%cwood%mdData)
+
+    end subroutine check_mcmc
 end module mod_mcmc
