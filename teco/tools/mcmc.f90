@@ -32,7 +32,7 @@ module mod_mcmc
 
         MDparval = parval
         npar4DA  = 0 ! record the number of parameters for data assimilation
-        do ipar in 1, npar
+        do ipar = 1, npar
             if (parmin(ipar) .ne. parmax(ipar)) then
                 npar4DA              = npar4DA + 1
                 temp_paridx(npar4DA) = ipar
@@ -323,7 +323,7 @@ module mod_mcmc
         xnew = xold + x
     end subroutine gengaussvect
 
-    function rangauss(idum)
+   real function rangauss(idum)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Generation of a random number from a standard	  !!
     !! normal distribution. (Numerical Recipes)           !!

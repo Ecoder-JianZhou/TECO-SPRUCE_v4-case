@@ -3,7 +3,7 @@ program TECO
     use mod_spinup
     use mod_mcmc
     use driver
-    use mod_ncd_io
+    ! use mod_ncd_io
     ! to run TECO simulation, spin-up and data simulation
     implicit none
     ! character(len=32) :: cmdChar_folder, out_csv, out_nc, out_nc_daily, out_nc_hourly, out_nc_monthly

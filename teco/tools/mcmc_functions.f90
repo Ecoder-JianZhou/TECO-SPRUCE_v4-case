@@ -416,7 +416,7 @@ module mcmc_functions
 
     
 
-    subroutine GetSimuData(mc_iyear, mc_iday, mc_ihour)
+    subroutine GetSimuData()
         implicit none
         ! vars4MCMC%
 
@@ -501,7 +501,7 @@ module mcmc_functions
                 vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 1) = mc_iyear
                 vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 2) = mc_iday
                 vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 3) = mc_ihour
-                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 4) = ch4_h
+                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 4) = sum(CH4)
             endif
         endif
         ! cleaf
@@ -513,7 +513,7 @@ module mcmc_functions
                 vars4MCMC%cleaf%mdData(mc_itime_cleaf, 1) = mc_iyear
                 vars4MCMC%cleaf%mdData(mc_itime_cleaf, 2) = mc_iday
                 vars4MCMC%cleaf%mdData(mc_itime_cleaf, 3) = mc_ihour
-                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 4) = Q(1) 
+                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 4) = QC(1) 
             endif
         endif
         ! cwood
@@ -525,7 +525,7 @@ module mcmc_functions
                 vars4MCMC%cwood%mdData(mc_itime_cwood, 1) = mc_iyear
                 vars4MCMC%cwood%mdData(mc_itime_cwood, 2) = mc_iday
                 vars4MCMC%cwood%mdData(mc_itime_cwood, 3) = mc_ihour
-                vars4MCMC%cwood%mdData(mc_itime_cwood, 4) = Q(2)
+                vars4MCMC%cwood%mdData(mc_itime_cwood, 4) = QC(2)
             endif
         endif
            
@@ -570,4 +570,4 @@ module mcmc_functions
         return
     end subroutine ReadObsDataFromFile
 
-end module mcmc_tools
+end module mcmc_functions

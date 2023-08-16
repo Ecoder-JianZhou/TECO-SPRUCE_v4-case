@@ -1,15 +1,15 @@
 &nml_obsfiles
-    obsfile_gpp_d   =
-    obsfile_nee_d   =
-    obsfile_reco_d  =
-    obsfile_gpp_h   =
-    obsfile_nee_h   =
-    obsfile_reco_h  =
+    obsfile_gpp_d   = "observation_files\obsfile_gpp_d.txt"
+    obsfile_nee_d   = "observation_files\obsfile_nee_d.txt"
+    obsfile_reco_d  = "observation_files\obsfile_reco_d.txt"
+    obsfile_gpp_h   = "observation_files\obsfile_gpp_h.txt"
+    obsfile_nee_h   = "observation_files\obsfile_nee_h.txt"
+    obsfile_reco_h  = "observation_files\obsfile_reco_h.txt"
     ! methane   
-    obsfile_ch4_h   =
+    obsfile_ch4_h   = "observation_files\obsfile_ch4_h.txt"
     ! c pools
-    obsfile_cleaf   = ! foliage
-    obsfile_cwood   =
+    obsfile_cleaf   = "observation_files\obsfile_cleaf_d.txt" ! foliage
+    obsfile_cwood   = "observation_files\obsfile_cwood_d.txt"
 &end
 
 &nml_parval      ! This is for default parameters
