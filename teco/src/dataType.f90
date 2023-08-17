@@ -2,7 +2,7 @@ module mod_data
     implicit none
     ! run settings 
     logical, parameter :: do_spinup  = .False.                     ! run spinup or not
-    logical, parameter :: do_mcmc    = .False.                     ! run mcmc or not
+    logical, parameter :: do_mcmc    = .True.                     ! run mcmc or not
     logical, parameter :: do_snow    = .True.                      ! do soil snow process
     logical, parameter :: do_soilphy = .True.                      ! do soil physics
     logical, parameter :: do_matrix  = .True.                      ! do matrix run
@@ -18,9 +18,9 @@ module mod_data
 
     ! define some parameters for in/out
     character(200) :: parafile        = "../input/parameters.txt"
-    character(200) :: climatefile     = "../input/SPRUCE_forcing_plot17.txt"    !"../input/forcing_1850-2014_new.txt"        !Forcing_in_TECO_2_1  SPRUCE_forcing_plot07
+    character(200) :: climatefile     = "../input/f1p1forcing2011_2018.txt"    !"../input/forcing_1850-2014_new.txt"        !Forcing_in_TECO_2_1  SPRUCE_forcing_plot07
     character(200) :: snowdepthfile   = "../input/SPRUCE_Snow_Depth_2011-2014.txt"
-    character(len=1500) :: outdir     = "../outputs/simu_plot17"!outputs_1850-2014_new"   !"../outputs/outputs_test_1850-2014"       ! 
+    character(len=1500) :: outdir     = "../outputs/simu_plot17"    !outputs_1850-2014_new"   !"../outputs/outputs_test_1850-2014"       ! 
     character(len=1500) :: in_restart = "../outputs/outputs_1850-2014_new/restart.nc"!"../outputs_old/outputs_spinup_plot7_new/restart.nc"! "../outputs/spinup_plot07/restart.nc"!
     character(len=50) watertablefile                               ! Jian: maybe used when not run soil_physical
     character(200) commts

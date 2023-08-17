@@ -4,18 +4,19 @@ module mod_mcmc
     use mcmc_functions
 
     implicit none
-    integer npar4DA, nDAsimu, do_cov4newpar, covexist
+    integer npar4DA, nDAsimu, do_cov4newpar, covexist, iDAsimu, upgraded, ipar
     real, allocatable :: DAparmin(:), DAparmax(:),  DAparidx(:),  DApar(:), DApar_old(:)
-    real, allocatable :: MDparval(:), gamma(:,:), gamnew(:,:)
-    real seach_scale, fact_rejet
+    real, allocatable :: MDparval(:), gamma(:,:), gamnew(:,:), coefhistory(:,:), coefnorm(:), coefac(:)
+    real search_scale, fact_rejet
     real J_last, J_new
-
+    integer new, reject
+    integer, parameter :: nc = 100, ncov = 500
 
     contains
     ! subroutine init_mcmc(npar, parmin, parmax, parval)!, df_search_scale)
     subroutine init_mcmc()
         implicit none
-        integer ipar
+        ! integer ipar
         ! real, dimension(npar) :: parmin, parmax, parval
         real, allocatable :: temp_parmin(:), temp_parmax(:), temp_paridx(:), temp_parval(:)
         ! real df_search_scale
@@ -30,7 +31,7 @@ module mod_mcmc
         allocate(temp_paridx(npar), temp_parval(npar))  ! mark the index of parameters for MCMC
         allocate(MDparval(npar))                        ! record the parameters set for model simulation
 
-        MDparval = parval
+        MDparval = parval                               ! parameters for running model
         npar4DA  = 0 ! record the number of parameters for data assimilation
         do ipar = 1, npar
             if (parmin(ipar) .ne. parmax(ipar)) then
@@ -59,23 +60,36 @@ module mod_mcmc
         covexist      = 0
         do_cov4newpar = 1
         fact_rejet    = 2.4/sqrt(real(npar4DA))
-        
+
+        ! record
+        allocate(coefhistory(ncov, npar4DA))
+        ! create the coefnorm for generating the new parameters
+        allocate(coefnorm(npar4DA)) 
+        allocate(coefac(npar4DA))
+        do ipar = 1, npar4DA
+            coefnorm(ipar)=0.5
+            coefac(ipar)=coefnorm(ipar)
+        enddo
+
     end subroutine init_mcmc
 
     subroutine run_mcmc()
         implicit none
-        integer iDAsimu, ipar ! iDAsimu: ith simu of DA
-        integer temp_upgraded, upgraded
+        integer temp_upgraded
         real rand
-        integer, parameter :: nc = 100, ncov = 500
+        
 
         write(*,*)"Start to run mcmc ..."
 
         do iDAsimu = 1, nDAsimu
+            write(*,*) iDAsimu, "/", nDAsimu
             call mcmc_functions_init()  ! initialize the mc_itime ... variables
-            call initialize() ! in TECO model initialize 
+            write(*,*) "after mcmc_functions_init"
+            call initialize()           ! initialize the TECO model 
+            write(*,*) "after initialize"
             ! generate parameters 
             call generate_newPar()
+            write(*,*) "generate_newPar"
             ! update the parameters
             do ipar = 1, npar4DA
                 parval(DAparidx(ipar)) = DApar(ipar)
@@ -95,27 +109,28 @@ module mod_mcmc
                     coefac = coefnorm
                     coefhistory(new, :) = coefnorm
                 else
-                    coefac = coef
+                    ! coefac = coef
                     do ipar = 1, npar4DA
-                        coefnorm(ipar) = (coef(ipar)-coefmin(ipar))/(coefmax(ipar)-coefmin(ipar))
+                        ! coefnorm(ipar) = (coef(ipar)-coefmin(ipar))/(coefmax(ipar)-coefmin(ipar))
+                        coefnorm(ipar) = (DApar(ipar)-DAparmin(ipar))/(DAparmax(ipar)-DAparmin(ipar))
                     enddo
                 endif
                 coefhistory(new, :) = coefnorm 
                 if(new .ge. ncov)new=0
 
-                if(upgraded .gt. 1500 .and. k3 .lt. 800) then ! k3 is for what?
-                    call random_number(rand)  ! get a rand number
-                    if(rand .gt. 0.95) then
-                        k3 = k3 + 1
-                        if (do_methane_da) then
+                ! if(upgraded .gt. 1500 .and. k3 .lt. 800) then ! k3 is for what?
+                !     call random_number(rand)  ! get a rand number
+                !     if(rand .gt. 0.95) then
+                !         k3 = k3 + 1
+                !         if (do_methane_da) then
 
-                        elseif (do_da)then
+                !         elseif (do_da)then
                         
-                        endif
+                !         endif
 
-                    endif
+                !     endif
 
-                endif
+                ! endif
             else
                 reject = reject + 1
             endif
@@ -160,6 +175,8 @@ module mod_mcmc
     end subroutine run_mcmc
 
     subroutine generate_newPar()
+        ! This subroutine is used to generate the new parameters to run MCMC
+        ! Based on the Shuang's code, it need to use the coef to generate the new parameters.
         implicit none
         integer igenPar, parflag
         real rand_harvest, rand
@@ -174,24 +191,29 @@ module mod_mcmc
                     call gengaussvect(fact_rejet*gamma, coefac, coefnorm, npar4DA)          ! generate the new cov parameters
                     parflag = 0                                                         
                     do igenPar = 1, npar4DA                                                 ! check the cov 
-                        if(coefnorm(igenPar).lt.0. .or. coefnorm(k1).gt.1.)then
+                        if(coefnorm(igenPar).lt.0. .or. coefnorm(ipar).gt.1.)then
                             parflag=parflag+1
                             write(*,*)'out of range',parflag
                         endif
                     enddo
                 enddo
-                do k1 = 1, npar4DA
-                    DApar(k1) = coefmin(k1) + coefnorm(k1) * (coefmax(k1)-coefmin(k1))
+                do ipar = 1, npar4DA
+                    DApar(ipar) = DAparmin(ipar) + coefnorm(ipar) * (DAparmax(ipar)-DAparmin(ipar))
                 enddo
             else
                 write (*,*) "covexist=0"
+                write(*,*) DAparmax-DAparmin
                 do igenPar = 1, npar4DA     ! for each parameters
 999                 continue
                     call random_number(rand_harvest)    
                     rand = rand_harvest - 0.5           ! create a random number in [-0.5, 0.5]
-                    DApar(igenPar) = DApar_old(igenPar) + rand*(DAparmin(igenPar)) * search_scale   ! create new parameter
-                    if((DApar(igenPar) .gt. DAparmax(i)) &
-                        &   .or. (DApar(igenPar) .lt. DAparmin(igenPar))) goto 999                  ! judge the range of new parameter
+                    DApar(igenPar) = DApar_old(igenPar) + rand*(DAparmax(igenPar) - DAparmin(igenPar)) * search_scale   ! create new parameter
+                    ! write(*,*)"new_here", Daparmax-DAparmin !DApar(igenPar)
+                    if((DApar(igenPar) .gt. DAparmax(igenPar)) &
+                        &   .or. (DApar(igenPar) .lt. DAparmin(igenPar))) then 
+                            write(*,*) igenPar, DApar(igenPar), DAparmin(igenPar), DAparmax(igenPar), i
+                            goto 999                  ! judge the range of new parameter
+                    endif
                 enddo
             endif
         endif
@@ -268,7 +290,7 @@ module mod_mcmc
             upgraded = upgraded + 1
             J_last = J_new
         endif
-        accept_rate = real(updated)/real(iDAsimu)
+        accept_rate = real(upgraded)/real(iDAsimu)
     end subroutine costFuncObs
 
     subroutine CalculateCost(datMod4MCMC, datObs4MCMC, stdObs4MCMC, JCost)
@@ -286,21 +308,147 @@ module mod_mcmc
             if(datObs4MCMC(iLine) .gt. -9999)then
                 nCost    = nCost + 1   
                 dObsSimu = datMod4MCMC(iLine) - datObs4MCMC(iLine) 
-                JCost    = J_cost + (dObsSimu*dObsSimu)/(2*stdObs4MCMC(iLine))
+                JCost    = JCost + (dObsSimu*dObsSimu)/(2*stdObs4MCMC(iLine))
             endif
         enddo
         if(nCost .gt. 0) JCost=JCost/real(nCost)
         return ! JCost
     end subroutine CalculateCost
 
-    subroutine generate_newPar_cov()
-        implicit none
-        integer parflag
-        fact_rejet = 2.4/squrt
-        do while(parflag .gt. 0)
-            call gengaussvect()
+    ! subroutine generate_newPar_cov()
+    !     implicit none
+    !     integer parflag
+    !     fact_rejet = 2.4/squrt
+    !     do while(parflag .gt. 0)
+    !         call gengaussvect()
+    !     enddo
+    ! end subroutine generate_newPar_cov
+    
+
+    subroutine racine_mat(M, Mrac,npara)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !! Square root of a matrix							  !!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        integer npara,i, nrot
+        real M(npara,npara),Mrac(npara,npara)
+        real valpr(npara),vectpr(npara,npara)
+        Mrac=0.
+        call jacobi(M,npara,npara,valpr,vectpr,nrot)
+        do i=1,npara
+        if(valpr(i).ge.0.) then
+                Mrac(i,i)=sqrt(valpr(i))
+        else
+                print*, 'WARNING!!! Square root of the matrix is undefined.'
+                print*, ' A negative eigenvalue has been set to zero - results may be wrong'
+                Mrac=M
+                return
+        endif
         enddo
-    end subroutine generate_newPar_cov
+        Mrac=matmul(matmul(vectpr, Mrac),transpose(vectpr))
+
+    end subroutine racine_mat
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !! Extraction of the eigenvalues and the eigenvectors !!
+    !! of a matrix (Numerical Recipes)					  !!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    SUBROUTINE jacobi(a,n,np,d,v,nrot)
+        INTEGER :: n,np,nrot
+        REAL :: a(np,np),d(np),v(np,np)
+        INTEGER, PARAMETER :: NMAX=500
+        INTEGER :: i,ip,iq,j
+        REAL :: c,g,h,s,sm,t,tau,theta,tresh,b(NMAX),z(NMAX)
+        
+        do ip=1,n
+            do iq=1,n
+                v(ip,iq)=0.
+            end do
+            v(ip,ip)=1.
+        end do
+        
+        do ip=1,n
+            b(ip)=a(ip,ip)
+            d(ip)=b(ip)
+            z(ip)=0.
+        end do
+        
+        nrot=0
+        do i=1,50
+            sm=0.
+            do ip=1,n-1
+                do iq=ip+1,n
+                    sm=sm+abs(a(ip,iq))
+                end do
+            end do
+            if(sm.eq.0.)return
+            if(i.lt.4)then
+                tresh=0.2*sm/n**2
+            else
+                tresh=0.
+            endif
+            do ip=1,n-1
+                do iq=ip+1,n
+                    g=100.*abs(a(ip,iq))
+                    if((i.gt.4).and.(abs(d(ip))+g.eq.abs(d(ip))).and.(abs(d(iq))+g.eq.abs(d(iq))))then
+                        a(ip,iq)=0.
+                    else if(abs(a(ip,iq)).gt.tresh)then
+                        h=d(iq)-d(ip)
+                        if(abs(h)+g.eq.abs(h))then
+                            t=a(ip,iq)/h
+                        else
+                            theta=0.5*h/a(ip,iq)
+                            t=1./(abs(theta)+sqrt(1.+theta**2))
+                            if(theta.lt.0.) then
+                                t=-t
+                            endif
+                        endif
+                        c=1./sqrt(1+t**2)
+                        s=t*c
+                        tau=s/(1.+c)
+                        h=t*a(ip,iq)
+                        z(ip)=z(ip)-h
+                        z(iq)=z(iq)+h
+                        d(ip)=d(ip)-h
+                        d(iq)=d(iq)+h
+                        a(ip,iq)=0.
+                        do j=1,ip-1
+                            g=a(j,ip)
+                            h=a(j,iq)
+                            a(j,ip)=g-s*(h+g*tau)
+                            a(j,iq)=h+s*(g-h*tau)
+                        end do
+                        do j=ip+1,iq-1
+                            g=a(ip,j)
+                            h=a(j,iq)
+                            a(ip,j)=g-s*(h+g*tau)
+                            a(j,iq)=h+s*(g-h*tau)
+                        end do
+                        do j=iq+1,n
+                            g=a(ip,j)
+                            h=a(iq,j)
+                            a(ip,j)=g-s*(h+g*tau)
+                            a(iq,j)=h+s*(g-h*tau)
+                        end do
+                        do j=1,n
+                            g=v(j,ip)
+                            h=v(j,iq)
+                            v(j,ip)=g-s*(h+g*tau)
+                            v(j,iq)=h+s*(g-h*tau)
+                        end do
+                        nrot=nrot+1
+                    endif
+                end do
+            end do
+            do ip=1,n
+                b(ip)=b(ip)+z(ip)
+                d(ip)=b(ip)
+                z(ip)=0.
+            end do
+        end do
+        print*, 'too many iterations in jacobi'
+        return
+    END subroutine jacobi
 
     subroutine gengaussvect(gamma_racine,xold,xnew,npara)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -331,8 +479,10 @@ module mod_mcmc
         integer idum
         real v1, v2, r, fac, gset
         real r_num
+        integer :: iset
         
-        data iset/0/
+        ! data iset/0/
+        iset = 0
         if(iset==0) then
 1	        CALL random_number(r_num)
             v1=2.*r_num-1
@@ -363,7 +513,7 @@ module mod_mcmc
         
         varcovar = matmul(transpose(tab2), tab2)*(1./real(ncov))
         
-        end subroutine varcov
+    end subroutine varcov
 
 
 
@@ -374,7 +524,7 @@ module mod_mcmc
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         integer npara,ncov
         real mat(ncov,npara),mat_out(ncov,npara)
-        real mean
+        ! real mean
 
         do i=1,npara
             mat_out(:,i) = mat(:,i) - mean(mat(:,i),ncov)
@@ -382,19 +532,24 @@ module mod_mcmc
 
     end subroutine centre
 
-    Function mean(tab,ncov)
+    real function mean(tab,ncov)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! mean of a vector									  !!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        integer ncov
+        integer ncov, incov
         real tab(ncov)
-        real mean,mean_tt
+        real mean_tt
         mean_tt=0.
-        do i=1,ncov
-        mean_tt=mean_tt+tab(i)/real(ncov)
+        do incov=1,ncov
+        mean_tt=mean_tt+tab(incov)/real(ncov)
         enddo
         mean=mean_tt
-    End Function
+    End Function mean
+
+    ! real function mean(tab, ncov)
+    !     integer ncov
+    !     real tab(ncov)
+    ! end function mean
     
     subroutine check_mcmc()
     ! deallocate some variables and summary the information of MCMC
@@ -429,6 +584,10 @@ module mod_mcmc
         if(allocated(vars4MCMC%ch4_h%mdData))  deallocate(vars4MCMC%ch4_h%mdData)
         if(allocated(vars4MCMC%cleaf%mdData))  deallocate(vars4MCMC%cleaf%mdData)
         if(allocated(vars4MCMC%cwood%mdData))  deallocate(vars4MCMC%cwood%mdData)
+
+        if(allocated(coefhistory)) deallocate(coefhistory)
+        if(allocated(coefnorm)) deallocate(coefnorm)
+        if(allocated(coefac)) deallocate(coefac)
 
     end subroutine check_mcmc
 end module mod_mcmc

@@ -1,0 +1,16 @@
+lat	Longitude	wsmax	wsmin				
+47.5	-93.45	85.3	0.2				
+LAIMAX	LAIMIN	rdepth	Rootmax	Stemmax			
+8.0	0.3	150	500	1000			
+SapR	SapS	SLA	GLmax	GRmax	Gsmax	stom_n	
+1	0.5	50.3	10.56	21.71	27.03	2	
+a1	Ds0	Vcmx0	extkU	xfang	alpha		
+8	2000	61.38	0.51	0	0.385		
+Tau_Leaf	Tau_Wood	Tau_Root	Tau_F	Tau_C	Tau_Micro	Tau_SlowSOM	Tau_Passive
+1.05	50.1	1.1994	0.2784	15.4561	0.3118	80.7995	200.99
+gddonset	Q10	Rl0	Rs0	Rr0			
+157.85	2.74	13.03	6.32	34.88			
+r_me	Q10pro	kCH4	 Omax	CH4_thre	Tveg	Tpro_me	Toxi
+0.16	3.	5.	22.80	1400.0	7.7	10.  	10.
+f   bubprob     Vmaxfraction
+0.35 0.27         0.1

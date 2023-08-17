@@ -5,6 +5,7 @@ module driver
     use mod_soil
     use mod_transfer
     use mod_upAndSum
+    use mcmc_functions
     implicit none
     ! some paramaters for cycle and saving results
     integer daysOfyear, hoursOfmonth, hoursOfYear, daysOfmonth(12) 

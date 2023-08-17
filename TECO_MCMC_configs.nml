@@ -15,8 +15,8 @@
 &nml_parval      ! This is for default parameters
     mc_lat         = 47.5
     mc_Longitude   = -93.45
-    mc_wsmax       = 95.3
-    mc_wsmin       = 2.2														
+    mc_wsmax       = 85.3
+    mc_wsmin       = 0.2														
     mc_LAIMAX	   = 8
     mc_LAIMIN	   = 0.3
     mc_rdepth	   = 150
@@ -141,7 +141,7 @@
 &nml_parmax
     mc_lat         = 47.5
     mc_Longitude   = -93.45
-    mc_wsmax       = 50.0	
+    mc_wsmax       = 85.3	
     mc_wsmin       = 0.2													
     mc_LAIMAX	   = 8.0	
     mc_LAIMIN	   = 0.3	
