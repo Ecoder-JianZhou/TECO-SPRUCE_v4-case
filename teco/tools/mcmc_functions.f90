@@ -271,7 +271,7 @@ module mcmc_functions
     subroutine renewMDpars()
         implicit none
         lat         = parval(1)
-        Longi       = parval(2)
+        long        = parval(2)
         wsmax       = parval(3)
         wsmin       = parval(4)                                            
         LAIMAX      = parval(5)

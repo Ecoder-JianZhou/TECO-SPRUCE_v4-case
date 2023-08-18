@@ -34,7 +34,7 @@ module mod_vegetation
 contains
    subroutine canopy() 
       implicit none
-      real Ecanop
+      real Acanop, Ecanop
       doy  = iday
       hour = ihour+1
 
@@ -118,6 +118,7 @@ contains
       real bW, bT, W
       real L_add, NL_fall, NL_add
       real alpha_St
+      real ht
 
       Twarm = 35.0
       Tcold = 5.0

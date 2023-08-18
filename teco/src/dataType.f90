@@ -32,211 +32,318 @@ module mod_data
     character(50), parameter :: outfile_spinup  = "results_spinup.nc"
     
     ! experiment settings
-    real    :: Ttreat     = 0.        ! Temperature treatment, warming in air and soil temperature
-    real    :: CO2treat   = 0.        ! CO2 treatmant, up to CO2treat, not add to Ca. CO2
-    real    :: N_fert     = 0.        ! 5.6 ! (11.2 gN m-2 yr-1, in spring, Duke Forest FACE)
+    real :: Ttreat     = 0.        ! Temperature treatment, warming in air and soil temperature
+    real :: CO2treat   = 0.        ! CO2 treatmant, up to CO2treat, not add to Ca. CO2
+    real :: N_fert     = 0.        ! 5.6 ! (11.2 gN m-2 yr-1, in spring, Duke Forest FACE)
 
     ! parameters for spin-up
     integer :: nloops                 ! the times of cycling the forcing to reach ss
-    
-    ! variables for outputs
-    integer nday4out, idayOfnyear, i_record, record_yr(10000), j   ! some variables for cycles
-    real Simu_dailyflux14(14,1500000)                              ! output variables (Jian: need to modify according to CMIP6 for SPURCE-MIP) 
-    real Simu_dailyflux14_2023(28,1500000)                         ! Jian: Just used for testing Matrix-MIP
-    
 
-
-    ! parameters for running the loops
-    ! ! parameters for cycle
+    ! special parameters from reading file
+    type spec_data_type
+        real :: lat
+        real :: lon
+        real :: wsmax
+        real :: wsmin
+        real :: LAIMAX
+        real :: LAIMIN
+        real :: SLAx
+        real :: rdepth
+        real :: Rootmax
+        real :: Stemmax
+        real :: SapR
+        real :: SapS
+        real :: GLmax
+        real :: GRmax
+        real :: Gsmax
+        real :: stom_n
+        real :: a1
+        real :: Ds0
+        real :: Vcmax0            ! Jian: Vcmax0 and Vcmx0 is same? Vcmax0 is Vcmx0 in consts
+        real :: extkU
+        real :: xfang
+        real :: alpha               
+        real :: Tau_Leaf
+        real :: Tau_Wood
+        real :: Tau_Root          ! turnover rate of plant carbon pools : leaf, wood, root  
+        real :: Tau_F
+        real :: Tau_C             ! turnover rate of litter carbon pools: fine, coarse 
+        real :: Tau_Micro
+        real :: Tau_slowSOM
+        real :: Tau_Passive       ! turnover rate of soil carbon pools  : fast, slow, passive 
+        real :: gddonset
+        real :: Q10
+        real :: Q10rh             ! Q10rh modified from Ma et al.,2023 for aclimate study, change in transfer module of Q10h
+        real :: Rl0
+        real :: Rs0
+        real :: Rr0
+        ! added for parameters in methane module   
+        real :: r_me
+        real :: Q10pro
+        real :: kCH4
+        real :: Omax
+        real :: CH4_thre
+        real :: Tveg
+        real :: Tpro_me
+        real :: Toxi
+        ! add based on Ma et al., 2022
+        real :: f
+        real :: bubprob
+        real :: Vmaxfraction  
+        ! add based on Ma et al., 2023
+        real :: JV
+        real :: Entrpy
+        real :: etaL
+        real :: etaW
+        real :: etaR  ! etaL and etaR are not used.
+        real :: f_F2M
+        real :: f_C2M
+        real :: f_C2S
+        real :: f_M2S
+        real :: f_M2P
+        real :: f_S2P
+        real :: f_S2M
+        real :: f_P2M
+    end type spec_data_type
     
-    real    radsol, wind, co2ca, par, rain, RH
-    real    tair, Dair, eairP, TairK, Tsoil                        ! Jian: not sure different between Dair and eairP. eairP means air water vapour pressure 
-
     ! parameters for forcing data -------------------------------------
     integer iforcing, nforcing, nHours, nDays, nMonths, nYears                                     ! for cycle
-    integer, parameter :: nterms = 13, max_nlines=1500000           ! year doy hour Tair Tsoil RH VPD Rain WS PAR CO2
-    real,DIMENSION(:), ALLOCATABLE :: snow_in
-    type ForcingType
-        INTEGER, dimension (:), allocatable :: year
-        INTEGER, dimension (:), allocatable :: doy
-        INTEGER, dimension (:), allocatable :: hour
-        real,    dimension (:), allocatable :: Tair
-        real,    dimension (:), allocatable :: Tsoil
-        real,    dimension (:), allocatable :: RH                   ! Jian: RH seems confused in forcing and soil respiration
-        real,    dimension (:), allocatable :: VPD
-        real,    dimension (:), allocatable :: Rain
-        real,    dimension (:), allocatable :: WS
-        real,    dimension (:), allocatable :: PAR
-        real,    dimension (:), allocatable :: CO2
-        real,    dimension (:), allocatable :: PBOT                 ! unit patm Pa dynamic atmosphere pressure
-        real,    dimension (:), allocatable :: Ndep
-    end type ForcingType
-    type(ForcingType) :: forcing 
+    ! integer, parameter :: nterms = 13, max_nlines=1500000           ! year doy hour Tair Tsoil RH VPD Rain WS PAR CO2
+    
+    type forcing_data_type
+        INTEGER :: year
+        INTEGER :: doy
+        INTEGER :: hour
+        real    :: Tair
+        real    :: Tsoil
+        real    :: RH                   ! Jian: RH seems confused in forcing and soil respiration
+        real    :: VPD
+        real    :: Rain
+        real    :: WS
+        real    :: PAR
+        real    :: CO2
+        real    :: PBOT                 ! unit patm Pa dynamic atmosphere pressure
+        real    :: Ndep
+    end type forcing_data_type
 
-
-    ! site-based parameters: read parameter from parameter files ---------------------------------
-    real lat, longi
-    real wsmax, wsmin
-    real LAIMAX, LAIMIN, SLA
-    real rdepth
-    real Rootmax, Stemmax
-    real SapR, SapS
-    real GLmax, GRmax, Gsmax
-    real stom_n
-    real a1
-    real Ds0
-    real Vcmax0                                             ! Jian: Vcmax0 and Vcmx0 is same? Vcmax0 is Vcmx0 in consts
-    real extkU
-    real xfang
-    real alpha               
-    real Tau_Leaf, Tau_Wood, Tau_Root                       ! turnover rate of plant carbon pools : leaf, wood, root  
-    real Tau_F,Tau_C                                        ! turnover rate of litter carbon pools: fine, coarse 
-    real Tau_Micro, Tau_slowSOM,Tau_Passive                 ! turnover rate of soil carbon pools  : fast, slow, passive 
-    real gddonset
-    real Q10, Q10rh                                         ! Q10rh modified from Ma et al.,2023 for aclimate study, change in transfer module of Q10h
-    real Rl0, Rs0, Rr0
-    ! added for parameters in methane module   
-    real r_me
-    real Q10pro
-    real kCH4
-    real Omax
-    real CH4_thre
-    real Tveg
-    real Tpro_me
-    real Toxi
-    ! add based on Ma et al., 2022
-    real f, bubprob, Vmaxfraction
-    ! add based on Ma et al., 2023
-    real JV, Entrpy
-    real etaL,etaW,etaR  ! etaL and etaR are not used.
-    real f_F2M,f_C2M,f_C2S,f_M2S,f_M2P,f_S2P,f_S2M,f_P2M
-    ! end of read parameters --------------------------------
-    real, parameter:: times_storage_use=3*720.   ! 720 hours, 30 days
-
-    ! contant parameters------------------------------------
-    ! Sps is not assigned previous, something is wrong. -JJJJJJJJJJJJJJJJJJJJJ
-    real :: Sps = 1.                                    ! scaling factors for growth, Jian: using in vegetation module. set it to 1
-    integer, parameter :: nlayers=10                                ! how many
-    ! Jian: like the consts module in old version TECO
-    real :: pi      = 3.1415926
+    ! constant parameters
+    ! Sps is not assigned previous, something is wrong. -JJ
+    real :: Sps = 1.                                ! scaling factors for growth, Jian: using in vegetation module. set it to 1
+    integer, parameter :: nlayers = 10                ! how many
+    real,    parameter :: pi      = 3.1415926
     ! physical constants
-    real :: tauL(3) = (/0.1, 0.425, 0.00/)          ! leaf transmittance for vis, for NIR, for thermal
-    real :: rhoL(3) = (/0.1, 0.425, 0.00/)          ! leaf reflectance for vis, for NIR, for thermal
-    real :: rhoS(3) = (/0.1, 0.3,   0.00/)          ! soil reflectance for vis, for NIR, for thermal
-    real :: emleaf  = 0.96
-    real :: emsoil  = 0.94
-    real :: Rconst  = 8.314                         ! universal gas constant (J/mol)
-    real :: sigma   = 5.67e-8                       ! Steffan Boltzman constant (W/m2/K4)
-    real :: cpair   = 1010.                         ! heat capapcity of air (J/kg/K)
-    real :: Patm    = 101325. !1.e5                 ! atmospheric pressure  (Pa)
-    real :: Trefk   = 293.2                         ! reference temp K for Kc, Ko, Rd
-    real :: H2OLv0  = 2.501e6                       ! latent heat H2O (J/kg)
-    real :: AirMa   = 29.e-3                        ! mol mass air (kg/mol)
-    real :: H2OMw   = 18.e-3                        ! mol mass H2O (kg/mol)
-    real :: chi     = 0.93                          ! gbH/gbw
-    real :: Dheat   = 21.5e-6                       ! molecular diffusivity for heat
+    real,    parameter :: tauL(3) = (/0.1, 0.425, 0.00/)          ! leaf transmittance for vis, for NIR, for thermal
+    real,    parameter :: rhoL(3) = (/0.1, 0.425, 0.00/)          ! leaf reflectance for vis, for NIR, for thermal
+    real,    parameter :: rhoS(3) = (/0.1, 0.3,   0.00/)          ! soil reflectance for vis, for NIR, for thermal
+    real,    parameter :: emleaf  = 0.96
+    real,    parameter :: emsoil  = 0.94
+    real,    parameter :: Rconst  = 8.314                         ! universal gas constant (J/mol)
+    real,    parameter :: sigma   = 5.67e-8                       ! Steffan Boltzman constant (W/m2/K4)
+    real,    parameter :: cpair   = 1010.                         ! heat capapcity of air (J/kg/K)
+    real,    parameter :: Patm    = 101325. !1.e5                 ! atmospheric pressure  (Pa)
+    real,    parameter :: Trefk   = 293.2                         ! reference temp K for Kc, Ko, Rd
+    real,    parameter :: H2OLv0  = 2.501e6                       ! latent heat H2O (J/kg)
+    real,    parameter :: AirMa   = 29.e-3                        ! mol mass air (kg/mol)
+    real,    parameter :: H2OMw   = 18.e-3                        ! mol mass H2O (kg/mol)
+    real,    parameter :: chi     = 0.93                          ! gbH/gbw
+    real,    parameter :: Dheat   = 21.5e-6                       ! molecular diffusivity for heat
     ! plant parameters
-    real :: gsw0    = 1.0e-2                        ! g0 for H2O in BWB model
-    real    eJmx0   != Vcmax0*2.7                   ! @20C Leuning 1996 from Wullschleger (1993)
-    real :: theta   = 0.9
-    real :: wleaf   = 0.01                          ! leaf width (m)
+    real,    parameter :: gsw0    = 1.0e-2                        ! g0 for H2O in BWB model
+    real,    parameter :: theta   = 0.9
+    real,    parameter :: wleaf   = 0.01                          ! leaf width (m)
     ! thermodynamic parameters for Kc and Ko (Leuning 1990)
-    real :: conKc0  = 302.e-6                       ! mol mol^-1
-    real :: conKo0  = 256.e-3                       ! mol mol^-1
-    real :: Ekc     = 59430.                        ! J mol^-1
-    real :: Eko     = 36000.                        ! J mol^-1
+    real,    parameter :: conKc0  = 302.e-6                       ! mol mol^-1
+    real,    parameter :: conKo0  = 256.e-3                       ! mol mol^-1
+    real,    parameter :: Ekc     = 59430.                        ! J mol^-1
+    real,    parameter :: Eko     = 36000.                        ! J mol^-1
     ! Erd = 53000.                                  ! J mol^-1
-    real :: o2ci    = 210.e-3                       ! mol mol^-1
+    real,    parameter :: o2ci    = 210.e-3                       ! mol mol^-1
     ! thermodynamic parameters for Vcmax & Jmax (Eq 9, Harley et al, 1992; #1392)
-    real :: Eavm    = 116300.                       ! J/mol  (activation energy)
-    real :: Edvm    = 202900.                       ! J/mol  (deactivation energy)
-    real :: Eajm    = 79500.                        ! J/mol  (activation energy) 
-    real :: Edjm    = 201000.                       ! J/mol  (deactivation energy)
+    real,    parameter :: Eavm    = 116300.                       ! J/mol  (activation energy)
+    real,    parameter :: Edvm    = 202900.                       ! J/mol  (deactivation energy)
+    real,    parameter :: Eajm    = 79500.                        ! J/mol  (activation energy) 
+    real,    parameter :: Edjm    = 201000.                       ! J/mol  (deactivation energy)
     ! real :: Entrpy  = 650.                          ! J/mol/K (entropy term, for Jmax & Vcmax)
     ! parameters for temperature dependence of gamma* (revised from von Caemmerer et al 1993)
-    real :: gam0    = 28.0e-6                       ! mol mol^-1 @ 20C = 36.9 @ 25C
-    real :: gam1    = .0509
-    real :: gam2    = .0010
+    real,    parameter :: gam0    = 28.0e-6                       ! mol mol^-1 @ 20C = 36.9 @ 25C
+    real,    parameter :: gam1    = .0509
+    real,    parameter :: gam2    = .0010
+    real,    parameter :: times_storage_use=3*720.   ! 720 hours, 30 days
     ! end of consts parameters -------------------------------------------------------------------
 
-    ! initialize parameters ----------------------------------------------------------------------
+    ! summary of outputs
+    type output_vars_type
+        ! carbon fluxes (Kg C m-2 s-1)
+        real, pointer :: gpp(:)
+        real, pointer :: nee(:)
+        real, pointer :: npp(:)
+        real, pointer :: nppLeaf(:)
+        real, pointer :: nppWood(:)
+        real, pointer :: nppStem(:)
+        real, pointer :: nppRoot(:)
+        real, pointer :: nppOther(:)           ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
+        real, pointer :: ra(:)
+        real, pointer :: raLeaf(:)
+        real, pointer :: raStem(:)
+        real, pointer :: raRoot(:)
+        real, pointer :: raOther(:)
+        real, pointer :: rMaint(:)
+        real, pointer :: rGrowth(:)            ! maintenance respiration and growth respiration
+        real, pointer :: rh(:)
+        real, pointer :: nbp(:)                ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
+        real, pointer :: wetlandCH4(:)
+        real, pointer :: wetlandCH4prod(:)
+        real, pointer :: wetlandCH4cons(:)     ! wetland net fluxes of CH4, CH4 production, CH4 consumption
+        ! Carbon Pools  (KgC m-2)
+        real, pointer :: cLeaf(:)
+        real, pointer :: cStem(:)
+        real, pointer :: cRoot(:)
+        real, pointer :: cOther(:)              ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
+        real, pointer :: cLitter(:)
+        real, pointer :: cLitterCwd(:)          ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
+        real, pointer :: cSoil(:)
+        real, pointer :: cSoilLevels(:, :)
+        real, pointer :: cSoilFast(:)
+        real, pointer :: cSoilSlow(:)
+        real, pointer :: cSoilPassive(:)           ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
+        real, pointer :: cCH4(:, :)          ! methane concentration
+        ! Nitrogen fluxes (kgN m-2 s-1)
+        real, pointer :: fBNF(:)
+        real, pointer :: fN2O(:)
+        real, pointer :: fNloss(:)
+        real, pointer :: fNnetmin(:)
+        real, pointer :: fNdep(:)                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
+        ! Nitrogen pools (kgN m-2)
+        real, pointer :: nLeaf(:)
+        real, pointer :: nStem(:)
+        real, pointer :: nRoot(:)
+        real, pointer :: nOther(:)
+        real, pointer :: nLitter(:)
+        real, pointer :: nLitterCwd(:)
+        real, pointer :: nSoil(:)
+        real, pointer :: nMineral(:)                ! nMineral: Mineral nitrogen pool
+        ! energy fluxes (W m-2)
+        real, pointer :: hfls(:)
+        real, pointer :: hfss(:)
+        real, pointer :: SWnet(:)
+        real, pointer :: LWnet(:)                   ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
+        ! water fluxes (kg m-2 s-1)
+        real, pointer :: ec(:)
+        real, pointer :: tran(:)
+        real, pointer :: es(:)                      ! Canopy evaporation; Canopy transpiration; Soil evaporation
+        real, pointer :: hfsbl(:)                   ! Snow sublimation
+        real, pointer :: mrro(:)
+        real, pointer :: mrros(:)
+        real, pointer :: mrrob(:)                   ! Total runoff; Surface runoff; Subsurface runoff
+        ! other
+        real, pointer :: mrso(:, :)           ! Kg m-2, soil moisture in each soil layer
+        real, pointer :: tsl(:, :)            ! K, soil temperature in each soil layer
+        real, pointer :: tsland(:)                  ! K, surface temperature
+        real, pointer :: wtd(:)                     ! m, Water table depth
+        real, pointer :: snd(:)                     ! m, Total snow depth
+        real, pointer :: lai(:)                     ! m2 m-2, Leaf area index            
+    end type output_vars_type
+    
+    type(output_vars_type) :: outVars_h   ! hourly outputs
+    type(output_vars_type) :: outVars_d   ! daily outputs
+    type(output_vars_type) :: outVars_m   ! monthly outputs
+    type(output_vars_type) :: outVars_y   ! yearly outputs
+    type(output_vars_type) :: outVars_spinup ! for spinup yearly results
+
+    ! physical
+    real    :: raero                                   ! aerodynamic resistance
+    real    :: Rsoilab1, Rsoilab2, Rsoilab3, Rsoilabs  ! calculate in xlayer and used in soil module, QLsoil and Rsoilab3, Rsoilabs seem be calculated both xlayers and soil T dynamic?
+    real    :: QLair, QLleaf, QLsoil
+    real    :: rhocp, H2OLv, slope, psyc, Cmolar, fw1  ! thermodynamic parameters for air. Maybe calculate in module (veg and soil)?
+    real    :: Rsoil, rLAI
+    real    :: Hsoil, Hcanop                           ! Sensible heat flux; Hcanop seems not used?
+    real    :: Esoil
+    real    :: tsoil_layer(11)                         ! not sure why 11 layers?
+    real    :: sftmp, Tsnow, Twater, Tice
+    real    :: Tsoill(10)
+    ! vegetation
+    ! photosynsis
+    real :: eJmx0   != Vcmax0*2.7                   ! @20C Leuning 1996 from Wullschleger (1993)
+    real :: Vcmx0    
     ! phonology related parameters
-    integer pheno
-    real    GDD5
-    integer onset                                       !flag of phenological stage
-    integer phenoset
-    ! ! vegetation states and flux
-    real GPP, NPP, NEE, NEP 
-    real NPP_L,NPP_W,NPP_R
-    real Rhetero                                         ! total heterotrophic respiration
-    real Vcmx0                      
-    real NSCmin, fnsc, nsc, NSCmax                      ! none structural carbon pool
-    real store, add 
-    real L_fall,alpha_L,alpha_W,alpha_R                 ! allocation ratio to Leaf, stem, and Root                      
-    real flait, raero                                   ! Jian: from vegetable to Tsoil_simu
-    real RmLeaf,RmStem,RmRoot                           ! maintanence respiration
-    real RgLeaf,RgStem,RgRoot                           ! growth respiration 
-    real Rgrowth,Rnitrogen,Rmain,Rauto                  ! respirations
-    real StemSap,RootSap                     
-    ! soil processes related variables
-    real Rsoilab1, Rsoilab2                             ! calculate in xlayer and used in soil module, QLsoil and Rsoilab3, Rsoilabs seem be calculated both xlayers and soil T dynamic?
-    real QLair, QLleaf, QLsoil, Rsoilab3, Rsoilabs      
-    real rhocp, H2OLv, slope, psyc, Cmolar, fw1, Rsoil, rLAI, Hsoil ! seem both in xlayer and soil T dynamic
-    real snow_depth, snow_depth_e, snow_dsim
-    real,dimension(10):: thksl,wcl,FRLEN   ! wsc is the output from soil water module
-    real runoff, wsc(10)
-    real Rh_pools(5)
-    real sublim                             ! snow sublimation
-    real tsoil_layer(11)
-    real depth(nlayers)
-    ! water or energy?
-    real Hcanop
+    integer :: pheno
+    real    :: GDD5
+    integer :: onset                                       !flag of phenological stage
+    integer :: phenoset
+    ! NSC relative
+    real    :: NSCmin, fnsc, nsc, NSCmax 
+    real    :: store, add
+    real    :: stor_use, storage, accumulation
+    ! Growth
+    real    :: L_fall                             ! leaf fall
+    real    :: alpha_L, alpha_W, alpha_R          ! allocation fraction to Leaf, stem, and Root             
+    real    :: flait                              ! Jian: LAI relavant variable from vegetable to energy
+    real    :: StemSap, RootSap
+    real    :: LAI
+    real    :: bmroot, bmstem, bmleaf, bmplant
+    ! vegetation flux
+    real    :: GPP
+    real    :: NPP, NPP_L, NPP_W, NPP_R
+    real    :: Rauto
+    real    :: Rmain,   RmLeaf, RmStem, RmRoot    ! maintanence respiration
+    real    :: Rgrowth, RgLeaf, RgStem, RgRoot    ! growth respiration
+    ! water cycle
+    real :: evap, transp, ET, G
+
+    ! soil carbon flux
+    real :: Rhetero, Rh_pools(5)              ! heterotrophic respiration
+    ! soil water
+    real :: thksl(10), depth(nlayers)
+    real :: wcl(10),   wsc(10)    ! wsc is the output from soil water module
+    real :: FRLEN(10) 
+    real :: runoff 
+    real :: ice_tw, water_tw 
+    real :: ice(10), liq_water(10) 
+    real :: zwt, phi, Sw
+    real :: WILTPT,FILDCP,infilt
+    ! snow process
+    real :: snow_depth, snow_depth_e, snow_dsim
+    real :: sublim                                 ! snow sublimation
+    real :: melt, dcount, dcount_soil
+    real :: shcap_snow, condu_snow
+    real :: albedo_snow, resht, thd_snow_depth, b_bound
+    ! ecosystem flux
+    real :: NEE, NEP
+    ! pool state
+    real :: QC(8), OutC(8), testout(11)  !  leaf,wood,root,fine lit.,coarse lit.,Micr,Slow,Pass
+    real :: TauC(8)
+
+    ! Nitrogen
+    real   :: SNvcmax,SNgrowth,SNRauto,SNrs            ! nitrogen relavent scalars
+    real   :: Rnitrogen       ! respiration
+    real   :: N_uptake, N_fixation, N_deposit
+    real   :: N_loss,   N_leach, N_vol
+    real   :: fNnetmin, N_transfer
+    real   :: N_leaf, N_wood, N_root
+    real   :: N_LF, N_WF, N_RF
+    real   :: QNplant, QNminer
+    real   :: QN(8), CN0(8),  CN(8), OutN(8)
+    real   :: N_miner, alphaN
+    real   :: NSN, N_deficit
+    
     ! methane
-    real ProCH4(nlayers), Pro_sum
-    real OxiCH4(nlayers), Oxi_sum       !CH4 oxidation
-    ! real Fdifu(nlayers+1)
-    real Fdifu(nlayers)                 ! modified based on Ma et al.,2022
-    real Ebu_sum,Pla_sum,simuCH4
-    real CH4(nlayers),CH4_V(nlayers),CH4V_d(nlayers) 
-    ! add based on Ma et al., 2022
-    real Vp(nlayers),pwater(nlayers),presP(nlayers),methanebP(nlayers),methaneP(nlayers),Rgas
-    real bubble_methane_tot, Nbub
-    ! methene module add based on Ma et al.2022
-    real dpatm ! used only in methane ebullition
-    real Ebu_sum_unsat,Ebu_sum_sat
-    ! real rh_layert
-    ! transfer C
-    real QC(8),OutC(8),testout(11)  !  leaf,wood,root,fine lit.,coarse lit.,Micr,Slow,Pass
-    real QN(8),CN0(8),CN(8),OutN(8),QNplant,QNminer
-    real N_uptake,N_leach,N_vol,N_fixation,N_deposit,N_loss,fNnetmin,N_transfer
-    real N_leaf,N_wood,N_root
-    real N_LF,N_WF,N_RF
+    real :: ProCH4(nlayers), Pro_sum
+    real :: OxiCH4(nlayers), Oxi_sum                    ! CH4 oxidation
+    real :: Fdifu(nlayers)                              ! modified based on Ma et al.,2022
+    real :: Vp(nlayers), pwater(nlayers),presP(nlayers) ! add based on Ma et al., 2022
+    real :: methanebP(nlayers), methaneP(nlayers)
+    real :: Rgas
+    real :: bubble_methane_tot, Nbub
+    real :: dpatm                          ! used only in methane ebullition
+    real :: Ebu_sum_unsat,Ebu_sum_sat
+    real :: CH4(nlayers), CH4_V(nlayers), CH4V_d(nlayers)
+    real :: simuCH4, Ebu_sum, Pla_sum
     
-    
-    real sftmp,Tsnow,Twater,Tice,ice_tw,water_tw 
-    ! variables for canopy model
-    real evap,transp,ET,G
-    real Esoil,Hcrop,ecstot,Anet,DEPH2O,Acanop
-    real zwt_d,melt,dcount,dcount_soil
-    real,dimension(10):: Tsoill,ice,liq_water
-    real zwt,phi
-    real Sw
-    
-    real tau_L,tau_W,tau_R,tau_Micr,tau_Slow,tau_Pass
-    real TauC(8)
-    real SLAx
-    ! real GLmx,Gsmx,GRmx
     ! for soil conditions
-    real WILTPT,FILDCP,infilt
-    real stor_use, storage, accumulation
-    real SNvcmax,SNgrowth,SNRauto,SNrs
-    real LAI,bmroot,bmstem,bmleaf,bmplant,totlivbiom,ht
-    
-    real N_miner,alphaN
-    real NSN, N_deficit
     
 
-    real shcap_snow,condu_snow,albedo_snow,resht,thd_snow_depth,b_bound
+
+    
     ! .. int from soil thermal module
     real diff_snow,diff_s,condu_b
     real depth_ex 
@@ -244,413 +351,15 @@ module mod_data
     real fa,fsub,rho_snow,decay_m   
     real fwsoil,topfws,omega 
 
-    
-
-    ! -------------------------------------
-    
-    ! summary for output or balance calculation variable
-    ! hourly: in order to avoid the mistake for hourly or half hour simulation, we define new variable for hourly outputs
-    ! -------------------------------------------------------------------------------------------------------------------
-    ! carbon fluxes (Kg C m-2 s-1)
-    real gpp_h, nee_h
-    real npp_h, nppLeaf_h, nppWood_h, nppStem_h, nppRoot_h, nppOther_h   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-    real ra_h,  raLeaf_h,  raStem_h,  raRoot_h,  raOther_h
-    real rMaint_h, rGrowth_h                                             ! maintenance respiration and growth respiration
-    real rh_h,  nbp_h                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-    real wetlandCH4_h, wetlandCH4prod_h, wetlandCH4cons_h                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-    ! Carbon Pools  (KgC m-2)
-    real cLeaf_h, cStem_h, cRoot_h, cOther_h                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-    real cLitter_h, cLitterCwd_h                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-    real cSoil_h, cSoilLevels_h(nlayers), cSoilFast_h,cSoilSlow_h,cSoilPassive_h                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-    real cCH4_h(nlayers)                                                          ! methane concentration
-    ! Nitrogen fluxes (kgN m-2 s-1)
-    real fBNF_h, fN2O_h, fNloss_h, fNnetmin_h, fNdep_h                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-    ! Nitrogen pools (kgN m-2)
-    real nLeaf_h, nStem_h, nRoot_h, nOther_h
-    real nLitter_h, nLitterCwd_h, nSoil_h, nMineral_h                    ! nMineral: Mineral nitrogen pool
-    ! energy fluxes (W m-2)
-    real hfls_h, hfss_h, SWnet_h, LWnet_h                                ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-    ! water fluxes (kg m-2 s-1)
-    real ec_h, tran_h, es_h                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-    real hfsbl_h                                                         ! Snow sublimation
-    real mrro_h, mrros_h, mrrob_h                                        ! Total runoff; Surface runoff; Subsurface runoff
-    ! other
-    real mrso_h(nlayers)                                                   ! Kg m-2, soil moisture in each soil layer
-    real tsl_h(nlayers)                                                    ! K, soil temperature in each soil layer
-    real tsland_h                                                          ! K, surface temperature
-    real wtd_h                                                             ! m, Water table depth
-    real snd_h                                                             ! m, Total snow depth
-    real lai_h                                                             ! m2 m-2, Leaf area index
-
-    ! daily: some daily variables in old TECO need be saved or not? 
-    real soilt_d_simu(11),soilt_d_obs(7),ice_d_simu(10)
-    real simuCH4_d, Pro_sum_d, Oxi_sum_d, Fdifu1_d, Ebu_sum_d, Pla_sum_d
-    real gpp_ra,NEP_d, NEE_d
-    real evap_d,transp_d, Hcanop_d
-    real ta, Ts, omega_d
-    real LE_d, RaL, RaS, RaR
-    real N_up_d, N_fix_d, N_dep_d, N_leach_d, N_vol_d
-    real PAR_d, VPD_d, RECO_d, RLEAV_d, RWOOD_d, RROOT_d
-    real GL_d, GW_d, GR_d, LFALL_d, NUP_d, NVOL_d, NLEACH_d
-    real NMIN_d, N_LG_d, N_WG_d, N_RG_d, N_LF_d
-    real N_WF_d, N_RF_d, WFALL_d, RFALL_d
-    real runoff_d
-    real Rsoil_d, ET_d
-    real gpp_d_old, npp_d_old, ra_d_old, rh_d_old
-    ! ---------------------------------------------------------------------
-    ! carbon fluxes (Kg C m-2 s-1)
-    real gpp_d
-    real npp_d, nppLeaf_d, nppWood_d, nppStem_d, nppRoot_d, nppOther_d   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-    real ra_d,  raLeaf_d,  raStem_d,  raRoot_d,  raOther_d
-    real rMaint_d, rGrowth_d                                             ! maintenance respiration and growth respiration
-    real rh_d,  nbp_d                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-    real wetlandCH4_d, wetlandCH4prod_d, wetlandCH4cons_d                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-    ! Carbon Pools  (KgC m-2)
-    real cLeaf_d, cStem_d, cRoot_d, cOther_d                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-    real cLitter_d, cLitterCwd_d                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-    real cSoil_d, cSoilLevels_d(nlayers), cSoilFast_d,cSoilSlow_d,cSoilPassive_d                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-    real cCH4_d(nlayers)                                                          ! methane concentration
-    ! Nitrogen fluxes (kgN m-2 s-1)
-    real fBNF_d, fN2O_d, fNloss_d, fNnetmin_d, fNdep_d                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-    ! Nitrogen pools (kgN m-2)
-    real nLeaf_d, nStem_d, nRoot_d, nOther_d
-    real nLitter_d, nLitterCwd_d, nSoil_d, nMineral_d                    ! nMineral: Mineral nitrogen pool
-    ! energy fluxes (W m-2)
-    real hfls_d, hfss_d, SWnet_d, LWnet_d                                ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-    ! water fluxes (kg m-2 s-1)
-    real ec_d, tran_d, es_d                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-    real hfsbl_d                                                         ! Snow sublimation
-    real mrro_d, mrros_d, mrrob_d                                        ! Total runoff; Surface runoff; Subsurface runoff
-    ! other
-    real mrso_d(nlayers)                                                   ! Kg m-2, soil moisture in each soil layer
-    real tsl_d(nlayers)                                                    ! K, soil temperature in each soil layer
-    real tsland_d                                                          ! K, surface temperature
-    real wtd_d                                                             ! m, Water table depth
-    real snd_d                                                             ! m, Total snow depth
-    real lai_d                                                             ! m2 m-2, Leaf area index
-
-
-    ! monthly
-    ! carbon fluxes (Kg C m-2 s-1)
-    real gpp_m
-    real npp_m, nppLeaf_m, nppWood_m, nppStem_m, nppRoot_m, nppOther_m   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-    real ra_m,  raLeaf_m,  raStem_m,  raRoot_m,  raOther_m
-    real rMaint_m, rGrowth_m                                             ! maintenance respiration and growth respiration
-    real rh_m,  nbp_m                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-    real wetlandCH4_m, wetlandCH4prod_m, wetlandCH4cons_m                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-    ! Carbon Pools  (KgC m-2)
-    real cLeaf_m, cStem_m, cRoot_m, cOther_m                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-    real cLitter_m, cLitterCwd_m                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-    real cSoil_m, cSoilLevels_m(nlayers), cSoilFast_m,cSoilSlow_m,cSoilPassive_m                           ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-    real cCH4_m(nlayers)                                                          ! methane concentration
-    ! Nitrogen fluxes (kgN m-2 s-1)
-    real fBNF_m, fN2O_m, fNloss_m, fNnetmin_m, fNdep_m                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-    ! Nitrogen pools (kgN m-2)
-    real nLeaf_m, nStem_m, nRoot_m, nOther_m
-    real nLitter_m, nLitterCwd_m, nSoil_m, nMineral_m                    ! nMineral: Mineral nitrogen pool
-    ! energy fluxes (W m-2)
-    real hfls_m, hfss_m, SWnet_m, LWnet_m                                ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-    ! water fluxes (kg m-2 s-1)
-    real ec_m, tran_m, es_m                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-    real hfsbl_m                                                         ! Snow sublimation
-    real mrro_m, mrros_m, mrrob_m                                        ! Total runoff; Surface runoff; Subsurface runoff
-    ! other
-    real mrso_m(nlayers)                                                   ! Kg m-2, soil moisture in each soil layer
-    real tsl_m(nlayers)                                                    ! K, soil temperature in each soil layer
-    real tsland_m                                                          ! K, surface temperature
-    real wtd_m                                                             ! m, Water table depth
-    real snd_m                                                             ! m, Total snow depth
-    real lai_m                                                             ! m2 m-2, Leaf area index
-
-
-    ! yearly
-    real fwsoil_yr,omega_yr,topfws_yr,diff_yr,diff_d
-    real gpp_yr,NPP_yr,NEE_yr,Rh_yr
-    real Rh4_yr,Rh5_yr,Rh6_yr,Rh7_yr,Rh8_yr,Ra_yr
-    real R_Ntr_yr
-    real GL_yr,GR_yr,GW_yr
-    real Pool1,Pool2,Pool3,Pool4,Pool5,Pool6,Pool7,Pool8
-    real out1_yr,out2_yr,out3_yr,out4_yr,out5_yr,out6_yr,out7_yr,out8_yr
-    real runoff_yr,rain_d,rain_yr
-    real evap_yr,transp_yr
-    real N_up_yr,N_fix_yr,N_dep_yr,N_leach_yr,N_vol_yr
-    ! -------------------------------------------------------------------------
-    ! carbon fluxes (Kg C m-2 s-1)
-    real gpp_y
-    real npp_y, nppLeaf_y, nppWood_y, nppStem_y, nppRoot_y, nppOther_y   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-    real ra_y,  raLeaf_y,  raStem_y,  raRoot_y,  raOther_y
-    real rMaint_y, rGrowth_y                                             ! maintenance respiration and growth respiration
-    real rh_y,  nbp_y                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-    real wetlandCH4_y, wetlandCH4prod_y, wetlandCH4cons_y                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-    ! Carbon Pools  (KgC m-2)
-    real cLeaf_y, cStem_y, cRoot_y, cOther_y                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-    real cLitter_y, cLitterCwd_y                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-    real cSoil_y, cSoilLevels_y(nlayers), cSoilFast_y,cSoilSlow_y,cSoilPassive_y                           ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-    real cCH4_y(nlayers)                                                          ! methane concentration
-    ! Nitrogen fluxes (kgN m-2 s-1)
-    real fBNF_y, fN2O_y, fNloss_y, fNnetmin_y, fNdep_y                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-    ! Nitrogen pools (kgN m-2)
-    real nLeaf_y, nStem_y, nRoot_y, nOther_y
-    real nLitter_y, nLitterCwd_y, nSoil_y, nMineral_y                    ! nMineral: Mineral nitrogen pool
-    ! energy fluxes (W m-2)
-    real hfls_y, hfss_y, SWnet_y, LWnet_y                                ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-    ! water fluxes (kg m-2 s-1)
-    real ec_y, tran_y, es_y                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-    real hfsbl_y                                                         ! Snow sublimation
-    real mrro_y, mrros_y, mrrob_y                                        ! Total runoff; Surface runoff; Subsurface runoff
-    ! other
-    real mrso_y(nlayers)                                                   ! Kg m-2, soil moisture in each soil layer
-    real tsl_y(nlayers)                                                    ! K, soil temperature in each soil layer
-    real tsland_y                                                          ! K, surface temperature
-    real wtd_y                                                             ! m, Water table depth
-    real snd_y                                                             ! m, Total snow depth
-    real lai_y                                                             ! m2 m-2, Leaf area index
 
     ! matrix variables
     real mat_B(8,1), mat_A(8,8), mat_e(8,8), mat_k(8,8), mat_x(8,1), mat_Rh, mat_Rh_d ! for matrix
     
-    ! hourly
-    ! carbon fluxes (Kg C m-2 s-1)
-    real, dimension (:), allocatable :: all_gpp_h
-    real, dimension (:), allocatable :: all_npp_h
-    real, dimension (:), allocatable :: all_nppLeaf_h
-    real, dimension (:), allocatable :: all_nppWood_h 
-    real, dimension (:), allocatable :: all_nppStem_h
-    real, dimension (:), allocatable :: all_nppRoot_h
-    real, dimension (:), allocatable :: all_nppOther_h                  ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-    real, dimension (:), allocatable :: all_ra_h
-    real, dimension (:), allocatable :: all_raLeaf_h
-    real, dimension (:), allocatable :: all_raStem_h
-    real, dimension (:), allocatable :: all_raRoot_h
-    real, dimension (:), allocatable :: all_raOther_h
-    real, dimension (:), allocatable :: all_rMaint_h
-    real, dimension (:), allocatable :: all_rGrowth_h                                             ! maintenance respiration and growth respiration
-    real, dimension (:), allocatable :: all_rh_h
-    real, dimension (:), allocatable :: all_nbp_h                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-    real, dimension (:), allocatable :: all_wetlandCH4_h
-    real, dimension (:), allocatable :: all_wetlandCH4prod_h
-    real, dimension (:), allocatable :: all_wetlandCH4cons_h                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-    ! Carbon Pools  (KgC m-2)
-    real, dimension (:), allocatable :: all_cLeaf_h
-    real, dimension (:), allocatable :: all_cStem_h
-    real, dimension (:), allocatable :: all_cRoot_h
-    real, dimension (:), allocatable :: all_cOther_h                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-    real, dimension (:), allocatable :: all_cLitter_h
-    real, dimension (:), allocatable :: all_cLitterCwd_h                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-    real, dimension (:), allocatable :: all_cSoil_h
-    real, dimension (:,:), allocatable :: all_cSoilLevels_h
-    real, dimension (:), allocatable :: all_cSoilFast_h
-    real, dimension (:), allocatable :: all_cSoilSlow_h
-    real, dimension (:), allocatable :: all_cSoilPassive_h                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-    real, dimension (:,:), allocatable :: all_cCH4_h                                                        ! methane concentration
-    ! Nitrogen fluxes (kgN m-2 s-1)
-    real, dimension (:), allocatable :: all_fBNF_h
-    real, dimension (:), allocatable :: all_fN2O_h
-    real, dimension (:), allocatable :: all_fNloss_h
-    real, dimension (:), allocatable :: all_fNnetmin_h
-    real, dimension (:), allocatable :: all_fNdep_h                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-    ! Nitrogen pools (kgN m-2)
-    real, dimension (:), allocatable :: all_nLeaf_h
-    real, dimension (:), allocatable :: all_nStem_h
-    real, dimension (:), allocatable :: all_nRoot_h
-    real, dimension (:), allocatable :: all_nOther_h
-    real, dimension (:), allocatable :: all_nLitter_h
-    real, dimension (:), allocatable :: all_nLitterCwd_h
-    real, dimension (:), allocatable :: all_nSoil_h
-    real, dimension (:), allocatable :: all_nMineral_h                    ! nMineral: Mineral nitrogen pool
-    ! energy fluxes (W m-2)
-    real, dimension (:), allocatable :: all_hfls_h
-    real, dimension (:), allocatable :: all_hfss_h
-    real, dimension (:), allocatable :: all_SWnet_h
-    real, dimension (:), allocatable :: all_LWnet_h                               ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-    ! water fluxes (kg m-2 s-1)
-    real, dimension (:), allocatable :: all_ec_h
-    real, dimension (:), allocatable :: all_tran_h
-    real, dimension (:), allocatable :: all_es_h                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-    real, dimension (:), allocatable :: all_hfsbl_h                                                         ! Snow sublimation
-    real, dimension (:), allocatable :: all_mrro_h
-    real, dimension (:), allocatable :: all_mrros_h
-    real, dimension (:), allocatable :: all_mrrob_h                                        ! Total runoff; Surface runoff; Subsurface runoff
-    ! Other
-    real, dimension (:,:), allocatable :: all_mrso_h                                                   ! Kg m-2, soil moisture in each soil layer
-    real, dimension (:,:), allocatable :: all_tsl_h                                                    ! K, soil temperature in each soil layer
-    real, dimension (:), allocatable :: all_tsland_h                                                          ! K, surface temperature
-    real, dimension (:), allocatable :: all_wtd_h                                                             ! m, Water table depth
-    real, dimension (:), allocatable :: all_snd_h                                                             ! m, Total snow depth
-    real, dimension (:), allocatable :: all_lai_h 
-    real, dimension (:), allocatable :: all_gdd5_h   
-    real, dimension (:), allocatable :: all_onset_h                                                         ! m2 m-2, Leaf area index
-    real, dimension (:), allocatable :: all_storage_h 
-    real, dimension (:), allocatable :: all_add_h 
-    real, dimension (:), allocatable :: all_accumulation_h 
-    real, dimension (:,:), allocatable :: all_test_h
-
-    ! daily: 
-    ! ---------------------------------------------------------------------
-    ! carbon fluxes (Kg C m-2 s-1)
-    real, dimension (:), allocatable :: all_gpp_d
-    real, dimension (:), allocatable :: all_npp_d
-    real, dimension (:), allocatable :: all_nppLeaf_d
-    real, dimension (:), allocatable :: all_nppWood_d
-    real, dimension (:), allocatable :: all_nppStem_d
-    real, dimension (:), allocatable :: all_nppRoot_d
-    real, dimension (:), allocatable :: all_nppOther_d   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-    real, dimension (:), allocatable :: all_ra_d
-    real, dimension (:), allocatable :: all_raLeaf_d
-    real, dimension (:), allocatable :: all_raStem_d
-    real, dimension (:), allocatable :: all_raRoot_d
-    real, dimension (:), allocatable :: all_raOther_d
-    real, dimension (:), allocatable :: all_rMaint_d
-    real, dimension (:), allocatable :: all_rGrowth_d                                             ! maintenance respiration and growth respiration
-    real, dimension (:), allocatable :: all_rh_d
-    real, dimension (:), allocatable :: all_nbp_d                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-    real, dimension (:), allocatable :: all_wetlandCH4_d
-    real, dimension (:), allocatable :: all_wetlandCH4prod_d
-    real, dimension (:), allocatable :: all_wetlandCH4cons_d                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-    ! Carbon Pools  (KgC m-2)
-    real, dimension (:), allocatable :: all_cLeaf_d
-    real, dimension (:), allocatable :: all_cStem_d
-    real, dimension (:), allocatable :: all_cRoot_d
-    real, dimension (:), allocatable :: all_cOther_d                            ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-    real, dimension (:), allocatable :: all_cLitter_d
-    real, dimension (:), allocatable :: all_cLitterCwd_d                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-    real, dimension (:), allocatable :: all_cSoil_d
-    real, dimension (:,:), allocatable :: all_cSoilLevels_d
-    real, dimension (:), allocatable :: all_cSoilFast_d
-    real, dimension (:), allocatable :: all_cSoilSlow_d
-    real, dimension (:), allocatable :: all_cSoilPassive_d                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-    real, dimension (:,:), allocatable :: all_cCH4_d                                                         ! methane concentration
-    ! Nitrogen fluxes (kgN m-2 s-1)
-    real, dimension (:), allocatable :: all_fBNF_d
-    real, dimension (:), allocatable :: all_fN2O_d
-    real, dimension (:), allocatable :: all_fNloss_d
-    real, dimension (:), allocatable :: all_fNnetmin_d
-    real, dimension (:), allocatable :: all_fNdep_d                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-    ! Nitrogen pools (kgN m-2)
-    real, dimension (:), allocatable :: all_nLeaf_d
-    real, dimension (:), allocatable :: all_nStem_d
-    real, dimension (:), allocatable :: all_nRoot_d
-    real, dimension (:), allocatable :: all_nOther_d
-    real, dimension (:), allocatable :: all_nLitter_d
-    real, dimension (:), allocatable :: all_nLitterCwd_d
-    real, dimension (:), allocatable :: all_nSoil_d
-    real, dimension (:), allocatable :: all_nMineral_d                    ! nMineral: Mineral nitrogen pool
-    ! energy fluxes (W m-2)
-    real, dimension (:), allocatable :: all_hfls_d
-    real, dimension (:), allocatable :: all_hfss_d
-    real, dimension (:), allocatable :: all_SWnet_d
-    real, dimension (:), allocatable :: all_LWnet_d                               ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-    ! water fluxes (kg m-2 s-1)
-    real, dimension (:), allocatable :: all_ec_d
-    real, dimension (:), allocatable :: all_tran_d
-    real, dimension (:), allocatable :: all_es_d                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-    real, dimension (:), allocatable :: all_hfsbl_d                                                         ! Snow sublimation
-    real, dimension (:), allocatable :: all_mrro_d
-    real, dimension (:), allocatable :: all_mrros_d
-    real, dimension (:), allocatable :: all_mrrob_d                                        ! Total runoff; Surface runoff; Subsurface runoff
-    ! Other
-    real, dimension (:,:), allocatable :: all_mrso_d                                                   ! Kg m-2, soil moisture in each soil layer
-    real, dimension (:,:), allocatable :: all_tsl_d                                                    ! K, soil temperature in each soil layer
-    real, dimension (:), allocatable :: all_tsland_d                                                          ! K, surface temperature
-    real, dimension (:), allocatable :: all_wtd_d                                                             ! m, Water table depth
-    real, dimension (:), allocatable :: all_snd_d                                                             ! m, Total snow depth
-    real, dimension (:), allocatable :: all_lai_d                                                             ! m2 m-2, Leaf area index
-
-    ! monthly
-    ! carbon fluxes (Kg C m-2 s-1)
-    real, dimension (:), allocatable :: all_gpp_m
-    real, dimension (:), allocatable :: all_npp_m
-    real, dimension (:), allocatable :: all_nppLeaf_m
-    real, dimension (:), allocatable :: all_nppWood_m
-    real, dimension (:), allocatable :: all_nppStem_m
-    real, dimension (:), allocatable :: all_nppRoot_m
-    real, dimension (:), allocatable :: all_nppOther_m   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-    real, dimension (:), allocatable :: all_ra_m
-    real, dimension (:), allocatable :: all_raLeaf_m
-    real, dimension (:), allocatable :: all_raStem_m
-    real, dimension (:), allocatable :: all_raRoot_m
-    real, dimension (:), allocatable :: all_raOther_m
-    real, dimension (:), allocatable :: all_rMaint_m
-    real, dimension (:), allocatable :: all_rGrowth_m                                             ! maintenance respiration and growth respiration
-    real, dimension (:), allocatable :: all_rh_m
-    real, dimension (:), allocatable :: all_nbp_m                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-    real, dimension (:), allocatable :: all_wetlandCH4_m
-    real, dimension (:), allocatable :: all_wetlandCH4prod_m
-    real, dimension (:), allocatable :: all_wetlandCH4cons_m                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-    ! Carbon Pools  (KgC m-2)
-    real, dimension (:), allocatable :: all_cLeaf_m
-    real, dimension (:), allocatable :: all_cStem_m
-    real, dimension (:), allocatable :: all_cRoot_m
-    real, dimension (:), allocatable :: all_cOther_m                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-    real, dimension (:), allocatable :: all_cLitter_m
-    real, dimension (:), allocatable :: all_cLitterCwd_m                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-    real, dimension (:), allocatable :: all_cSoil_m
-    real, dimension (:,:), allocatable :: all_cSoilLevels_m
-    real, dimension (:), allocatable :: all_cSoilFast_m
-    real, dimension (:), allocatable :: all_cSoilSlow_m
-    real, dimension (:), allocatable :: all_cSoilPassive_m                           ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-    real, dimension (:,:), allocatable :: all_cCH4_m                                                       ! methane concentration
-    ! Nitrogen fluxes (kgN m-2 s-1)
-    real, dimension (:), allocatable :: all_fBNF_m
-    real, dimension (:), allocatable :: all_fN2O_m
-    real, dimension (:), allocatable :: all_fNloss_m
-    real, dimension (:), allocatable :: all_fNnetmin_m
-    real, dimension (:), allocatable :: all_fNdep_m                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-    ! Nitrogen pools (kgN m-2)
-    real, dimension (:), allocatable :: all_nLeaf_m
-    real, dimension (:), allocatable :: all_nStem_m
-    real, dimension (:), allocatable :: all_nRoot_m
-    real, dimension (:), allocatable :: all_nOther_m
-    real, dimension (:), allocatable :: all_nLitter_m
-    real, dimension (:), allocatable :: all_nLitterCwd_m
-    real, dimension (:), allocatable :: all_nSoil_m
-    real, dimension (:), allocatable :: all_nMineral_m                    ! nMineral: Mineral nitrogen pool
-    ! energy fluxes (W m-2)
-    real, dimension (:), allocatable :: all_hfls_m
-    real, dimension (:), allocatable :: all_hfss_m
-    real, dimension (:), allocatable :: all_SWnet_m
-    real, dimension (:), allocatable :: all_LWnet_m                                ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-    ! water fluxes (kg m-2 s-1)
-    real, dimension (:), allocatable :: all_ec_m
-    real, dimension (:), allocatable :: all_tran_m
-    real, dimension (:), allocatable :: all_es_m                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-    real, dimension (:), allocatable :: all_hfsbl_m                                                         ! Snow sublimation
-    real, dimension (:), allocatable :: all_mrro_m
-    real, dimension (:), allocatable :: all_mrros_m
-    real, dimension (:), allocatable :: all_mrrob_m 
-    ! Other
-    real, dimension (:,:), allocatable :: all_mrso_m                                                   ! Kg m-2, soil moisture in each soil layer
-    real, dimension (:,:), allocatable :: all_tsl_m                                                    ! K, soil temperature in each soil layer
-    real, dimension (:), allocatable :: all_tsland_m                                                          ! K, surface temperature
-    real, dimension (:), allocatable :: all_wtd_m                                                             ! m, Water table depth
-    real, dimension (:), allocatable :: all_snd_m                                                             ! m, Total snow depth
-    real, dimension (:), allocatable :: all_lai_m                                                             ! m2 m-2, Leaf area index
-
-    ! spin-up results 
-    ! carbon fluxes (Kg C m-2 s-1)
-    real, dimension (:), allocatable :: sp_gpp_y, sp_npp_y, sp_ra_y, sp_rh_y 
-    real, dimension (:), allocatable :: sp_wetlandCH4_y, sp_wetlandCH4prod_y, sp_wetlandCH4cons_y
-    ! Carbon Pools  (KgC m-2)
-    real, dimension (:), allocatable :: sp_cLeaf_y, sp_cStem_y, sp_cRoot_y, sp_cOther_y                             
-    real, dimension (:), allocatable :: sp_cLitter_y, sp_cLitterCwd_y                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-    real, dimension (:), allocatable :: sp_cSoil_y, sp_cSoilFast_y, sp_cSoilSlow_y, sp_cSoilPassive_y                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-    real, dimension (:,:), allocatable :: sp_cCH4_y                                                          ! methane concentration
-    ! Nitrogen fluxes (kgN m-2 s-1)
-    real, dimension (:), allocatable :: sp_fBNF_y, sp_fN2O_y, sp_fNloss_y, sp_fNnetmin_y, sp_fNdep_y                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-    ! Nitrogen pools (kgN m-2)
-    real, dimension (:), allocatable :: sp_nLeaf_y, sp_nStem_y, sp_nRoot_y, sp_nOther_y
-    real, dimension (:), allocatable :: sp_nLitter_y, sp_nLitterCwd_y, sp_nSoil_y, sp_nMineral_y                    ! nMineral: Mineral nitrogen pool
-    ! energy fluxes (W m-2)
-    real, dimension (:), allocatable :: sp_hfls_y, sp_hfss_y                                                       ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-    ! water fluxes (kg m-2 s-1)
-    real, dimension (:), allocatable :: sp_ec_y, sp_tran_y, sp_es_y                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-    real, dimension (:), allocatable :: sp_hfsbl_y                                                         ! Snow sublimation
-    real, dimension (:), allocatable :: sp_mrro_y, sp_mrros_y, sp_mrrob_y
-    real, dimension (:), allocatable :: sp_lai_y
-    ! test
-    real, dimension (:,:), allocatable :: sp_test_y
-    integer i
-
+    ! alternative input variable
+    real,DIMENSION(:), ALLOCATABLE :: snow_in       ! if not run snow process
+    
+    
+    type(forcing_data_type) :: forcing 
     ! ==============================================================================================
     contains
     subroutine initialize()

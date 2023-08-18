@@ -1532,10 +1532,10 @@ module mod_soil
         !     write(*,*)"test CH4-1: ", iforcing, Kpla*Tveg*FRLEN_PMT(1)*fgrow*CH4(1), Kpla,Tveg,FRLEN_PMT(1),fgrow,CH4(1)
         !     stop
         ! endif 
-        if (isnan(CH4(1))) then
-            write(*,*)"test CH4: ", iforcing, Kpla*Tveg*FRLEN_PMT(1)*fgrow*CH4(1), Kpla,Tveg,FRLEN_PMT(1),fgrow,CH4(1)
-            stop
-        endif  
+        ! if (isnan(CH4(1))) then
+        !     write(*,*)"test CH4: ", iforcing, Kpla*Tveg*FRLEN_PMT(1)*fgrow*CH4(1), Kpla,Tveg,FRLEN_PMT(1),fgrow,CH4(1)
+        !     stop
+        ! endif  
         return
     end subroutine methane
 
