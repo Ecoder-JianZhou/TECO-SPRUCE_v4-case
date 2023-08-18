@@ -197,7 +197,7 @@ contains
       GrowthRaccu = GrowthRaccu + GrowthR
       GrowthSaccu = GrowthSaccu + GrowthS
       ! test_gpp = (/GrowthL,GrowthR,GrowthS,add,0.,0.,0.,0.,0./)
-      test_gpp = (/GPmax*fnsc*St*(1.-exp(-NSN)),0.004*NSC,0.004*NSN*CNp0,GPmax,fnsc,nsn,CNP0,GLmax,bmL/)
+      ! test_gpp = (/GPmax*fnsc*St*(1.-exp(-NSN)),0.004*NSC,0.004*NSN*CNp0,GPmax,fnsc,nsn,CNP0,GLmax,bmL/)
       ! test_gpp = (/GPmax*fnsc*St*(1.-exp(-NSN)),0.004*NSC,0.004*NSN*CNp0,GPmax,fnsc,QC(1),bmleaf,bmleaf*0.48,bmL/)
       
       if (NPP .eq. 0.0) then

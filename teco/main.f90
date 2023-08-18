@@ -50,10 +50,10 @@ program TECO
     
     call initialize()                           ! initializations
     if (do_restart)then
-        call read_restart(in_restart)
+        call read_restart(restartfile)
         call initialize_with_restart()
     endif
-    itest = 0
+    ! itest = 0
     if (do_spinup) then
         call run_spinup()
         call write_spinup_res()
@@ -66,7 +66,7 @@ program TECO
         call check_mcmc()
     endif
     
-    itest = 1
+    ! itest = 1
     call teco_simu()
     ! writing output file...
 !     i_record = 1

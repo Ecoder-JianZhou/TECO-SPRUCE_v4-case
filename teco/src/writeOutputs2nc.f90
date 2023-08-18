@@ -182,7 +182,7 @@ module mod_ncd_io
         call write_nc(outDir_h,nHours,all_storage_h,"storage","m2 m-2", "onset","hourly",1)
         call write_nc(outDir_h,nHours,all_add_h,"add","m2 m-2", "onset","hourly",1)
         call write_nc(outDir_h,nHours,all_accumulation_h,"accumulation","m2 m-2", "accumulation","hourly",1)
-        call write_nc(outDir_h,nHours,all_test_h,"test_gpp","m2 m-2", "test_gpp","hourly",9)
+        ! call write_nc(outDir_h,nHours,all_test_h,"test_gpp","m2 m-2", "test_gpp","hourly",9)
 
 
 
@@ -1066,7 +1066,7 @@ module mod_ncd_io
         
         allocate(character(len=200+len(outfile)) :: nc_fileName)
         nc_fileName = adjustl(trim(outfile))//"/"//adjustl(trim(varName))//"_"//freq//"_TECO-SPRUCE_"//&
-            & adjustl(trim(experiment))//"_"//adjustl(trim(str_startyr))//"-"//adjustl(trim(str_endyr))//".nc"   
+            & adjustl(trim(simu_name))//"_"//adjustl(trim(str_startyr))//"-"//adjustl(trim(str_endyr))//".nc"   
         
         !Create the netCDF file.
         CALL check(nf90_create(nc_fileName, NF90_CLOBBER, ncid))

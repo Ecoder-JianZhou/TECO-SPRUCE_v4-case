@@ -306,7 +306,7 @@ module mod_upAndSum
         wtd_y             = wtd_y            + wtd_h            /hoursOfYear                   ! m, Water table depth
         snd_y             = snd_y            + snd_h            /hoursOfYear                   ! m, Total snow depth
         lai_y             = lai_y            + lai_h            /hoursOfYear
-        test_gpp_y        = test_gpp_y       + test_gpp         /hoursOfYear
+        ! test_gpp_y        = test_gpp_y       + test_gpp         /hoursOfYear
 
         ! not used in SPRUCE-MIP
         rain_yr   = rain_yr   + rain
@@ -392,7 +392,7 @@ module mod_upAndSum
         all_add_h(iTotHourly)            = add
         all_accumulation_h(iTotHourly)   = accumulation
         ! all_test_h(5*(iTotHourly-1)+1:5*(iTotHourly),:) = test_gpp
-        all_test_h(iTotHourly,:) = test_gpp
+        ! all_test_h(iTotHourly,:) = test_gpp
 
         iTotHourly = iTotHourly+1
     end subroutine summaryHourly
