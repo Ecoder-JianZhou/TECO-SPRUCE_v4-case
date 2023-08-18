@@ -8,6 +8,7 @@ module driver
     use mcmc_functions
     implicit none
     ! some paramaters for cycle and saving results
+    integer iyear,  iday, ihour
     integer daysOfyear, hoursOfmonth, hoursOfYear, daysOfmonth(12) 
     integer iTotHourly, iTotDaily, iTotMonthly  ! used to cycle the record of different frequences of the results
 

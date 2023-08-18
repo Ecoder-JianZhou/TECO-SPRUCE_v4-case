@@ -1,45 +1,54 @@
 module mod_data
     implicit none
-    ! run settings 
-    logical, parameter :: do_spinup  = .False.                     ! run spinup or not
-    logical, parameter :: do_mcmc    = .false.                     ! run mcmc or not
-    logical, parameter :: do_snow    = .True.                      ! do soil snow process
-    logical, parameter :: do_soilphy = .True.                      ! do soil physics
-    logical, parameter :: do_matrix  = .True.                      ! do matrix run
-    logical, parameter :: do_EBG     = .False.                     ! run EBG or not based on Ma et al., 2022
-    logical, parameter :: do_restart = .True.
-    logical, parameter :: do_ndep    = .False.
-    logical, parameter :: do_simu    = .True.
-    logical, parameter :: do_leap    = .False.
-    real,    parameter :: Ttreat     = 0.                          ! Temperature treatment, warming in air and soil temperature
-    real,    parameter :: CO2treat   = 0.                          ! CO2 treatmant, up to CO2treat, not add to Ca. CO2
-    real,    parameter :: N_fert     = 0.                          ! 5.6 ! (11.2 gN m-2 yr-1, in spring, Duke Forest FACE)
-    integer, parameter :: dtimes     = 24                          ! hourly simulation
+    ! run simulation settings 
+    character(100) :: simu_name ! define the case name of the simulation 
+    logical :: do_spinup        ! run spinup or not
+    logical :: do_mcmc          ! run mcmc or not
+    logical :: do_snow          ! do soil snow process
+    logical :: do_soilphy       ! do soil physics
+    logical :: do_matrix        ! do matrix run
+    logical :: do_EBG           ! run EBG or not based on Ma et al., 2022
+    logical :: do_restart       ! have restart file or not
+    logical :: do_ndep          ! N deposit
+    logical :: do_simu          ! ?
+    logical :: do_leap          ! judge leap year or not
 
-    ! define some parameters for in/out
-    character(200) :: parafile        = "../input/parameters.txt"
-    character(200) :: climatefile     = "../input/f1p1forcing2011_2018.txt"    !"../input/forcing_1850-2014_new.txt"        !Forcing_in_TECO_2_1  SPRUCE_forcing_plot07
-    character(200) :: snowdepthfile   = "../input/SPRUCE_Snow_Depth_2011-2014.txt"
-    character(len=1500) :: outdir     = "../outputs/simu_plot17"    !outputs_1850-2014_new"   !"../outputs/outputs_test_1850-2014"       ! 
-    character(len=1500) :: in_restart = "../outputs/outputs_1850-2014_new/restart.nc"!"../outputs_old/outputs_spinup_plot7_new/restart.nc"! "../outputs/spinup_plot07/restart.nc"!
-    character(len=50) watertablefile                               ! Jian: maybe used when not run soil_physical
-    character(200) commts
-    character(len=1000) :: outDir_h, outDir_d, outDir_m, outDir_csv, outFile_restart
-    character(len=1000) :: outDir_sp, outFile_sp
+    integer :: dtimes                 ! 24: hourly simulation
+    character(200) :: filepath_in     ! input file path
+    character(100) :: climfile        ! climate file name
+    character(100) :: snowdepthfile   ! snow depthfile
+    character(100) :: restartfile     ! restartfile
+    character(100) :: watertablefile  ! Jian: maybe used when not run soil_physical
+   
+    character(100) :: outdir          ! output path
+    ! fixed output path 
+    character(50), parameter :: outDir_nc       = "results_nc_format"
+    character(50), parameter :: outDir_csv      = "results_csv_format"
+    character(50), parameter :: outDir_h        = "Hourly"
+    character(50), parameter :: outDir_d        = "Daily"
+    character(50), parameter :: outDir_m        = "Monthly"
+    character(50), parameter :: outfile_restart = "restart"
+    character(50), parameter :: outDir_spinup   = "results_spinup"
+    character(50), parameter :: outfile_spinup  = "results_spinup.nc"
+    
+    ! experiment settings
+    real    :: Ttreat     = 0.        ! Temperature treatment, warming in air and soil temperature
+    real    :: CO2treat   = 0.        ! CO2 treatmant, up to CO2treat, not add to Ca. CO2
+    real    :: N_fert     = 0.        ! 5.6 ! (11.2 gN m-2 yr-1, in spring, Duke Forest FACE)
+
+    ! parameters for spin-up
+    integer :: nloops                 ! the times of cycling the forcing to reach ss
+    
+    ! variables for outputs
+    integer nday4out, idayOfnyear, i_record, record_yr(10000), j   ! some variables for cycles
     real Simu_dailyflux14(14,1500000)                              ! output variables (Jian: need to modify according to CMIP6 for SPURCE-MIP) 
     real Simu_dailyflux14_2023(28,1500000)                         ! Jian: Just used for testing Matrix-MIP
-    character(len=20) :: experiment = "9degree_AmbCO2"                    ! for output based on SPRUCE-MIP form, such as "historical","control","w0-ambCO2","w2p25-ambCO2"..."w9-500CO2"
     
-    ! parameters for spin-up
-    integer, parameter :: nloops     = 10000                       ! the times to cycle all of forcing data for spin-up
-    integer :: itest  ! add for testing
-    integer :: iitest
-    real,DIMENSION(9) :: test_gpp, test_gpp_y
+
 
     ! parameters for running the loops
-    integer nday4out, idayOfnyear, i_record, record_yr(10000), j   ! some variables for cycles
     ! ! parameters for cycle
-    integer iyear,  iday, ihour
+    
     real    radsol, wind, co2ca, par, rain, RH
     real    tair, Dair, eairP, TairK, Tsoil                        ! Jian: not sure different between Dair and eairP. eairP means air water vapour pressure 
 
@@ -645,7 +654,7 @@ module mod_data
     ! ==============================================================================================
     contains
     subroutine initialize()
-        nday4out       = 0
+        ! nday4out       = 0
         eJmx0          = Vcmax0*2.7                     ! @20C Leuning 1996 from Wullschleger (1993)
         QC             = (/300.,500.,250.,200.,300.,322.,28340.,23120./)!(/450.,380.,250.,119.,300.,322.,38340.,23120./)    !  leaf,wood,root,fine lit.,coarse lit.,Micr,Slow,Pass
         CN0            = (/50.,350.,60.,40.,300.,10.,20.,12./)
