@@ -30,7 +30,7 @@
 
 &nml_params ! Jian: This params for SPRUCE site. If you have special site, you need change it.
    lat        = 47.5
-   Longitude  = -93.45	
+   lon        = -93.45	
    wsmax      = 85.3
    wsmin      = 0.2
    LAIMAX     = 8.0
