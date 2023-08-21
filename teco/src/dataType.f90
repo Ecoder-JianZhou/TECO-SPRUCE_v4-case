@@ -105,6 +105,8 @@ module mod_data
         real :: f_S2M
         real :: f_P2M
     end type spec_data_type
+
+    type(spec_data_type) :: spData
     
     ! parameters for forcing data -------------------------------------
     integer iforcing, nforcing, nHours, nDays, nMonths, nYears                                     ! for cycle
@@ -301,6 +303,12 @@ module mod_data
     real :: ice(10), liq_water(10) 
     real :: zwt, phi, Sw
     real :: WILTPT,FILDCP,infilt
+    ! .. init from soil thermal module
+    real :: diff_snow, diff_s, condu_b
+    real :: depth_ex 
+    real :: infilt_rate
+    real :: fa,fsub,rho_snow,decay_m   
+    real :: fwsoil,topfws,omega 
     ! snow process
     real :: snow_depth, snow_depth_e, snow_dsim
     real :: sublim                                 ! snow sublimation
@@ -339,18 +347,6 @@ module mod_data
     real :: CH4(nlayers), CH4_V(nlayers), CH4V_d(nlayers)
     real :: simuCH4, Ebu_sum, Pla_sum
     
-    ! for soil conditions
-    
-
-
-    
-    ! .. int from soil thermal module
-    real diff_snow,diff_s,condu_b
-    real depth_ex 
-    real infilt_rate
-    real fa,fsub,rho_snow,decay_m   
-    real fwsoil,topfws,omega 
-
 
     ! matrix variables
     real mat_B(8,1), mat_A(8,8), mat_e(8,8), mat_k(8,8), mat_x(8,1), mat_Rh, mat_Rh_d ! for matrix
@@ -360,8 +356,139 @@ module mod_data
     
     
     type(forcing_data_type) :: forcing 
+
     ! ==============================================================================================
     contains
+
+    subroutine read_TECO_model_configs()
+        ! read the "TECO_model_configs.nml"
+        implicit none
+        real :: lat, lon, wsmin, wsmax, LAIMAX, LAIMIN, SLA
+        real :: rdepth, Rootmax, Stemmax, SapR, SapS, GLmax, GRmax, Gsmax
+        real :: stom_n, a1, Ds0, Vcmax0, extkU, xfang, alpha
+        real :: Tau_Leaf, Tau_Wood, Tau_Root, Tau_F, Tau_C
+        real :: Tau_Micro, Tau_slowSOM, Tau_Passive   
+        real :: gddonset, Q10, Q10rh, Rl0, Rs0, Rr0
+        ! added for parameters in methane module   
+        real :: r_me, Q10pro, kCH4, Omax, CH4_thre
+        real :: Tveg, Tpro_me, Toxi
+        ! add based on Ma et al., 2022
+        real :: f, bubprob, Vmaxfraction  
+        ! add based on Ma et al., 2023
+        real :: JV, Entrpy, etaL, etaW, etaR  ! etaL and etaR are not used.
+        real :: f_F2M, f_C2M, f_C2S, f_M2S, f_M2P
+        real :: f_S2P, f_S2M, f_P2M
+
+        ! initial states
+        real :: init_QC, init_CN0, init_NSCmin, init_Storage
+        real :: init_nsc, init_accumulation, init_SNvcmax, init_N_deposit, init_alphaN
+        real :: init_NSN, init_QNminer, init_N_deficit, init_thksl, init_FRLEN
+        real :: init_liq_water, init_fwsoil, init_topfws, init_omega, init_zwt
+        real :: init_infilt, init_sftmp, init_Tsnow, init_Twater, init_Tice, G
+        real :: init_snow_dsim, init_dcount, init_dcount_soil, init_ice_tw, init_Tsoill
+        real :: init_ice, init_shcap_snow, init_condu_snow, init_condu_b, init_depth_ex
+        real :: init_diff_s, init_diff_snow, init_albedo_snow, init_resht
+        real :: init_thd_snow_depth, init_b_bound, init_infilt_rate, init_fa, init_fsub
+        real :: init_rho_snow, init_decay_m, init_CH4_V, init_CH4, init_Vp
+        real :: init_bubble_methane_tot, init_Nbub, init_depth_1
+
+        namelist /nml_simu_settings/ simu_name, do_spinup, do_mcmc,          & 
+            do_snow, do_soilphy, do_matrix, do_EBG, do_restart, do_ndep,     &
+            do_simu, do_leap, dtimes, filepath_in,  climfile, snowdepthfile, & 
+            watertablefile, restartfile, outdir
+        namelist /nml_exps/ Ttreat, CO2treat, N_fert
+        namelist /nml_params/ lat, lon, wsmax, wsmin, LAIMAX, LAIMIN, rdepth,  & 
+            Rootmax, Stemmax, SapR, SapS, SLA, GLmax, GRmax, Gsmax, stom_n,    &
+            a1, Ds0, Vcmx0, extkU, xfang, alpha, Tau_Leaf, Tau_Wood, Tau_Root, &
+            Tau_F, Tau_C, Tau_Micro, Tau_SlowSOM, Tau_Passive, gddonset, Q10,  &
+            Rl0, Rs0, Rr0, r_me, Q10pro, kCH4, Omax, CH4_thre, Tveg, Tpro_me,  & 
+            Toxi, f, bubprob, Vmaxfraction
+        namelist /nml_initial_states/ init_QC, init_CN0, init_NSCmin, init_Storage, &
+            init_nsc, init_accumulation, init_SNvcmax, init_N_deposit, init_alphaN, & 
+            init_NSN, init_QNminer, init_N_deficit, init_thksl, init_FRLEN,         &
+            init_liq_water, init_fwsoil, init_topfws, init_omega, init_zwt,         &
+            init_infilt, init_sftmp, init_Tsnow, init_Twater, init_Tice, G,         &
+            init_snow_dsim, init_dcount, init_dcount_soil, init_ice_tw, init_Tsoill, &
+            init_ice, init_shcap_snow, init_condu_snow, init_condu_b, init_depth_ex, & 
+            init_diff_s, init_diff_snow, init_albedo_snow, init_resht,               &
+            init_thd_snow_depth, init_b_bound, init_infilt_rate, init_fa, init_fsub, &
+            init_rho_snow, init_decay_m, init_CH4_V, init_CH4, init_Vp,              &
+            init_bubble_methane_tot, init_Nbub, init_depth_1
+        namelist /nml_spinup/ nloops 
+
+        open(388, file="TECO_model_configs.nml")
+        read(388, nml=nml_simu_settings)
+        read(388, nml=nml_exps)
+        read(388, nml=nml_params)
+        read(388, nml=nml_initial_states)
+        read(388, nml=nml_spinup)
+        close(388)
+
+        spData%lat         = lat
+        spData%lon         = lon
+        spData%wsmax       = wsmax
+        spData%wsmin       = wsmin
+        spData%LAIMAX      = LAIMAX
+        spData%LAIMIN      = LAIMIN
+        spData%SLAx        = SLAx
+        spData%rdepth      = rdepth
+        spData%Rootmax     = Rootmax
+        spData%Stemmax     = Stemmax
+        spData%SapR        = SapR
+        spData%SapS        = SapS
+        spData%GLmax       = GLmax
+        spData%GRmax       = GRmax
+        spData%Gsmax       = Gsmax
+        spData%stom_n      = stom_n
+        spData%a1          = a1
+        spData%Ds0         = Ds0
+        spData%Vcmax0      = Vcmax0        ! Jian: Vcmax0 and Vcmx0 is same? Vcmax0 is Vcmx0 in consts
+        spData%extkU       = extkU
+        spData%xfang       = xfang
+        spData%alpha       = alpha  
+        spData%Tau_Leaf    = Tau_Leaf
+        spData%Tau_Wood    = Tau_Wood
+        spData%Tau_Root    = Tau_Root      ! turnover rate of plant carbon pools : leaf, wood, root  
+        spData%Tau_F       = tau_F
+        spData%Tau_C       = tauC          ! turnover rate of litter carbon pools: fine, coarse 
+        spData%Tau_Micro   = Tau_Micro
+        spData%Tau_slowSOM = Tau_SlowSOM
+        spData%Tau_Passive = Tau_Passive   ! turnover rate of soil carbon pools  : fast, slow, passive 
+        spData%gddonset    = gddonset
+        spData%Q10         = Q10
+        spData%Q10rh       = Q10rh         ! Q10rh modified from Ma et al.,2023 for aclimate study, change in transfer module of Q10h
+        spData%Rl0         = Rl0
+        spData%Rs0         = Rs0
+        spData%Rr0         = Rr0
+        ! added for parameters in methane module   
+        spData%r_me        = r_me
+        spData%Q10pro      = Q10pro
+        spData%kCH4        = kCH4
+        spData%Omax        = Omax
+        spData%CH4_thre    = CH4_thre
+        spData%Tveg        = Tveg
+        spData%Tpro_me     = Tpro_me
+        spData%Toxi        = Toxi
+        ! add based on Ma et al., 2022
+        spData%f            = f
+        spData%bubprob      = bubprob
+        spData%Vmaxfraction = Vmaxfraction 
+        ! add based on Ma et al., 2023
+        spData%JV           = JV
+        spData%Entrpy       = Entrpy
+        spData%etaL         = etaL
+        spData%etaW         = etaW
+        spData%etaR         = etaR   ! etaL and etaR are not used.
+        spData%f_F2M        = f_F2M
+        spData%f_C2M        = f_C2M
+        spData%f_C2S        = f_C2S
+        spData%f_M2S        = f_M2S
+        spData%f_M2P        = f_M2P
+        spData%f_S2P        = f_S2P
+        spData%f_S2M        = f_S2M
+        spData%f_P2M        = f_P2M
+    end subroutine read_TECO_model_configs
+
     subroutine initialize()
         ! nday4out       = 0
         eJmx0          = Vcmax0*2.7                     ! @20C Leuning 1996 from Wullschleger (1993)
@@ -1251,34 +1378,34 @@ module mod_data
     end subroutine deallocate_all_results
     
 
-    ! some functions to get parameters or some input data (eg. forcing data, observation data) 
-    !=================================================================
-    subroutine get_params()   
-        ! Jian: read parameters from the parameter file
-        implicit none
-        parafile = TRIM(parafile)
-        ! open and read input file for getting climate data
-        open(10,file=parafile,status='old')
-        read(10,11)commts
-        read(10,*)lat,longi,wsmax,wsmin
-        read(10,11)commts
-        read(10,*)LAIMAX,LAIMIN,rdepth,Rootmax,Stemmax    
-        read(10,11)commts
-        read(10,*)SapR,SapS,SLAx,GLmax,GRmax,Gsmax,stom_n
-        read(10,11)commts
-        read(10,*)a1,Ds0,Vcmax0,extkU,xfang,alpha
-        read(10,11)commts
-        read(10,*)Tau_Leaf,Tau_Wood,Tau_Root,Tau_F,Tau_C,Tau_Micro,Tau_slowSOM,Tau_Passive
-        read(10,11)commts
-        read(10,*)gddonset,Q10,Rl0,Rs0,Rr0
-        ! added for pars in methane module
-        read(10,11)commts
-        read(10,*)r_me,Q10pro,kCH4,Omax,CH4_thre,Tveg,Tpro_me,Toxi                      !this line is for MCMEME     
-        read(10,11)commts
-        read(10,*)f,bubprob,Vmaxfraction
-11  format(a132)
-        close(10)
-    end subroutine get_params
+!     ! some functions to get parameters or some input data (eg. forcing data, observation data) 
+!     !=================================================================
+!     subroutine get_params()   
+!         ! Jian: read parameters from the parameter file
+!         implicit none
+!         parafile = TRIM(parafile)
+!         ! open and read input file for getting climate data
+!         open(10,file=parafile,status='old')
+!         read(10,11)commts
+!         read(10,*)lat,longi,wsmax,wsmin
+!         read(10,11)commts
+!         read(10,*)LAIMAX,LAIMIN,rdepth,Rootmax,Stemmax    
+!         read(10,11)commts
+!         read(10,*)SapR,SapS,SLAx,GLmax,GRmax,Gsmax,stom_n
+!         read(10,11)commts
+!         read(10,*)a1,Ds0,Vcmax0,extkU,xfang,alpha
+!         read(10,11)commts
+!         read(10,*)Tau_Leaf,Tau_Wood,Tau_Root,Tau_F,Tau_C,Tau_Micro,Tau_slowSOM,Tau_Passive
+!         read(10,11)commts
+!         read(10,*)gddonset,Q10,Rl0,Rs0,Rr0
+!         ! added for pars in methane module
+!         read(10,11)commts
+!         read(10,*)r_me,Q10pro,kCH4,Omax,CH4_thre,Tveg,Tpro_me,Toxi                      !this line is for MCMEME     
+!         read(10,11)commts
+!         read(10,*)f,bubprob,Vmaxfraction
+! 11  format(a132)
+!         close(10)
+!     end subroutine get_params
     
     subroutine get_forcingdata()
         implicit none
