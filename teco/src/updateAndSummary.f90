@@ -11,386 +11,376 @@ module mod_upAndSum
         convert_g2kg = 0.001
         convert_h2s  = 1/3600.
         ! carbon fluxes (KgC m-2 s-1) Jian: TECO unit is gC m-2 h-1
-        gpp_h             = gpp*convert_g2kg*convert_h2s
-        npp_h             = npp*convert_g2kg*convert_h2s
-        nppLeaf_h         = NPP_L*convert_g2kg*convert_h2s
-        nppWood_h         = NPP_W*convert_g2kg*convert_h2s  
-        nppStem_h         = NPP_W*convert_g2kg*convert_h2s                   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues. Jian: TECO has no above ground woody tissues, set to equit wood
-        nppRoot_h         = NPP_R*convert_g2kg*convert_h2s
-        nppOther_h        = 0*convert_g2kg*convert_h2s                       ! Jian: no other storage, NSC seems different from other NPP.
-        ra_h              = Rauto*convert_g2kg*convert_h2s
-        raLeaf_h          = Rmleaf*convert_g2kg*convert_h2s
-        raStem_h          = Rmstem*convert_g2kg*convert_h2s
-        raRoot_h          = Rmroot*convert_g2kg*convert_h2s
-        raOther_h         = Rnitrogen *convert_g2kg*convert_h2s               ! Total C cost for nitrogen
-        rMaint_h          = Rmain *convert_g2kg*convert_h2s                   ! maintenance respiration
-        rGrowth_h         = Rgrowth *convert_g2kg*convert_h2s                 ! growth respiration
-        rh_h              = Rhetero *convert_g2kg*convert_h2s                 ! heterotrophic respiration
-        nbp_h             = (gpp - Rhetero - Rauto) *convert_g2kg*convert_h2s   ! NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        wetlandCH4_h      = simuCH4 *convert_g2kg*convert_h2s                 ! wetland net fluxes of CH4
-        wetlandCH4prod_h  = Pro_sum *convert_g2kg*convert_h2s                 ! wetland net fluxes of CH4 production
-        wetlandCH4cons_h  = Oxi_sum *convert_g2kg*convert_h2s                 ! wetland net fluxes of CH4 consumption
+        outVars_h%gpp     = gpp*convert_g2kg*convert_h2s
+        outVars_h%npp             = npp*convert_g2kg*convert_h2s
+        outVars_h%nppLeaf         = NPP_L*convert_g2kg*convert_h2s
+        outVars_h%nppWood         = NPP_W*convert_g2kg*convert_h2s  
+        outVars_h%nppStem         = NPP_W*convert_g2kg*convert_h2s                   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues. Jian: TECO has no above ground woody tissues, set to equit wood
+        outVars_h%nppRoot         = NPP_R*convert_g2kg*convert_h2s
+        outVars_h%nppOther        = 0*convert_g2kg*convert_h2s                       ! Jian: no other storage, NSC seems different from other NPP.
+        outVars_h%ra              = Rauto*convert_g2kg*convert_h2s
+        outVars_h%raLeaf          = Rmleaf*convert_g2kg*convert_h2s
+        outVars_h%raStem          = Rmstem*convert_g2kg*convert_h2s
+        outVars_h%raRoot          = Rmroot*convert_g2kg*convert_h2s
+        outVars_h%raOther         = Rnitrogen *convert_g2kg*convert_h2s               ! Total C cost for nitrogen
+        outVars_h%rMaint          = Rmain *convert_g2kg*convert_h2s                   ! maintenance respiration
+        outVars_h%rGrowth         = Rgrowth *convert_g2kg*convert_h2s                 ! growth respiration
+        outVars_h%rh              = Rhetero *convert_g2kg*convert_h2s                 ! heterotrophic respiration
+        outVars_h%nbp             = (gpp - Rhetero - Rauto) *convert_g2kg*convert_h2s   ! NBP(net biome productivity) = GPP - Rh - Ra - other losses  
+        outVars_h%wetlandCH4      = simuCH4 *convert_g2kg*convert_h2s                 ! wetland net fluxes of CH4
+        outVars_h%wetlandCH4prod  = Pro_sum *convert_g2kg*convert_h2s                 ! wetland net fluxes of CH4 production
+        outVars_h%wetlandCH4cons  = Oxi_sum *convert_g2kg*convert_h2s                 ! wetland net fluxes of CH4 consumption
         ! Carbon Pools  (KgC m-2)
-        cLeaf_h           = QC(1)*convert_g2kg
-        cStem_h           = QC(2)*convert_g2kg
-        cRoot_h           = QC(3)*convert_g2kg
-        cOther_h          = NSC*convert_g2kg                        ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        cLitter_h         = QC(4)*convert_g2kg                      ! litter (excluding coarse woody debris), Jian: fine litter in TECO?
-        cLitterCwd_h      = QC(5)*convert_g2kg                      ! cLitterCwd: carbon in coarse woody debris
-        cSoil_h           = (QC(6) + QC(7) + QC(8))*convert_g2kg    ! cSoil: soil organic carbon (Jian: total soil carbon);
-        cSoilLevels_h     = (/0.,0.,0.,0.,0.,0.,0.,0.,0.,0./)                                       ! cSoilLevels(depth-specific soil organic carbon, Jian: depth?);
-        cSoilFast_h       = QC(6)*convert_g2kg                      ! cSoilPools (different pools without depth)
-        cSoilSlow_h       = QC(7)*convert_g2kg 
-        cSoilPassive_h    = QC(8)*convert_g2kg 
-        cCH4_h            = CH4*convert_g2kg                        ! methane concentration
+        outVars_h%cLeaf           = QC(1)*convert_g2kg
+        outVars_h%cStem           = QC(2)*convert_g2kg
+        outVars_h%cRoot           = QC(3)*convert_g2kg
+        outVars_h%cOther          = NSC*convert_g2kg                        ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
+        outVars_h%cLitter         = QC(4)*convert_g2kg                      ! litter (excluding coarse woody debris), Jian: fine litter in TECO?
+        outVars_h%cLitterCwd      = QC(5)*convert_g2kg                      ! cLitterCwd: carbon in coarse woody debris
+        outVars_h%cSoil           = (QC(6) + QC(7) + QC(8))*convert_g2kg    ! cSoil: soil organic carbon (Jian: total soil carbon);
+        outVars_h%cSoilLevels     = (/0.,0.,0.,0.,0.,0.,0.,0.,0.,0./)                                       ! cSoilLevels(depth-specific soil organic carbon, Jian: depth?);
+        outVars_h%cSoilFast       = QC(6)*convert_g2kg                      ! cSoilPools (different pools without depth)
+        outVars_h%cSoilSlow       = QC(7)*convert_g2kg 
+        outVars_h%cSoilPassive    = QC(8)*convert_g2kg 
+        outVars_h%CH4            = CH4*convert_g2kg                        ! methane concentration
         ! Nitrogen fluxes (kgN m-2 s-1)
-        fBNF_h            = N_fixation*convert_g2kg*convert_h2s                 ! fBNF: biological nitrogen fixation;
-        ! fN2O_h            = N_miner*convert_g2kg*convert_h2s                    ! fN2O: loss of nitrogen through emission of N2O;
-        ! fNloss_h          = N_loss*convert_g2kg*convert_h2s                     ! fNloss:Total loss of nitrogen to the atmosphere and from leaching;
-        ! fNnetmin_h        = fNnetmin*convert_g2kg*convert_h2s                   ! net mineralizaiton
-        ! fNdep_h           = N_deposit*convert_g2kg*convert_h2s                  ! deposition of N
-        fN2O_h            = (N_transfer+N_uptake+N_fixation)*convert_g2kg*convert_h2s                    ! fN2O: loss of nitrogen through emission of N2O;
-        fNloss_h          = (N_leaf+N_wood+N_root)*convert_g2kg*convert_h2s                     ! fNloss:Total loss of nitrogen to the atmosphere and from leaching;
-        fNnetmin_h        = ((N_transfer+N_uptake+N_fixation)-(N_leaf+N_wood+N_root))*convert_g2kg*convert_h2s                   ! net mineralizaiton
-        fNdep_h           = N_wood*convert_g2kg*convert_h2s                  ! deposition of N
+        outVars_h%fBNF            = N_fixation*convert_g2kg*convert_h2s                 ! fBNF: biological nitrogen fixation;
+        outVars_h%fN2O            = (N_transfer+N_uptake+N_fixation)*convert_g2kg*convert_h2s                    ! fN2O: loss of nitrogen through emission of N2O;
+        outVars_h%fNloss          = (N_leaf+N_wood+N_root)*convert_g2kg*convert_h2s                     ! fNloss:Total loss of nitrogen to the atmosphere and from leaching;
+        outVars_h%fNnetmin        = ((N_transfer+N_uptake+N_fixation)-(N_leaf+N_wood+N_root))*convert_g2kg*convert_h2s                   ! net mineralizaiton
+        outVars_h%fNdep           = N_wood*convert_g2kg*convert_h2s                  ! deposition of N
         ! Nitrogen pools (kgN m-2)
-        nLeaf_h           = QN(1)*convert_g2kg
-        nStem_h           = QN(2)*convert_g2kg
-        nRoot_h           = QN(3)*convert_g2kg
-        nOther_h          = NSN*convert_g2kg         ! other N pool
-        nLitter_h         = QN(4)*convert_g2kg
-        nLitterCwd_h      = QN(5)*convert_g2kg
-        nSoil_h           = (QN(6)+QN(7)+QN(8))*convert_g2kg
-        nMineral_h        = QNminer*convert_g2kg                                 ! nMineral: Mineral nitrogen pool
+        outVars_h%nLeaf           = QN(1)*convert_g2kg
+        outVars_h%nStem           = QN(2)*convert_g2kg
+        outVars_h%nRoot           = QN(3)*convert_g2kg
+        outVars_h%nOther          = NSN*convert_g2kg         ! other N pool
+        outVars_h%nLitter         = QN(4)*convert_g2kg
+        outVars_h%nLitterCwd      = QN(5)*convert_g2kg
+        outVars_h%nSoil           = (QN(6)+QN(7)+QN(8))*convert_g2kg
+        outVars_h%nMineral        = QNminer*convert_g2kg                                 ! nMineral: Mineral nitrogen pool
         ! energy fluxes (W m-2)
-        hfls_h            = Hsoil ! Sensible heat flux;
-        hfss_h            = Esoil ! Latent heat flux;
-        SWnet_h           = 0 ! Net shortwave radiation;
-        LWnet_h           = 0 ! Net longwave radiation
+        outVars_h%hfls            = Hsoil ! Sensible heat flux;
+        outVars_h%hfss            = Esoil ! Latent heat flux;
+        outVars_h%SWnet           = 0 ! Net shortwave radiation;
+        outVars_h%LWnet           = 0 ! Net longwave radiation
         ! water fluxes (kg m-2 s-1)
-        ec_h              = 0!evap*convert_g2kg*convert_h2s        ! Canopy evaporation;
-        tran_h            = transp*convert_g2kg*convert_h2s      ! Canopy transpiration;
-        es_h              = evap*convert_g2kg*convert_h2s ! Soil evaporation
-        hfsbl_h           = sublim*convert_g2kg*convert_h2s ! Snow sublimation
-        mrro_h            = runoff*convert_g2kg*convert_h2s
-        mrros_h           = forcing%Rain(iforcing)    
-        mrrob_h           = 0 ! Total runoff; Surface runoff; Subsurface runoff
+        outVars_h%ec              = 0!evap*convert_g2kg*convert_h2s        ! Canopy evaporation;
+        outVars_h%tran            = transp*convert_g2kg*convert_h2s      ! Canopy transpiration;
+        outVars_h%es              = evap*convert_g2kg*convert_h2s ! Soil evaporation
+        outVars_h%hfsbl           = sublim*convert_g2kg*convert_h2s ! Snow sublimation
+        outVars_h%mrro            = runoff*convert_g2kg*convert_h2s
+        outVars_h%mrros           = forcing(iforcing)%Rain    
+        outVars_h%mrrob           = 0 ! Total runoff; Surface runoff; Subsurface runoff
         ! other
-        mrso_h            = liq_water*1000                                   ! Kg m-2, soil moisture in each soil layer
-        tsl_h             = tsoil_layer(1:10)+273.15                            ! K, soil temperature in each soil layer Jian: not sure the tsoil_layer is correct or not
-        tsland_h          = Tair+273.15                                   ! K, surface temperature
-        wtd_h             = zwt/1000                                       ! m, Water table depth
-        snd_h             = snow_depth/100                                ! m, Total snow depth, Jian: change from m to cm in code, and now change from cm to m
-        lai_h             = LAI                                           ! m2 m-2, Leaf area index
-        ! not used in SPRUCE-MIP
-        
+        outVars_h%mrso            = liq_water*1000                                   ! Kg m-2, soil moisture in each soil layer
+        outVars_h%tsl             = tsoil_layer(1:10)+273.15                            ! K, soil temperature in each soil layer Jian: not sure the tsoil_layer is correct or not
+        outVars_h%tsland          = forcing(iforcing)%Tair+273.15                                   ! K, surface temperature
+        outVars_h%wtd             = zwt/1000                                       ! m, Water table depth
+        outVars_h%snd             = snow_depth/100                                ! m, Total snow depth, Jian: change from m to cm in code, and now change from cm to m
+        outVars_h%lai             = LAI                                           ! m2 m-2, Leaf area index
     end subroutine updateHourly
 
     subroutine updateDaily()
         implicit none
         ! carbon fluxes
-        gpp_d             = gpp_d            + gpp_h/24
-        npp_d             = npp_d            + npp_h/24
-        nppLeaf_d         = nppLeaf_d        + nppLeaf_h/24
-        nppWood_d         = nppWood_d        + nppWood_h/24
-        nppStem_d         = nppStem_d        + nppStem_h/24                      ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-        nppRoot_d         = nppRoot_d        + nppRoot_h/24
-        nppOther_d        = nppOther_d       + nppOther_h/24
-        ra_d              = ra_d             + ra_h/24
-        raLeaf_d          = raLeaf_d         + raLeaf_h/24
-        raStem_d          = raStem_d         + raStem_h/24
-        raRoot_d          = raRoot_d         + raRoot_h/24
-        raOther_d         = raOther_d        + raOther_h/24
-        rMaint_d          = rMaint_d         + rMaint_h/24                           ! maintenance respiration
-        rGrowth_d         = Rgrowth_d        + rGrowth_h/24                         ! growth respiration
-        rh_d              = rh_d             + rh_h/24                                   ! heterotrophic respiration
-        nbp_d             = nbp_d            + nbp_h/24                                 ! NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        wetlandCH4_d      = wetlandCH4_d     + wetlandCH4_h/24                   ! wetland net fluxes of CH4
-        wetlandCH4prod_d  = wetlandCH4prod_d + wetlandCH4prod_h/24           ! wetland net fluxes of CH4 production
-        wetlandCH4cons_d  = wetlandCH4cons_d + wetlandCH4cons_h/24           ! wetland net fluxes of CH4 consumption
+        outVars_d%gpp             = outVars_d%gpp            + outVars_h%gpp/24
+        outVars_d%npp             = outVars_d%npp            + outVars_h%npp/24
+        outVars_d%nppLeaf         = outVars_d%nppLeaf        + outVars_h%nppLeaf/24
+        outVars_d%nppWood         = outVars_d%nppWood        + outVars_h%nppWood/24
+        outVars_d%nppStem         = outVars_d%nppStem        + outVars_h%nppStem/24                      ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
+        outVars_d%nppRoot         = outVars_d%nppRoot        + outVars_h%nppRoot/24
+        outVars_d%nppOther        = outVars_d%nppOther       + outVars_h%nppOther/24
+        outVars_d%ra              = outVars_d%ra             + outVars_h%ra/24
+        outVars_d%raLeaf          = outVars_d%raLeaf         + outVars_h%raLeaf/24
+        outVars_d%raStem          = outVars_d%raStem         + outVars_h%raStem/24
+        outVars_d%raRoot          = outVars_d%raRoot         + outVars_h%raRoot/24
+        outVars_d%raOther         = outVars_d%raOther        + outVars_h%raOther/24
+        outVars_d%rMaint          = outVars_d%rMaint         + outVars_h%rMaint/24                           ! maintenance respiration
+        outVars_d%rGrowth         = outVars_d%Rgrowth        + outVars_h%rGrowth/24                         ! growth respiration
+        outVars_d%rh              = outVars_d%rh             + outVars_h%rh/24                                   ! heterotrophic respiration
+        outVars_d%nbp             = outVars_d%nbp            + outVars_h%nbp/24                                 ! NBP(net biome productivity) = GPP - Rh - Ra - other losses  
+        outVars_d%wetlandCH4      = outVars_d%wetlandCH4     + outVars_h%wetlandCH4/24                   ! wetland net fluxes of CH4
+        outVars_d%wetlandCH4prod  = outVars_d%wetlandCH4prod + outVars_h%wetlandCH4prod/24           ! wetland net fluxes of CH4 production
+        outVars_d%wetlandCH4cons  = outVars_d%wetlandCH4cons + outVars_h%wetlandCH4cons/24           ! wetland net fluxes of CH4 consumption
         ! Carbon Pools  (KgC m-2)
-        cLeaf_d           = cLeaf_d          + cLeaf_h/24
-        cStem_d           = cStem_d          + cStem_h/24
-        cRoot_d           = cRoot_d          + cRoot_h/24
-        cOther_d          = cOther_d         + cOther_h/24                                    ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        cLitter_d         = cLitter_d        + cLitter_h/24                                   ! litter (excluding coarse woody debris), Jian: fine litter in TECO?
-        cLitterCwd_d      = cLitterCwd_d     + cLitterCwd_h/24                                ! cLitterCwd: carbon in coarse woody debris
-        cSoil_d           = cSoil_d          + cSoil_h/24                                     ! cSoil: soil organic carbon (Jian: total soil carbon);
-        cSoilLevels_d     = cSoilLevels_d    + cSoilLevels_h/24                               ! cSoilLevels(depth-specific soil organic carbon, Jian: depth?);
-        cSoilFast_d       = cSoilFast_d      + cSoilFast_h/24                                 ! cSoilPools (different pools without depth)
-        cSoilSlow_d       = cSoilSlow_d      + cSoilSlow_h/24 
-        cSoilPassive_d    = cSoilPassive_d   + cSoilPassive_h/24 
-        cCH4_d            = cCH4_d           + cCH4_h/24                                      ! methane concentration
+        outVars_d%cLeaf           = outVars_d%cLeaf          + outVars_h%cLeaf/24
+        outVars_d%cStem           = outVars_d%cStem          + outVars_h%cStem/24
+        outVars_d%cRoot           = outVars_d%cRoot          + outVars_h%cRoot/24
+        outVars_d%cOther          = outVars_d%cOther         + outVars_h%cOther/24                                    ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
+        outVars_d%cLitter         = outVars_d%cLitter        + outVars_h%cLitter/24                                   ! litter (excluding coarse woody debris), Jian: fine litter in TECO?
+        outVars_d%cLitterCwd      = outVars_d%cLitterCwd     + outVars_h%cLitterCwd/24                                ! cLitterCwd: carbon in coarse woody debris
+        outVars_d%cSoil           = outVars_d%cSoil          + outVars_h%cSoil/24                                     ! cSoil: soil organic carbon (Jian: total soil carbon);
+        outVars_d%cSoilLevels     = outVars_d%cSoilLevels    + outVars_h%cSoilLevels/24                               ! cSoilLevels(depth-specific soil organic carbon, Jian: depth?);
+        outVars_d%cSoilFast       = outVars_d%cSoilFast      + outVars_h%cSoilFast/24                                 ! cSoilPools (different pools without depth)
+        outVars_d%cSoilSlow       = outVars_d%cSoilSlow      + outVars_h%cSoilSlow/24 
+        outVars_d%cSoilPassive    = outVars_d%cSoilPassive   + outVars_h%cSoilPassive/24 
+        outVars_d%CH4            = outVars_d%CH4           + outVars_h%CH4/24                                      ! methane concentration
         ! Nitrogen fluxes (kgN m-2 s-1)
-        fBNF_d            = fBNF_d           + fBNF_h/24                               ! fBNF: biological nitrogen fixation;
-        fN2O_d            = fN2O_d           + fN2O_h/24                               ! fN2O: loss of nitrogen through emission of N2O;
-        fNloss_d          = fNloss_d         + fNloss_h/24                           ! fNloss:Total loss of nitrogen to the atmosphere and from leaching;
-        fNnetmin_d        = fNnetmin_d       + fNnetmin_h/24                       ! net mineralizaiton
-        fNdep_d           = fNdep_d          + fNdep_h/24                             ! deposition of N
+        outVars_d%fBNF            = outVars_d%fBNF           + outVars_h%fBNF/24                               ! fBNF: biological nitrogen fixation;
+        outVars_d%fN2O            = outVars_d%fN2O           + outVars_h%fN2O/24                               ! fN2O: loss of nitrogen through emission of N2O;
+        outVars_d%fNloss          = outVars_d%fNloss         + outVars_h%fNloss/24                           ! fNloss:Total loss of nitrogen to the atmosphere and from leaching;
+        outVars_d%fNnetmin        = outVars_d%fNnetmin       + outVars_h%fNnetmin/24                       ! net mineralizaiton
+        outVars_d%fNdep           = outVars_d%fNdep          + outVars_h%fNdep/24                             ! deposition of N
         ! Nitrogen pools (kgN m-2)
-        nLeaf_d           = nLeaf_d          + nLeaf_h/24
-        nStem_d           = nStem_d          + nStem_h/24
-        nRoot_d           = nRoot_d          + nRoot_h/24
-        nOther_d          = nOther_d         + nOther_h/24
-        nLitter_d         = nLitter_d        + nLitter_h/24
-        nLitterCwd_d      = nLitterCwd_d     + nLitter_h/24
-        nSoil_d           = nSoil_d          + nSoil_h/24
-        nMineral_d        = nMineral_d       + nMineral_h/24                                  ! nMineral: Mineral nitrogen pool
+        outVars_d%nLeaf           = outVars_d%nLeaf          + outVars_h%nLeaf/24
+        outVars_d%nStem           = outVars_d%nStem          + outVars_h%nStem/24
+        outVars_d%nRoot           = outVars_d%nRoot          + outVars_h%nRoot/24
+        outVars_d%nOther          = outVars_d%nOther         + outVars_h%nOther/24
+        outVars_d%nLitter         = outVars_d%nLitter        + outVars_h%nLitter/24
+        outVars_d%nLitterCwd      = outVars_d%nLitterCwd     + outVars_h%nLitter/24
+        outVars_d%nSoil           = outVars_d%nSoil          + outVars_h%nSoil/24
+        outVars_d%nMineral        = outVars_d%nMineral       + outVars_h%nMineral/24                                  ! nMineral: Mineral nitrogen pool
         ! energy fluxes (W m-2)
-        hfls_d            = hfls_d           + hfls_h/24                               ! Sensible heat flux;
-        hfss_d            = hfss_d           + hfss_h/24                               ! Latent heat flux;
-        SWnet_d           = SWnet_d          + SWnet_h/24                             ! Net shortwave radiation;
-        LWnet_d           = LWnet_d          + LWnet_h/24                             ! Net longwave radiation
+        outVars_d%hfls            = outVars_d%hfls           + outVars_h%hfls/24                               ! Sensible heat flux;
+        outVars_d%hfss            = outVars_d%hfss           + outVars_h%hfss/24                               ! Latent heat flux;
+        outVars_d%SWnet           = outVars_d%SWnet          + outVars_h%SWnet/24                             ! Net shortwave radiation;
+        outVars_d%LWnet           = outVars_d%LWnet          + outVars_h%LWnet/24                             ! Net longwave radiation
         ! water fluxes (kg m-2 s-1)
-        ec_d              = ec_d             + ec_h/24
-        tran_d            = tran_d           + tran_h/24
-        es_d              = es_d             + es_h/24                                   ! Canopy evaporation; Canopy transpiration; Soil evaporation
-        hfsbl_d           = hfsbl_d          + hfsbl_h/24                             ! Snow sublimation
-        mrro_d            = mrro_d           + mrro_h/24
-        mrros_d           = mrros_d          + mrros_h/24
-        mrrob_d           = mrrob_d          + mrrob_h/24                              ! Total runoff; Surface runoff; Subsurface runoff
+        outVars_d%ec              = outVars_d%ec             + outVars_h%ec/24
+        outVars_d%tran            = outVars_d%tran           + outVars_h%tran/24
+        outVars_d%es              = outVars_d%es             + outVars_h%es/24                                   ! Canopy evaporation; Canopy transpiration; Soil evaporation
+        outVars_d%hfsbl           = outVars_d%hfsbl          + outVars_h%hfsbl/24                             ! Snow sublimation
+        outVars_d%mrro            = outVars_d%mrro           + outVars_h%mrro/24
+        outVars_d%mrros           = outVars_d%mrros          + outVars_h%mrros/24
+        outVars_d%mrrob           = outVars_d%mrrob          + outVars_h%mrrob/24                              ! Total runoff; Surface runoff; Subsurface runoff
         ! other
-        mrso_d            = mrso_d           + mrro_h/24                  ! Kg m-2, soil moisture in each soil layer
-        tsl_d             = tsl_d            + tsl_h/24                   ! K, soil temperature in each soil layer
-        tsland_d          = tsland_d         + tsland_h/24                ! K, surface temperature
-        wtd_d             = wtd_d            + wtd_h/24                   ! m, Water table depth
-        snd_d             = snd_d            + snd_h/24                   ! m, Total snow depth
-        lai_d             = lai_d            + lai_h/24                   ! m2 m-2, Leaf area index
-        ! not used in SPRUCE-MIP    
+        outVars_d%mrso            = outVars_d%mrso           + outVars_h%mrro/24                  ! Kg m-2, soil moisture in each soil layer
+        outVars_d%tsl             = outVars_d%tsl            + outVars_h%tsl/24                   ! K, soil temperature in each soil layer
+        outVars_d%tsland          = outVars_d%tsland         + outVars_h%tsland/24                ! K, surface temperature
+        outVars_d%wtd             = outVars_d%wtd            + outVars_h%wtd/24                   ! m, Water table depth
+        outVars_d%snd             = outVars_d%snd            + outVars_h%snd/24                   ! m, Total snow depth
+        outVars_d%lai             = outVars_d%lai            + outVars_h%lai/24                   ! m2 m-2, Leaf area index   
     end subroutine updateDaily
 
     subroutine updateMonthly(hoursOfmonth)
         implicit none
         integer hoursOfmonth
         ! carbon fluxes
-        gpp_m             = gpp_m            + gpp_h            /hoursOfmonth
-        npp_m             = npp_m            + npp_h            /hoursOfmonth
-        nppLeaf_m         = nppLeaf_m        + nppLeaf_h        /hoursOfmonth
-        nppWood_m         = nppWood_m        + nppWood_h        /hoursOfmonth
-        nppStem_m         = nppStem_m        + nppStem_h        /hoursOfmonth ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-        nppRoot_m         = nppRoot_m        + nppRoot_h        /hoursOfmonth
-        nppOther_m        = nppOther_m       + nppOther_h       /hoursOfmonth
-        ra_m              = ra_m             + ra_h             /hoursOfmonth
-        raLeaf_m          = raLeaf_m         + raLeaf_h         /hoursOfmonth
-        raStem_m          = raStem_m         + raStem_h         /hoursOfmonth
-        raRoot_m          = raRoot_m         + raRoot_h         /hoursOfmonth
-        raOther_m         = raOther_m        + raOther_h        /hoursOfmonth
-        rMaint_m          = rMaint_m         + rMaint_h         /hoursOfmonth ! maintenance respiration
-        rGrowth_m         = rGrowth_m        + rGrowth_h        /hoursOfmonth ! growth respiration
-        rh_m              = rh_m             + rh_h             /hoursOfmonth ! heterotrophic respiration
-        nbp_m             = nbp_m            + nbp_h            /hoursOfmonth ! NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        wetlandCH4_m      = wetlandCH4_m     + wetlandCH4_h     /hoursOfmonth ! wetland net fluxes of CH4
-        wetlandCH4prod_m  = wetlandCH4prod_m + wetlandCH4prod_h /hoursOfmonth ! wetland net fluxes of CH4 production
-        wetlandCH4cons_m  = wetlandCH4cons_m + wetlandCH4cons_h /hoursOfmonth ! wetland net fluxes of CH4 consumption
+        outVars_m%gpp             = outVars_m%gpp            + outVars_h%gpp            /hoursOfmonth
+        outVars_m%npp             = outVars_m%npp            + outVars_h%npp            /hoursOfmonth
+        outVars_m%nppLeaf         = outVars_m%nppLeaf        + outVars_h%nppLeaf        /hoursOfmonth
+        outVars_m%nppWood         = outVars_m%nppWood        + outVars_h%nppWood        /hoursOfmonth
+        outVars_m%nppStem         = outVars_m%nppStem        + outVars_h%nppStem        /hoursOfmonth ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
+        outVars_m%nppRoot         = outVars_m%nppRoot        + outVars_h%nppRoot        /hoursOfmonth
+        outVars_m%nppOther        = outVars_m%nppOther       + outVars_h%nppOther       /hoursOfmonth
+        outVars_m%ra              = outVars_m%ra             + outVars_h%ra             /hoursOfmonth
+        outVars_m%raLeaf          = outVars_m%raLeaf         + outVars_h%raLeaf         /hoursOfmonth
+        outVars_m%raStem          = outVars_m%raStem         + outVars_h%raStem         /hoursOfmonth
+        outVars_m%raRoot          = outVars_m%raRoot         + outVars_h%raRoot         /hoursOfmonth
+        outVars_m%raOther         = outVars_m%raOther        + outVars_h%raOther        /hoursOfmonth
+        outVars_m%rMaint          = outVars_m%rMaint         + outVars_h%rMaint         /hoursOfmonth ! maintenance respiration
+        outVars_m%rGrowth         = outVars_m%rGrowth        + outVars_h%rGrowth        /hoursOfmonth ! growth respiration
+        outVars_m%rh              = outVars_m%rh             + outVars_h%rh             /hoursOfmonth ! heterotrophic respiration
+        outVars_m%nbp             = outVars_m%nbp            + outVars_h%nbp            /hoursOfmonth ! NBP(net biome productivity) = GPP - Rh - Ra - other losses  
+        outVars_m%wetlandCH4      = outVars_m%wetlandCH4     + outVars_h%wetlandCH4     /hoursOfmonth ! wetland net fluxes of CH4
+        outVars_m%wetlandCH4prod  = outVars_m%wetlandCH4prod + outVars_h%wetlandCH4prod /hoursOfmonth ! wetland net fluxes of CH4 production
+        outVars_m%wetlandCH4cons  = outVars_m%wetlandCH4cons + outVars_h%wetlandCH4cons /hoursOfmonth ! wetland net fluxes of CH4 consumption
         ! Carbon Pools  (KgC m-2)
-        cLeaf_m           = cLeaf_m          + cLeaf_h          /hoursOfmonth     
-        cStem_m           = cStem_m          + cStem_h          /hoursOfmonth
-        cRoot_m           = cRoot_m          + cRoot_h          /hoursOfmonth      
-        cOther_m          = cOther_m         + cOther_h         /hoursOfmonth ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        cLitter_m         = cLitter_m        + cLitter_h        /hoursOfmonth ! litter (excluding coarse woody debris), Jian: fine litter in TECO?
-        cLitterCwd_m      = cLitterCwd_m     + cLitterCwd_h     /hoursOfmonth ! cLitterCwd: carbon in coarse woody debris
-        cSoil_m           = cSoil_m          + cSoil_h          /hoursOfmonth ! cSoil: soil organic carbon (Jian: total soil carbon);
-        cSoilLevels_m     = cSoilLevels_m    + cSoilLevels_h    /hoursOfmonth  ! cSoilLevels(depth-specific soil organic carbon, Jian: depth?);
-        cSoilFast_m       = cSoilFast_m      + cSoilFast_h      /hoursOfmonth ! cSoilPools (different pools without depth)
-        cSoilSlow_m       = cSoilSlow_m      + cSoilSlow_h      /hoursOfmonth
-        cSoilPassive_m    = cSoilPassive_m   + cSoilPassive_h   /hoursOfmonth
-        cCH4_m            = cCH4_m           + cCH4_h           /hoursOfmonth ! methane concentration
+        outVars_m%cLeaf           = outVars_m%cLeaf          + outVars_h%cLeaf          /hoursOfmonth     
+        outVars_m%cStem           = outVars_m%cStem          + outVars_h%cStem          /hoursOfmonth
+        outVars_m%cRoot           = outVars_m%cRoot          + outVars_h%cRoot          /hoursOfmonth      
+        outVars_m%cOther          = outVars_m%cOther         + outVars_h%cOther         /hoursOfmonth ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
+        outVars_m%cLitter         = outVars_m%cLitter        + outVars_h%cLitter        /hoursOfmonth ! litter (excluding coarse woody debris), Jian: fine litter in TECO?
+        outVars_m%cLitterCwd      = outVars_m%cLitterCwd     + outVars_h%cLitterCwd     /hoursOfmonth ! cLitterCwd: carbon in coarse woody debris
+        outVars_m%cSoil           = outVars_m%cSoil          + outVars_h%cSoil          /hoursOfmonth ! cSoil: soil organic carbon (Jian: total soil carbon);
+        outVars_m%cSoilLevels     = outVars_m%cSoilLevels    + outVars_h%cSoilLevels    /hoursOfmonth  ! cSoilLevels(depth-specific soil organic carbon, Jian: depth?);
+        outVars_m%cSoilFast       = outVars_m%cSoilFast      + outVars_h%cSoilFast      /hoursOfmonth ! cSoilPools (different pools without depth)
+        outVars_m%cSoilSlow       = outVars_m%cSoilSlow      + outVars_h%cSoilSlow      /hoursOfmonth
+        outVars_m%cSoilPassive    = outVars_m%cSoilPassive   + outVars_h%cSoilPassive   /hoursOfmonth
+        outVars_m%CH4            = outVars_m%CH4           + outVars_h%CH4           /hoursOfmonth ! methane concentration
         ! Nitrogen fluxes (kgN m-2 s-1)
-        fBNF_m            = fBNF_m           + fBNF_h           /hoursOfmonth ! fBNF: biological nitrogen fixation;
-        fN2O_m            = fN2O_m           + fN2O_h           /hoursOfmonth ! fN2O: loss of nitrogen through emission of N2O;
-        fNloss_m          = fNloss_m         + fNloss_h         /hoursOfmonth ! fNloss:Total loss of nitrogen to the atmosphere and from leaching;
-        fNnetmin_m        = fNnetmin_m       + fNnetmin_h       /hoursOfmonth ! net mineralizaiton
-        fNdep_m           = fNdep_m          + fNdep_h          /hoursOfmonth ! deposition of N
+        outVars_m%fBNF            = outVars_m%fBNF           + outVars_h%fBNF           /hoursOfmonth ! fBNF: biological nitrogen fixation;
+        outVars_m%fN2O            = outVars_m%fN2O           + outVars_h%fN2O           /hoursOfmonth ! fN2O: loss of nitrogen through emission of N2O;
+        outVars_m%fNloss          = outVars_m%fNloss         + outVars_h%fNloss         /hoursOfmonth ! fNloss:Total loss of nitrogen to the atmosphere and from leaching;
+        outVars_m%fNnetmin        = outVars_m%fNnetmin       + outVars_h%fNnetmin       /hoursOfmonth ! net mineralizaiton
+        outVars_m%fNdep           = outVars_m%fNdep          + outVars_h%fNdep          /hoursOfmonth ! deposition of N
         ! Nitrogen pools (kgN m-2)
-        nLeaf_m           = nLeaf_m          + nLeaf_h          /hoursOfmonth
-        nStem_m           = nStem_m          + nStem_h          /hoursOfmonth
-        nRoot_m           = nRoot_m          + nRoot_h          /hoursOfmonth
-        nOther_m          = nOther_m         + nOther_h         /hoursOfmonth
-        nLitter_m         = nLitter_m        + nLitter_h        /hoursOfmonth
-        nLitterCwd_m      = nLitterCwd_m     + nLitterCwd_h     /hoursOfmonth
-        nSoil_m           = nSoil_m          + nSoil_h          /hoursOfmonth
-        nMineral_m        = nMineral_m       + nMineral_h       /hoursOfmonth ! nMineral: Mineral nitrogen pool
+        outVars_m%nLeaf           = outVars_m%nLeaf          + outVars_h%nLeaf          /hoursOfmonth
+        outVars_m%nStem           = outVars_m%nStem          + outVars_h%nStem          /hoursOfmonth
+        outVars_m%nRoot           = outVars_m%nRoot          + outVars_h%nRoot          /hoursOfmonth
+        outVars_m%nOther          = outVars_m%nOther         + outVars_h%nOther         /hoursOfmonth
+        outVars_m%nLitter         = outVars_m%nLitter        + outVars_h%nLitter        /hoursOfmonth
+        outVars_m%nLitterCwd      = outVars_m%nLitterCwd     + outVars_h%nLitterCwd     /hoursOfmonth
+        outVars_m%nSoil           = outVars_m%nSoil          + outVars_h%nSoil          /hoursOfmonth
+        outVars_m%nMineral        = outVars_m%nMineral       + outVars_h%nMineral       /hoursOfmonth ! nMineral: Mineral nitrogen pool
         ! energy fluxes (W m-2)
-        hfls_m            = hfls_m           + hfls_h           /hoursOfmonth ! Sensible heat flux;
-        hfss_m            = hfss_m           + hfss_h           /hoursOfmonth ! Latent heat flux;
-        SWnet_m           = SWnet_m          + SWnet_h          /hoursOfmonth ! Net shortwave radiation;
-        LWnet_m           = LWnet_m          + LWnet_h          /hoursOfmonth !    Net longwave radiation
+        outVars_m%hfls            = outVars_m%hfls           + outVars_h%hfls           /hoursOfmonth ! Sensible heat flux;
+        outVars_m%hfss            = outVars_m%hfss           + outVars_h%hfss           /hoursOfmonth ! Latent heat flux;
+        outVars_m%SWnet           = outVars_m%SWnet          + outVars_h%SWnet          /hoursOfmonth ! Net shortwave radiation;
+        outVars_m%LWnet           = outVars_m%LWnet          + outVars_h%LWnet          /hoursOfmonth !    Net longwave radiation
         ! water fluxes (kg m-2 s-1)
-        ec_m              = ec_m             + ec_h             /hoursOfmonth
-        tran_m            = tran_m           + tran_h           /hoursOfmonth
-        es_m              = es_m             + es_h             /hoursOfmonth ! Canopy evaporation; Canopy transpiration; Soil evaporation
-        hfsbl_m           = hfsbl_m          + hfsbl_h          /hoursOfmonth ! Snow sublimation
-        mrro_m            = mrro_m           + mrro_h           /hoursOfmonth
-        mrros_m           = mrros_m          + mrros_h          /hoursOfmonth
-        mrrob_m           = mrrob_m          + mrrob_h          /hoursOfmonth ! Total runoff; Surface runoff; Subsurface runoff
+        outVars_m%ec              = outVars_m%ec             + outVars_h%ec             /hoursOfmonth
+        outVars_m%tran            = outVars_m%tran           + outVars_h%tran           /hoursOfmonth
+        outVars_m%es              = outVars_m%es             + outVars_h%es             /hoursOfmonth ! Canopy evaporation; Canopy transpiration; Soil evaporation
+        outVars_m%hfsbl           = outVars_m%hfsbl          + outVars_h%hfsbl          /hoursOfmonth ! Snow sublimation
+        outVars_m%mrro            = outVars_m%mrro           + outVars_h%mrro           /hoursOfmonth
+        outVars_m%mrros           = outVars_m%mrros          + outVars_h%mrros          /hoursOfmonth
+        outVars_m%mrrob           = outVars_m%mrrob          + outVars_h%mrrob          /hoursOfmonth ! Total runoff; Surface runoff; Subsurface runoff
         ! other
-        mrso_m            = mrso_m           + mrro_h           /hoursOfmonth                  ! Kg m-2, soil moisture in each soil layer
-        tsl_m             = tsl_m            + tsl_h            /hoursOfmonth                   ! K, soil temperature in each soil layer
-        tsland_m          = tsland_m         + tsland_h         /hoursOfmonth                ! K, surface temperature
-        wtd_m             = wtd_m            + wtd_h            /hoursOfmonth                   ! m, Water table depth
-        snd_m             = snd_m            + snd_h            /hoursOfmonth                   ! m, Total snow depth
-        lai_m             = lai_m            + lai_h            /hoursOfmonth                   ! m2 m-2, Leaf area index
-        ! not used in SPRUCE-MIP
-
-        
+        outVars_m%mrso            = outVars_m%mrso           + outVars_h%mrro           /hoursOfmonth                  ! Kg m-2, soil moisture in each soil layer
+        outVars_m%tsl             = outVars_m%tsl            + outVars_h%tsl            /hoursOfmonth                   ! K, soil temperature in each soil layer
+        outVars_m%tsland          = outVars_m%tsland         + outVars_h%tsland         /hoursOfmonth                ! K, surface temperature
+        outVars_m%wtd             = outVars_m%wtd            + outVars_h%wtd            /hoursOfmonth                   ! m, Water table depth
+        outVars_m%snd             = outVars_m%snd            + outVars_h%snd            /hoursOfmonth                   ! m, Total snow depth
+        outVars_m%lai             = outVars_m%lai            + outVars_h%lai            /hoursOfmonth                   ! m2 m-2, Leaf area index
     end subroutine updateMonthly
 
     subroutine updateYearly(hoursOfYear)
         implicit none
         integer hoursOfYear
         ! carbon fluxes
-        gpp_y             = gpp_y            + gpp_h            /hoursOfYear
-        npp_y             = npp_y            + npp_h            /hoursOfYear
-        nppLeaf_y         = nppLeaf_y        + nppLeaf_h        /hoursOfYear
-        nppWood_y         = nppWood_y        + nppWood_h        /hoursOfYear
-        nppStem_y         = nppStem_y        + nppStem_h        /hoursOfYear        ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-        nppRoot_y         = nppRoot_y        + nppRoot_h        /hoursOfYear
-        nppOther_y        = nppOther_y       + nppOther_h       /hoursOfYear
-        ra_y              = ra_y             + ra_h             /hoursOfYear
-        raLeaf_y          = raLeaf_y         + raLeaf_h         /hoursOfYear
-        raStem_y          = raStem_y         + raStem_h         /hoursOfYear
-        raRoot_y          = raRoot_y         + raRoot_h         /hoursOfYear
-        raOther_y         = raOther_y        + raOther_h        /hoursOfYear
-        rMaint_y          = rMaint_y         + rMaint_h         /hoursOfYear        ! maintenance respiration
-        rGrowth_y         = rGrowth_y        + rGrowth_h        /hoursOfYear        ! growth respiration
-        rh_y              = rh_y             + rh_h             /hoursOfYear        ! heterotrophic respiration
-        nbp_y             = nbp_y            + nbp_h            /hoursOfYear        ! NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        wetlandCH4_y      = wetlandCH4_y     + wetlandCH4_h     /hoursOfYear        ! wetland net fluxes of CH4
-        wetlandCH4prod_y  = wetlandCH4prod_y + wetlandCH4prod_h /hoursOfYear        ! wetland net fluxes of CH4 production
-        wetlandCH4cons_y  = wetlandCH4cons_y + wetlandCH4cons_h /hoursOfYear        ! wetland net fluxes of CH4 consumption
+        outVars_y%gpp             = outVars_y%gpp            + outVars_h%gpp            /hoursOfYear
+        outVars_y%npp             = outVars_y%npp            + outVars_h%npp            /hoursOfYear
+        outVars_y%nppLeaf         = outVars_y%nppLeaf        + outVars_h%nppLeaf        /hoursOfYear
+        outVars_y%nppWood         = outVars_y%nppWood        + outVars_h%nppWood        /hoursOfYear
+        outVars_y%nppStem         = outVars_y%nppStem        + outVars_h%nppStem        /hoursOfYear        ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
+        outVars_y%nppRoot         = outVars_y%nppRoot        + outVars_h%nppRoot        /hoursOfYear
+        outVars_y%nppOther        = outVars_y%nppOther       + outVars_h%nppOther       /hoursOfYear
+        outVars_y%ra              = outVars_y%ra             + outVars_h%ra             /hoursOfYear
+        outVars_y%raLeaf          = outVars_y%raLeaf         + outVars_h%raLeaf         /hoursOfYear
+        outVars_y%raStem          = outVars_y%raStem         + outVars_h%raStem         /hoursOfYear
+        outVars_y%raRoot          = outVars_y%raRoot         + outVars_h%raRoot         /hoursOfYear
+        outVars_y%raOther         = outVars_y%raOther        + outVars_h%raOther        /hoursOfYear
+        outVars_y%rMaint          = outVars_y%rMaint         + outVars_h%rMaint         /hoursOfYear        ! maintenance respiration
+        outVars_y%rGrowth         = outVars_y%rGrowth        + outVars_h%rGrowth        /hoursOfYear        ! growth respiration
+        outVars_y%rh              = outVars_y%rh             + outVars_h%rh             /hoursOfYear        ! heterotrophic respiration
+        outVars_y%nbp             = outVars_y%nbp            + outVars_h%nbp            /hoursOfYear        ! NBP(net biome productivity) = GPP - Rh - Ra - other losses  
+        outVars_y%wetlandCH4      = outVars_y%wetlandCH4     + outVars_h%wetlandCH4     /hoursOfYear        ! wetland net fluxes of CH4
+        outVars_y%wetlandCH4prod  = outVars_y%wetlandCH4prod + outVars_h%wetlandCH4prod /hoursOfYear        ! wetland net fluxes of CH4 production
+        outVars_y%wetlandCH4cons  = outVars_y%wetlandCH4cons + outVars_h%wetlandCH4cons /hoursOfYear        ! wetland net fluxes of CH4 consumption
         ! Carbon Pools  (KgC m-2)
-        cLeaf_y           = cLeaf_y          + cLeaf_h          /hoursOfYear
-        cStem_y           = cStem_y          + cStem_h          /hoursOfYear
-        cRoot_y           = cRoot_y          + cRoot_h          /hoursOfYear
-        cOther_y          = cOther_y         + cOther_h         /hoursOfYear        ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        cLitter_y         = cLitter_y        + cLitter_h        /hoursOfYear        ! litter (excluding coarse woody debris), Jian: fine litter in TECO?
-        cLitterCwd_y      = cLitterCwd_y     + cLitterCwd_h     /hoursOfYear        ! cLitterCwd: carbon in coarse woody debris
-        cSoil_y           = cSoil_y          + cSoil_h          /hoursOfYear        ! cSoil: soil organic carbon (Jian: total soil carbon);
-        cSoilLevels_y     = cSoilLevels_y    + cSoilLevels_h    /hoursOfYear        ! cSoilLevels(depth-specific soil organic carbon, Jian: depth?);
-        cSoilFast_y       = cSoilFast_y      + cSoilFast_h      /hoursOfYear        ! cSoilPools (different pools without depth)
-        cSoilSlow_y       = cSoilSlow_y      + cSoilSlow_h      /hoursOfYear
-        cSoilPassive_y    = cSoilPassive_y   + cSoilPassive_h   /hoursOfYear
-        cCH4_y            = cCH4_y           + cCH4_h           /hoursOfYear        ! methane concentration
+        outVars_y%cLeaf           = outVars_y%cLeaf          + outVars_h%cLeaf          /hoursOfYear
+        outVars_y%cStem           = outVars_y%cStem          + outVars_h%cStem          /hoursOfYear
+        outVars_y%cRoot           = outVars_y%cRoot          + outVars_h%cRoot          /hoursOfYear
+        outVars_y%cOther          = outVars_y%cOther         + outVars_h%cOther         /hoursOfYear        ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
+        outVars_y%cLitter         = outVars_y%cLitter        + outVars_h%cLitter        /hoursOfYear        ! litter (excluding coarse woody debris), Jian: fine litter in TECO?
+        outVars_y%cLitterCwd      = outVars_y%cLitterCwd     + outVars_h%cLitterCwd     /hoursOfYear        ! cLitterCwd: carbon in coarse woody debris
+        outVars_y%cSoil           = outVars_y%cSoil          + outVars_h%cSoil          /hoursOfYear        ! cSoil: soil organic carbon (Jian: total soil carbon);
+        outVars_y%cSoilLevels     = outVars_y%cSoilLevels    + outVars_h%cSoilLevels    /hoursOfYear        ! cSoilLevels(depth-specific soil organic carbon, Jian: depth?);
+        outVars_y%cSoilFast       = outVars_y%cSoilFast      + outVars_h%cSoilFast      /hoursOfYear        ! cSoilPools (different pools without depth)
+        outVars_y%cSoilSlow       = outVars_y%cSoilSlow      + outVars_h%cSoilSlow      /hoursOfYear
+        outVars_y%cSoilPassive    = outVars_y%cSoilPassive   + outVars_h%cSoilPassive   /hoursOfYear
+        outVars_y%CH4            = outVars_y%CH4           + outVars_h%CH4           /hoursOfYear        ! methane concentration
         ! Nitrogen fluxes (kgN m-2 s-1)
-        fBNF_y            = fBNF_y           + fBNF_h           /hoursOfYear        ! fBNF: biological nitrogen fixation;
-        fN2O_y            = fN2O_y           + fN2O_h           /hoursOfYear        ! fN2O: loss of nitrogen through emission of N2O;
-        fNloss_y          = fNloss_y         + fNloss_h         /hoursOfYear        ! fNloss:Total loss of nitrogen to the atmosphere and from leaching;
-        fNnetmin_y        = fNnetmin_y       + fNnetmin_h       /hoursOfYear        ! net mineralizaiton
-        fNdep_y           = fNdep_y          + fNdep_h          /hoursOfYear        ! deposition of N
+        outVars_y%fBNF            = outVars_y%fBNF           + outVars_h%fBNF           /hoursOfYear        ! fBNF: biological nitrogen fixation;
+        outVars_y%fN2O            = outVars_y%fN2O           + outVars_h%fN2O           /hoursOfYear        ! fN2O: loss of nitrogen through emission of N2O;
+        outVars_y%fNloss          = outVars_y%fNloss         + outVars_h%fNloss         /hoursOfYear        ! fNloss:Total loss of nitrogen to the atmosphere and from leaching;
+        outVars_y%fNnetmin        = outVars_y%fNnetmin       + outVars_h%fNnetmin       /hoursOfYear        ! net mineralizaiton
+        outVars_y%fNdep           = outVars_y%fNdep          + outVars_h%fNdep          /hoursOfYear        ! deposition of N
         ! Nitrogen pools (kgN m-2)
-        nLeaf_y           = nLeaf_y          + nLeaf_h          /hoursOfYear
-        nStem_y           = nStem_y          + nStem_h          /hoursOfYear
-        nRoot_y           = nRoot_y          + nRoot_h          /hoursOfYear
-        nOther_y          = nOther_y         + nOther_h         /hoursOfYear
-        nLitter_y         = nLitter_y        + nLitter_h        /hoursOfYear
-        nLitterCwd_y      = nLitterCwd_y     + nLitterCwd_h     /hoursOfYear
-        nSoil_y           = nSoil_y          + nSoil_h          /hoursOfYear
-        nMineral_y        = nMineral_y       + nMineral_h       /hoursOfYear        ! nMineral: Mineral nitrogen pool
+        outVars_y%nLeaf           = outVars_y%nLeaf          + outVars_h%nLeaf          /hoursOfYear
+        outVars_y%nStem           = outVars_y%nStem          + outVars_h%nStem          /hoursOfYear
+        outVars_y%nRoot           = outVars_y%nRoot          + outVars_h%nRoot          /hoursOfYear
+        outVars_y%nOther          = outVars_y%nOther         + outVars_h%nOther         /hoursOfYear
+        outVars_y%nLitter         = outVars_y%nLitter        + outVars_h%nLitter        /hoursOfYear
+        outVars_y%nLitterCwd      = outVars_y%nLitterCwd     + outVars_h%nLitterCwd     /hoursOfYear
+        outVars_y%nSoil           = outVars_y%nSoil          + outVars_h%nSoil          /hoursOfYear
+        outVars_y%nMineral        = outVars_y%nMineral       + outVars_h%nMineral       /hoursOfYear        ! nMineral: Mineral nitrogen pool
         ! energy fluxes (W m-2)
-        hfls_y            = hfls_y           + hfls_h           /hoursOfYear        ! Sensible heat flux;
-        hfss_y            = hfss_y           + hfss_h           /hoursOfYear        ! Latent heat flux;
-        SWnet_y           = SWnet_y          + SWnet_h          /hoursOfYear        ! Net shortwave radiation;
-        LWnet_y           = LWnet_y          + LWnet_h          /hoursOfYear        ! Net longwave radiation
+        outVars_y%hfls            = outVars_y%hfls           + outVars_h%hfls           /hoursOfYear        ! Sensible heat flux;
+        outVars_y%hfss            = outVars_y%hfss           + outVars_h%hfss           /hoursOfYear        ! Latent heat flux;
+        outVars_y%SWnet           = outVars_y%SWnet          + outVars_h%SWnet          /hoursOfYear        ! Net shortwave radiation;
+        outVars_y%LWnet           = outVars_y%LWnet          + outVars_h%LWnet          /hoursOfYear        ! Net longwave radiation
         ! water fluxes (kg m-2 s-1)
-        ec_y              = ec_y             + ec_h             /hoursOfYear
-        tran_y            = tran_y           + tran_h           /hoursOfYear
-        es_y              = es_y             + es_h             /hoursOfYear        ! Canopy evaporation; Canopy transpiration; Soil evaporation
-        hfsbl_y           = hfsbl_y          + hfsbl_h          /hoursOfYear        ! Snow sublimation
-        mrro_y            = mrro_y           + mrro_h           /hoursOfYear
-        mrros_y           = mrros_y          + mrros_h          /hoursOfYear
-        mrrob_y           = mrrob_y          + mrrob_h          /hoursOfYear        ! Total runoff; Surface runoff; Subsurface runoff
+        outVars_y%ec              = outVars_y%ec             + outVars_h%ec             /hoursOfYear
+        outVars_y%tran            = outVars_y%tran           + outVars_h%tran           /hoursOfYear
+        outVars_y%es              = outVars_y%es             + outVars_h%es             /hoursOfYear        ! Canopy evaporation; Canopy transpiration; Soil evaporation
+        outVars_y%hfsbl           = outVars_y%hfsbl          + outVars_h%hfsbl          /hoursOfYear        ! Snow sublimation
+        outVars_y%mrro            = outVars_y%mrro           + outVars_h%mrro           /hoursOfYear
+        outVars_y%mrros           = outVars_y%mrros          + outVars_h%mrros          /hoursOfYear
+        outVars_y%mrrob           = outVars_y%mrrob          + outVars_h%mrrob          /hoursOfYear        ! Total runoff; Surface runoff; Subsurface runoff
         ! other
-        mrso_y            = mrso_y           + mrro_h           /hoursOfYear                  ! Kg m-2, soil moisture in each soil layer
-        tsl_y             = tsl_y            + tsl_h            /hoursOfYear                   ! K, soil temperature in each soil layer
-        tsland_y          = tsland_y         + tsland_h         /hoursOfYear                ! K, surface temperature
-        wtd_y             = wtd_y            + wtd_h            /hoursOfYear                   ! m, Water table depth
-        snd_y             = snd_y            + snd_h            /hoursOfYear                   ! m, Total snow depth
-        lai_y             = lai_y            + lai_h            /hoursOfYear
+        outVars_y%mrso            = outVars_y%mrso           + outVars_h%mrro           /hoursOfYear                  ! Kg m-2, soil moisture in each soil layer
+        outVars_y%tsl             = outVars_y%tsl            + outVars_h%tsl            /hoursOfYear                   ! K, soil temperature in each soil layer
+        outVars_y%tsland          = outVars_y%tsland         + outVars_h%tsland         /hoursOfYear                ! K, surface temperature
+        outVars_y%wtd             = outVars_y%wtd            + outVars_h%wtd            /hoursOfYear                   ! m, Water table depth
+        outVars_y%snd             = outVars_y%snd            + outVars_h%snd            /hoursOfYear                   ! m, Total snow depth
+        outVars_y%lai             = outVars_y%lai            + outVars_h%lai            /hoursOfYear
         ! test_gpp_y        = test_gpp_y       + test_gpp         /hoursOfYear
 
-        ! not used in SPRUCE-MIP
-        rain_yr   = rain_yr   + rain
-        transp_yr = transp_yr + transp
-        evap_yr   = evap_yr   + evap
-        runoff_yr = runoff_yr + runoff
+        ! ! not used in SPRUCE-MIP
+        ! rain_yr   = rain_yr   + rain
+        ! transp_yr = transp_yr + transp
+        ! evap_yr   = evap_yr   + evap
+        ! runoff_yr = runoff_yr + runoff
     end subroutine updateYearly
 
     subroutine summaryHourly(iTotHourly)
         implicit NONE
         integer iTotHourly
         ! summary in the total results
-        all_gpp_h(iTotHourly)            = gpp_h         
-        all_npp_h(iTotHourly)            = npp_h
-        all_nppLeaf_h(iTotHourly)        = nppLeaf_h
-        all_nppWood_h(iTotHourly)        = nppWood_h
-        all_nppStem_h(iTotHourly)        = nppStem_h
-        all_nppRoot_h(iTotHourly)        = nppRoot_h
-        all_nppOther_h(iTotHourly)       = nppOther_h                  ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-        all_ra_h(iTotHourly)             = ra_h
-        all_raLeaf_h(iTotHourly)         = raLeaf_h
-        all_raStem_h(iTotHourly)         = raStem_h
-        all_raRoot_h(iTotHourly)         = raRoot_h
-        all_raOther_h(iTotHourly)        = raOther_h
-        all_rMaint_h(iTotHourly)         = rMaint_h
-        all_rGrowth_h(iTotHourly)        = rGrowth_h                                             ! maintenance respiration and growth respiration
-        all_rh_h(iTotHourly)             = rh_h
-        all_nbp_h(iTotHourly)            = nbp_h                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        all_wetlandCH4_h(iTotHourly)     = wetlandCH4_h 
-        all_wetlandCH4prod_h(iTotHourly) = wetlandCH4prod_h 
-        all_wetlandCH4cons_h(iTotHourly) = wetlandCH4cons_h                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
+        tot_outVars_h%gpp(iTotHourly)            = outVars_h%gpp         
+        tot_outVars_h%npp(iTotHourly)            = outVars_h%npp
+        tot_outVars_h%nppLeaf(iTotHourly)        = outVars_h%nppLeaf
+        tot_outVars_h%nppWood(iTotHourly)        = outVars_h%nppWood
+        tot_outVars_h%nppStem(iTotHourly)        = outVars_h%nppStem
+        tot_outVars_h%nppRoot(iTotHourly)        = outVars_h%nppRoot
+        tot_outVars_h%nppOther(iTotHourly)       = outVars_h%nppOther                  ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
+        tot_outVars_h%ra(iTotHourly)             = outVars_h%ra
+        tot_outVars_h%raLeaf(iTotHourly)         = outVars_h%raLeaf
+        tot_outVars_h%raStem(iTotHourly)         = outVars_h%raStem
+        tot_outVars_h%raRoot(iTotHourly)         = outVars_h%raRoot
+        tot_outVars_h%raOther(iTotHourly)        = outVars_h%raOther
+        tot_outVars_h%rMaint(iTotHourly)         = outVars_h%rMaint
+        tot_outVars_h%rGrowth(iTotHourly)        = outVars_h%rGrowth                                             ! maintenance respiration and growth respiration
+        tot_outVars_h%rh(iTotHourly)             = outVars_h%rh
+        tot_outVars_h%nbp(iTotHourly)            = outVars_h%nbp                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
+        tot_outVars_h%wetlandCH4(iTotHourly)     = outVars_h%wetlandCH4 
+        tot_outVars_h%wetlandCH4prod(iTotHourly) = outVars_h%wetlandCH4prod 
+        tot_outVars_h%wetlandCH4cons(iTotHourly) = outVars_h%wetlandCH4cons                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
         ! Carbon Pools  (KgC m-2)
-        all_cLeaf_h(iTotHourly)          = cLeaf_h
-        all_cStem_h(iTotHourly)          = cStem_h
-        all_cRoot_h(iTotHourly)          = cRoot_h
-        all_cOther_h(iTotHourly)         = cOther_h                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        all_cLitter_h(iTotHourly)        = cLitter_h
-        all_cLitterCwd_h(iTotHourly)     = cLitterCwd_h                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-        all_cSoil_h(iTotHourly)          = cSoil_h
-        all_cSoilLevels_h(iTotHourly,:)  = cSoilLevels_h
-        all_cSoilFast_h(iTotHourly)      = cSoilFast_h
-        all_cSoilSlow_h(iTotHourly)      = cSoilSlow_h
-        all_cSoilPassive_h(iTotHourly)   = cSoilPassive_h                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-        all_cCH4_h(iTotHourly,:)         = cCH4_h                                                        ! methane concentration
+        tot_outVars_h%cLeaf(iTotHourly)          = outVars_h%cLeaf
+        tot_outVars_h%cStem(iTotHourly)          = outVars_h%cStem
+        tot_outVars_h%cRoot(iTotHourly)          = outVars_h%cRoot
+        tot_outVars_h%cOther(iTotHourly)         = outVars_h%cOther                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
+        tot_outVars_h%cLitter(iTotHourly)        = outVars_h%cLitter
+        tot_outVars_h%cLitterCwd(iTotHourly)     = outVars_h%cLitterCwd                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
+        tot_outVars_h%cSoil(iTotHourly)          = outVars_h%cSoil
+        tot_outVars_h%cSoilLevels(iTotHourly,:)  = outVars_h%cSoilLevels
+        tot_outVars_h%cSoilFast(iTotHourly)      = outVars_h%cSoilFast
+        tot_outVars_h%cSoilSlow(iTotHourly)      = outVars_h%cSoilSlow
+        tot_outVars_h%cSoilPassive(iTotHourly)   = outVars_h%cSoilPassive                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
+        tot_outVars_h%CH4(iTotHourly,:)         = outVars_h%CH4                                                        ! methane concentration
         ! Nitrogen fluxes (kgN m-2 s-1)
-        all_fBNF_h(iTotHourly)           = fBNF_h
-        all_fN2O_h(iTotHourly)           = fN2O_h
-        all_fNloss_h(iTotHourly)         = fNloss_h
-        all_fNnetmin_h(iTotHourly)       = fNnetmin_h
-        all_fNdep_h(iTotHourly)          = fNdep_h                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
+        tot_outVars_h%fBNF(iTotHourly)           = outVars_h%fBNF
+        tot_outVars_h%fN2O(iTotHourly)           = outVars_h%fN2O
+        tot_outVars_h%fNloss(iTotHourly)         = outVars_h%fNloss
+        tot_outVars_h%fNnetmin(iTotHourly)       = outVars_h%fNnetmin
+        tot_outVars_h%fNdep(iTotHourly)          = outVars_h%fNdep                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
         ! Nitrogen pools (kgN m-2)
-        all_nLeaf_h(iTotHourly)          = nLeaf_h
-        all_nStem_h(iTotHourly)          = nStem_h
-        all_nRoot_h(iTotHourly)          = nRoot_h
-        all_nOther_h(iTotHourly)         = nOther_h
-        all_nLitter_h(iTotHourly)        = nLitter_h
-        all_nLitterCwd_h(iTotHourly)     = nLitterCwd_h
-        all_nSoil_h(iTotHourly)          = nSoil_h
-        all_nMineral_h(iTotHourly)       = nMineral_h                    ! nMineral: Mineral nitrogen pool
+        tot_outVars_h%nLeaf(iTotHourly)          = outVars_h%nLeaf
+        tot_outVars_h%nStem(iTotHourly)          = outVars_h%nStem
+        tot_outVars_h%nRoot(iTotHourly)          = outVars_h%nRoot
+        tot_outVars_h%nOther(iTotHourly)         = outVars_h%nOther
+        tot_outVars_h%nLitter(iTotHourly)        = outVars_h%nLitter
+        tot_outVars_h%nLitterCwd(iTotHourly)     = outVars_h%nLitterCwd
+        tot_outVars_h%nSoil(iTotHourly)          = outVars_h%nSoil
+        tot_outVars_h%nMineral(iTotHourly)       = outVars_h%nMineral                    ! nMineral: Mineral nitrogen pool
         ! energy fluxes (W m-2)
-        all_hfls_h(iTotHourly)           = hfls_h
-        all_hfss_h(iTotHourly)           = hfss_h
-        all_SWnet_h(iTotHourly)          = SWnet_h
-        all_LWnet_h(iTotHourly)          = LWnet_h                               ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
+        tot_outVars_h%hfls(iTotHourly)           = outVars_h%hfls
+        tot_outVars_h%hfss(iTotHourly)           = outVars_h%hfss
+        tot_outVars_h%SWnet(iTotHourly)          = outVars_h%SWnet
+        tot_outVars_h%LWnet(iTotHourly)          = outVars_h%LWnet                               ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
         ! water fluxes (kg m-2 s-1)
-        all_ec_h(iTotHourly)             = ec_h
-        all_tran_h(iTotHourly)           = tran_h
-        all_es_h(iTotHourly)             = es_h                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-        all_hfsbl_h(iTotHourly)          = hfsbl_h                                                         ! Snow sublimation
-        all_mrro_h(iTotHourly)           = mrro_h
-        all_mrros_h(iTotHourly)          = mrros_h
-        all_mrrob_h(iTotHourly)          = mrrob_h                                        ! Total runoff; Surface runoff; Subsurface runoff
+        tot_outVars_h%ec(iTotHourly)             = outVars_h%ec
+        tot_outVars_h%tran(iTotHourly)           = outVars_h%tran
+        tot_outVars_h%es(iTotHourly)             = outVars_h%es                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
+        tot_outVars_h%hfsbl(iTotHourly)          = outVars_h%hfsbl                                                         ! Snow sublimation
+        tot_outVars_h%mrro(iTotHourly)           = outVars_h%mrro
+        tot_outVars_h%mrros(iTotHourly)          = outVars_h%mrros
+        tot_outVars_h%mrrob(iTotHourly)          = outVars_h%mrrob                                        ! Total runoff; Surface runoff; Subsurface runoff
         ! Other
-        all_mrso_h(iTotHourly,:)         = mrso_h                                                   ! Kg m-2, soil moisture in each soil layer
-        all_tsl_h(iTotHourly,:)          = tsl_h                                             ! K, soil temperature in each soil layer
-        all_tsland_h(iTotHourly)         = tsland_h                                                 ! K, surface temperature
-        all_wtd_h(iTotHourly)            = wtd_h                                                 ! m, Water table depth
-        all_snd_h(iTotHourly)            = snd_h                                                 ! m, Total snow depth
-        all_lai_h(iTotHourly)            = lai_h                     ! m2 m-2, Leaf area index
-        all_gdd5_h(iTotHourly)           = GDD5
-        all_onset_h(iTotHourly)           = onset
-        all_storage_h(iTotHourly)        = storage
-        all_add_h(iTotHourly)            = add
-        all_accumulation_h(iTotHourly)   = accumulation
+        tot_outVars_h%mrso(iTotHourly,:)         = outVars_h%mrso                                                   ! Kg m-2, soil moisture in each soil layer
+        tot_outVars_h%tsl(iTotHourly,:)          = outVars_h%tsl                                             ! K, soil temperature in each soil layer
+        tot_outVars_h%tsland(iTotHourly)         = outVars_h%tsland                                                 ! K, surface temperature
+        tot_outVars_h%wtd(iTotHourly)            = outVars_h%wtd                                                 ! m, Water table depth
+        tot_outVars_h%snd(iTotHourly)            = outVars_h%snd                                                 ! m, Total snow depth
+        tot_outVars_h%lai(iTotHourly)            = outVars_h%lai                     ! m2 m-2, Leaf area index
+        ! tot_outVars_h%gdd5(iTotHourly)           = GDD5
+        ! tot_outVars_h%onset(iTotHourly)           = onset
+        ! tot_outVars_h%storage(iTotHourly)        = storage
+        ! tot_outVars_h%add(iTotHourly)            = add
+        ! tot_outVars_h%accumulation(iTotHourly)   = accumulation
         ! all_test_h(5*(iTotHourly-1)+1:5*(iTotHourly),:) = test_gpp
         ! all_test_h(iTotHourly,:) = test_gpp
 
@@ -404,73 +394,73 @@ module mod_upAndSum
         ! daily: 
         ! ---------------------------------------------------------------------
         ! carbon fluxes (Kg C m-2 s-1)
-        all_gpp_d(iTotDaily)            = gpp_d
-        all_npp_d(iTotDaily)            = npp_d
-        all_nppLeaf_d(iTotDaily)        = nppLeaf_d
-        all_nppWood_d(iTotDaily)        = nppWood_d
-        all_nppStem_d(iTotDaily)        = nppStem_d
-        all_nppRoot_d(iTotDaily)        = nppRoot_d
-        all_nppOther_d(iTotDaily)       = nppOther_d   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-        all_ra_d(iTotDaily)             = ra_d
-        all_raLeaf_d(iTotDaily)         = raLeaf_d
-        all_raStem_d(iTotDaily)         = raStem_d
-        all_raRoot_d(iTotDaily)         = raRoot_d
-        all_raOther_d(iTotDaily)        = raOther_d
-        all_rMaint_d(iTotDaily)         = rMaint_d
-        all_rGrowth_d(iTotDaily)        = Rgrowth_d                                            ! maintenance respiration and growth respiration
-        all_rh_d(iTotDaily)             = rh_d
-        all_nbp_d(iTotDaily)            = nbp_d                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        all_wetlandCH4_d(iTotDaily)     = wetlandCH4_d
-        all_wetlandCH4prod_d(iTotDaily) = wetlandCH4prod_d
-        all_wetlandCH4cons_d(iTotDaily) = wetlandCH4cons_d                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
+        tot_outVars_d%gpp(iTotDaily)            = outVars_d%gpp
+        tot_outVars_d%npp(iTotDaily)            = outVars_d%npp
+        tot_outVars_d%nppLeaf(iTotDaily)        = outVars_d%nppLeaf
+        tot_outVars_d%nppWood(iTotDaily)        = outVars_d%nppWood
+        tot_outVars_d%nppStem(iTotDaily)        = outVars_d%nppStem
+        tot_outVars_d%nppRoot(iTotDaily)        = outVars_d%nppRoot
+        tot_outVars_d%nppOther(iTotDaily)       = outVars_d%nppOther   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
+        tot_outVars_d%ra(iTotDaily)             = outVars_d%ra
+        tot_outVars_d%raLeaf(iTotDaily)         = outVars_d%raLeaf
+        tot_outVars_d%raStem(iTotDaily)         = outVars_d%raStem
+        tot_outVars_d%raRoot(iTotDaily)         = outVars_d%raRoot
+        tot_outVars_d%raOther(iTotDaily)        = outVars_d%raOther
+        tot_outVars_d%rMaint(iTotDaily)         = outVars_d%rMaint
+        tot_outVars_d%rGrowth(iTotDaily)        = outVars_d%Rgrowth                                            ! maintenance respiration and growth respiration
+        tot_outVars_d%rh(iTotDaily)             = outVars_d%rh
+        tot_outVars_d%nbp(iTotDaily)            = outVars_d%nbp                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
+        tot_outVars_d%wetlandCH4(iTotDaily)     = outVars_d%wetlandCH4
+        tot_outVars_d%wetlandCH4prod(iTotDaily) = outVars_d%wetlandCH4prod
+        tot_outVars_d%wetlandCH4cons(iTotDaily) = outVars_d%wetlandCH4cons                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
         ! Carbon Pools  (KgC m-2)
-        all_cLeaf_d(iTotDaily)          = cLeaf_d
-        all_cStem_d(iTotDaily)          = cStem_d
-        all_cRoot_d(iTotDaily)          = cRoot_d
-        all_cOther_d(iTotDaily)         = cOther_d                           ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        all_cLitter_d(iTotDaily)        = cLitter_d
-        all_cLitterCwd_d(iTotDaily)     = cLitterCwd_d                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-        all_cSoil_d(iTotDaily)          = cSoil_d
-        all_cSoilLevels_d(iTotDaily,:)    = cSoilLevels_d
-        all_cSoilFast_d(iTotDaily)      = cSoilFast_d
-        all_cSoilSlow_d(iTotDaily)      = cSoilSlow_d
-        all_cSoilPassive_d(iTotDaily)   = cSoilPassive_d                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-        all_cCH4_d(iTotDaily,:)         = cCH4_d                                                         ! methane concentration
+        tot_outVars_d%cLeaf(iTotDaily)          = outVars_d%cLeaf
+        tot_outVars_d%cStem(iTotDaily)          = outVars_d%cStem
+        tot_outVars_d%cRoot(iTotDaily)          = outVars_d%cRoot
+        tot_outVars_d%cOther(iTotDaily)         = outVars_d%cOther                           ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
+        tot_outVars_d%cLitter(iTotDaily)        = outVars_d%cLitter
+        tot_outVars_d%cLitterCwd(iTotDaily)     = outVars_d%cLitterCwd                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
+        tot_outVars_d%cSoil(iTotDaily)          = outVars_d%cSoil
+        tot_outVars_d%cSoilLevels(iTotDaily,:)    = outVars_d%cSoilLevels
+        tot_outVars_d%cSoilFast(iTotDaily)      = outVars_d%cSoilFast
+        tot_outVars_d%cSoilSlow(iTotDaily)      = outVars_d%cSoilSlow
+        tot_outVars_d%cSoilPassive(iTotDaily)   = outVars_d%cSoilPassive                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
+        tot_outVars_d%CH4(iTotDaily,:)         = outVars_d%CH4                                                         ! methane concentration
         ! Nitrogen fluxes (kgN m-2 s-1)
-        all_fBNF_d(iTotDaily)           = fBNF_d
-        all_fN2O_d(iTotDaily)           = fN2O_d
-        all_fNloss_d(iTotDaily)         = fNloss_d
-        all_fNnetmin_d(iTotDaily)       = fNnetmin_d
-        all_fNdep_d(iTotDaily)          = fNdep_d                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
+        tot_outVars_d%fBNF(iTotDaily)           = outVars_d%fBNF
+        tot_outVars_d%fN2O(iTotDaily)           = outVars_d%fN2O
+        tot_outVars_d%fNloss(iTotDaily)         = outVars_d%fNloss
+        tot_outVars_d%fNnetmin(iTotDaily)       = outVars_d%fNnetmin
+        tot_outVars_d%fNdep(iTotDaily)          = outVars_d%fNdep                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
         ! Nitrogen pools (kgN m-2)
-        all_nLeaf_d(iTotDaily)          = nLeaf_d
-        all_nStem_d(iTotDaily)          = nStem_d
-        all_nRoot_d(iTotDaily)          = nRoot_d
-        all_nOther_d(iTotDaily)         = nOther_d
-        all_nLitter_d(iTotDaily)        = nLitter_d
-        all_nLitterCwd_d(iTotDaily)     = nLitterCwd_d
-        all_nSoil_d(iTotDaily)          = nSoil_d
-        all_nMineral_d(iTotDaily)       = nMineral_d                    ! nMineral: Mineral nitrogen pool
+        tot_outVars_d%nLeaf(iTotDaily)          = outVars_d%nLeaf
+        tot_outVars_d%nStem(iTotDaily)          = outVars_d%nStem
+        tot_outVars_d%nRoot(iTotDaily)          = outVars_d%nRoot
+        tot_outVars_d%nOther(iTotDaily)         = outVars_d%nOther
+        tot_outVars_d%nLitter(iTotDaily)        = outVars_d%nLitter
+        tot_outVars_d%nLitterCwd(iTotDaily)     = outVars_d%nLitterCwd
+        tot_outVars_d%nSoil(iTotDaily)          = outVars_d%nSoil
+        tot_outVars_d%nMineral(iTotDaily)       = outVars_d%nMineral                    ! nMineral: Mineral nitrogen pool
         ! energy fluxes (W m-2)
-        all_hfls_d(iTotDaily)           = hfls_d
-        all_hfss_d(iTotDaily)           = hfss_d
-        all_SWnet_d(iTotDaily)          = SWnet_d
-        all_LWnet_d(iTotDaily)          = LWnet_d                              ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
+        tot_outVars_d%hfls(iTotDaily)           = outVars_d%hfls
+        tot_outVars_d%hfss(iTotDaily)           = outVars_d%hfss
+        tot_outVars_d%SWnet(iTotDaily)          = outVars_d%SWnet
+        tot_outVars_d%LWnet(iTotDaily)          = outVars_d%LWnet                              ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
         ! water fluxes (kg m-2 s-1)
-        all_ec_d(iTotDaily)             = ec_d
-        all_tran_d(iTotDaily)           = tran_d
-        all_es_d(iTotDaily)             = es_d                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-        all_hfsbl_d(iTotDaily)          = hfsbl_d                                                         ! Snow sublimation
-        all_mrro_d(iTotDaily)           = mrro_d
-        all_mrros_d(iTotDaily)          = mrros_d
-        all_mrrob_d(iTotDaily)          = mrrob_d                                        ! Total runoff; Surface runoff; Subsurface runoff
+        tot_outVars_d%ec(iTotDaily)             = outVars_d%ec
+        tot_outVars_d%tran(iTotDaily)           = outVars_d%tran
+        tot_outVars_d%es(iTotDaily)             = outVars_d%es                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
+        tot_outVars_d%hfsbl(iTotDaily)          = outVars_d%hfsbl                                                         ! Snow sublimation
+        tot_outVars_d%mrro(iTotDaily)           = outVars_d%mrro
+        tot_outVars_d%mrros(iTotDaily)          = outVars_d%mrros
+        tot_outVars_d%mrrob(iTotDaily)          = outVars_d%mrrob                                        ! Total runoff; Surface runoff; Subsurface runoff
         ! Other
-        all_mrso_d(iTotDaily,:)         = mrso_d                                          ! Kg m-2, soil moisture in each soil layer
-        all_tsl_d(iTotDaily,:)          = tsl_d                                          ! K, soil temperature in each soil layer
-        all_tsland_d(iTotDaily)         = tsland_d                                                 ! K, surface temperature
-        all_wtd_d(iTotDaily)            = wtd_d                                                 ! m, Water table depth
-        all_snd_d(iTotDaily)            = snd_d                                                 ! m, Total snow depth
-        all_lai_d(iTotDaily)            = lai_d                                                 ! m2 m-2, Leaf area index
+        tot_outVars_d%mrso(iTotDaily,:)         = outVars_d%mrso                                          ! Kg m-2, soil moisture in each soil layer
+        tot_outVars_d%tsl(iTotDaily,:)          = outVars_d%tsl                                          ! K, soil temperature in each soil layer
+        tot_outVars_d%tsland(iTotDaily)         = outVars_d%tsland                                                 ! K, surface temperature
+        tot_outVars_d%wtd(iTotDaily)            = outVars_d%wtd                                                 ! m, Water table depth
+        tot_outVars_d%snd(iTotDaily)            = outVars_d%snd                                                 ! m, Total snow depth
+        tot_outVars_d%lai(iTotDaily)            = outVars_d%lai                                                 ! m2 m-2, Leaf area index
 
         iTotDaily = iTotDaily+1
     end subroutine summaryDaily
@@ -480,74 +470,150 @@ module mod_upAndSum
         integer iTotMonthly
         ! monthly
         ! carbon fluxes (Kg C m-2 s-1)
-        all_gpp_m(iTotMonthly)            = gpp_m
-        all_npp_m(iTotMonthly)            = npp_m
-        all_nppLeaf_m(iTotMonthly)        = nppLeaf_m
-        all_nppWood_m(iTotMonthly)        = nppWood_m
-        all_nppStem_m(iTotMonthly)        = nppStem_m
-        all_nppRoot_m(iTotMonthly)        = nppRoot_m
-        all_nppOther_m(iTotMonthly)       = nppOther_m   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
-        all_ra_m(iTotMonthly)             = ra_m
-        all_raLeaf_m(iTotMonthly)         = raLeaf_m
-        all_raStem_m(iTotMonthly)         = raStem_m
-        all_raRoot_m(iTotMonthly)         = raRoot_m
-        all_raOther_m(iTotMonthly)        = raOther_m
-        all_rMaint_m(iTotMonthly)         = rMaint_m
-        all_rGrowth_m(iTotMonthly)        = rGrowth_m                                             ! maintenance respiration and growth respiration
-        all_rh_m(iTotMonthly)             = rh_m
-        all_nbp_m(iTotMonthly)            = nbp_m                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        all_wetlandCH4_m(iTotMonthly)     = wetlandCH4_m
-        all_wetlandCH4prod_m(iTotMonthly) = wetlandCH4prod_m
-        all_wetlandCH4cons_m(iTotMonthly) = wetlandCH4cons_m                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
+        tot_outVars_m%gpp(iTotMonthly)            = outVars_m%gpp
+        tot_outVars_m%npp(iTotMonthly)            = outVars_m%npp
+        tot_outVars_m%nppLeaf(iTotMonthly)        = outVars_m%nppLeaf
+        tot_outVars_m%nppWood(iTotMonthly)        = outVars_m%nppWood
+        tot_outVars_m%nppStem(iTotMonthly)        = outVars_m%nppStem
+        tot_outVars_m%nppRoot(iTotMonthly)        = outVars_m%nppRoot
+        tot_outVars_m%nppOther(iTotMonthly)       = outVars_m%nppOther   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
+        tot_outVars_m%ra(iTotMonthly)             = outVars_m%ra
+        tot_outVars_m%raLeaf(iTotMonthly)         = outVars_m%raLeaf
+        tot_outVars_m%raStem(iTotMonthly)         = outVars_m%raStem
+        tot_outVars_m%raRoot(iTotMonthly)         = outVars_m%raRoot
+        tot_outVars_m%raOther(iTotMonthly)        = outVars_m%raOther
+        tot_outVars_m%rMaint(iTotMonthly)         = outVars_m%rMaint
+        tot_outVars_m%rGrowth(iTotMonthly)        = outVars_m%rGrowth                                             ! maintenance respiration and growth respiration
+        tot_outVars_m%rh(iTotMonthly)             = outVars_m%rh
+        tot_outVars_m%nbp(iTotMonthly)            = outVars_m%nbp                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
+        tot_outVars_m%wetlandCH4(iTotMonthly)     = outVars_m%wetlandCH4
+        tot_outVars_m%wetlandCH4prod(iTotMonthly) = outVars_m%wetlandCH4prod
+        tot_outVars_m%wetlandCH4cons(iTotMonthly) = outVars_m%wetlandCH4cons                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
         ! Carbon Pools  (KgC m-2)
-        all_cLeaf_m(iTotMonthly)          = cLeaf_m
-        all_cStem_m(iTotMonthly)          = cStem_m
-        all_cRoot_m(iTotMonthly)          = cRoot_m
-        all_cOther_m(iTotMonthly)         = cOther_m                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        all_cLitter_m(iTotMonthly)        = cLitter_m
-        all_cLitterCwd_m(iTotMonthly)     = cLitterCwd_m                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-        all_cSoil_m(iTotMonthly)          = cSoil_m
-        all_cSoilLevels_m(iTotMonthly,:)    = cSoilLevels_m
-        all_cSoilFast_m(iTotMonthly)      = cSoilFast_m
-        all_cSoilSlow_m(iTotMonthly)      = cSoilSlow_m
-        all_cSoilPassive_m(iTotMonthly)   = cSoilPassive_m                           ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-        all_cCH4_m(iTotMonthly,:)         = cCH4_m                                                      ! methane concentration
+        tot_outVars_m%cLeaf(iTotMonthly)          = outVars_m%cLeaf
+        tot_outVars_m%cStem(iTotMonthly)          = outVars_m%cStem
+        tot_outVars_m%cRoot(iTotMonthly)          = outVars_m%cRoot
+        tot_outVars_m%cOther(iTotMonthly)         = outVars_m%cOther                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
+        tot_outVars_m%cLitter(iTotMonthly)        = outVars_m%cLitter
+        tot_outVars_m%cLitterCwd(iTotMonthly)     = outVars_m%cLitterCwd                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
+        tot_outVars_m%cSoil(iTotMonthly)          = outVars_m%cSoil
+        tot_outVars_m%cSoilLevels(iTotMonthly,:)  = outVars_m%cSoilLevels
+        tot_outVars_m%cSoilFast(iTotMonthly)      = outVars_m%cSoilFast
+        tot_outVars_m%cSoilSlow(iTotMonthly)      = outVars_m%cSoilSlow
+        tot_outVars_m%cSoilPassive(iTotMonthly)   = outVars_m%cSoilPassive                           ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
+        tot_outVars_m%CH4(iTotMonthly,:)         = outVars_m%CH4                                                      ! methane concentration
         ! Nitrogen fluxes (kgN m-2 s-1)
-        all_fBNF_m(iTotMonthly)           = fBNF_m
-        all_fN2O_m(iTotMonthly)           = fN2O_m
-        all_fNloss_m(iTotMonthly)         = fNloss_m
-        all_fNnetmin_m(iTotMonthly)       = fNnetmin_m
-        all_fNdep_m(iTotMonthly)          = fNdep_m                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
+        tot_outVars_m%fBNF(iTotMonthly)           = outVars_m%fBNF
+        tot_outVars_m%fN2O(iTotMonthly)           = outVars_m%fN2O
+        tot_outVars_m%fNloss(iTotMonthly)         = outVars_m%fNloss
+        tot_outVars_m%fNnetmin(iTotMonthly)       = outVars_m%fNnetmin
+        tot_outVars_m%fNdep(iTotMonthly)          = outVars_m%fNdep                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
         ! Nitrogen pools (kgN m-2)
-        all_nLeaf_m(iTotMonthly)          = nLeaf_m
-        all_nStem_m(iTotMonthly)          = nStem_m
-        all_nRoot_m(iTotMonthly)          = nRoot_m
-        all_nOther_m(iTotMonthly)         = nOther_m
-        all_nLitter_m(iTotMonthly)        = nLitter_m
-        all_nLitterCwd_m(iTotMonthly)     = nLitterCwd_m
-        all_nSoil_m(iTotMonthly)          = nSoil_m
-        all_nMineral_m(iTotMonthly)       = nMineral_m                    ! nMineral: Mineral nitrogen pool
+        tot_outVars_m%nLeaf(iTotMonthly)          = outVars_m%nLeaf
+        tot_outVars_m%nStem(iTotMonthly)          = outVars_m%nStem
+        tot_outVars_m%nRoot(iTotMonthly)          = outVars_m%nRoot
+        tot_outVars_m%nOther(iTotMonthly)         = outVars_m%nOther
+        tot_outVars_m%nLitter(iTotMonthly)        = outVars_m%nLitter
+        tot_outVars_m%nLitterCwd(iTotMonthly)     = outVars_m%nLitterCwd
+        tot_outVars_m%nSoil(iTotMonthly)          = outVars_m%nSoil
+        tot_outVars_m%nMineral(iTotMonthly)       = outVars_m%nMineral                    ! nMineral: Mineral nitrogen pool
         ! energy fluxes (W m-2)
-        all_hfls_m(iTotMonthly)           = hfls_m
-        all_hfss_m(iTotMonthly)           = hfss_m
-        all_SWnet_m(iTotMonthly)          = SWnet_m
-        all_LWnet_m(iTotMonthly)          = LWnet_m                                ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
+        tot_outVars_m%hfls(iTotMonthly)           = outVars_m%hfls
+        tot_outVars_m%hfss(iTotMonthly)           = outVars_m%hfss
+        tot_outVars_m%SWnet(iTotMonthly)          = outVars_m%SWnet
+        tot_outVars_m%LWnet(iTotMonthly)          = outVars_m%LWnet                                ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
         ! water fluxes (kg m-2 s-1)
-        all_ec_m(iTotMonthly)             = ec_m
-        all_tran_m(iTotMonthly)           = tran_m
-        all_es_m(iTotMonthly)             =  es_m                                             ! Canopy evaporation; Canopy transpiration; Soil evaporation
-        all_hfsbl_m(iTotMonthly)          = hfsbl_m                                                         ! Snow sublimation
-        all_mrro_m(iTotMonthly)           = mrro_m
-        all_mrros_m(iTotMonthly)          = mrros_m
-        all_mrrob_m(iTotMonthly)          = mrrob_m 
+        tot_outVars_m%ec(iTotMonthly)             = outVars_m%ec
+        tot_outVars_m%tran(iTotMonthly)           = outVars_m%tran
+        tot_outVars_m%es(iTotMonthly)             = outVars_m%es                                             ! Canopy evaporation; Canopy transpiration; Soil evaporation
+        tot_outVars_m%hfsbl(iTotMonthly)          = outVars_m%hfsbl                                                         ! Snow sublimation
+        tot_outVars_m%mrro(iTotMonthly)           = outVars_m%mrro
+        tot_outVars_m%mrros(iTotMonthly)          = outVars_m%mrros
+        tot_outVars_m%mrrob(iTotMonthly)          = outVars_m%mrrob 
         ! Other
-        all_mrso_m(iTotMonthly,:)         = mrso_m                                         ! Kg m-2, soil moisture in each soil layer
-        all_tsl_m(iTotMonthly,:)          = tsl_m                                         ! K, soil temperature in each soil layer
-        all_tsland_m(iTotMonthly)         = tsland_m                                                 ! K, surface temperature
-        all_wtd_m(iTotMonthly)            = wtd_m                                                 ! m, Water table depth
-        all_snd_m(iTotMonthly)            = snd_m                                                 ! m, Total snow depth
-        all_lai_m(iTotMonthly)            = lai_m                                                 ! m2 m-2, Leaf area index
+        tot_outVars_m%mrso(iTotMonthly,:)         = outVars_m%mrso                                         ! Kg m-2, soil moisture in each soil layer
+        tot_outVars_m%tsl(iTotMonthly,:)          = outVars_m%tsl                                         ! K, soil temperature in each soil layer
+        tot_outVars_m%tsland(iTotMonthly)         = outVars_m%tsland                                                 ! K, surface temperature
+        tot_outVars_m%wtd(iTotMonthly)            = outVars_m%wtd                                                 ! m, Water table depth
+        tot_outVars_m%snd(iTotMonthly)            = outVars_m%snd                                                 ! m, Total snow depth
+        tot_outVars_m%lai(iTotMonthly)            = outVars_m%lai                                                 ! m2 m-2, Leaf area index
 
         iTotMonthly = iTotMonthly + 1
     end subroutine summaryMonthly
+
+    subroutine summaryYearly(iTotYearly)
+        implicit none
+        integer iTotYearly
+        ! monthly
+        ! carbon fluxes (Kg C m-2 s-1)
+        tot_outVars_y%gpp(iTotYearly)            = outVars_y%gpp
+        tot_outVars_y%npp(iTotYearly)            = outVars_y%npp
+        tot_outVars_y%nppLeaf(iTotYearly)        = outVars_y%nppLeaf
+        tot_outVars_y%nppWood(iTotYearly)        = outVars_y%nppWood
+        tot_outVars_y%nppStem(iTotYearly)        = outVars_y%nppStem
+        tot_outVars_y%nppRoot(iTotYearly)        = outVars_y%nppRoot
+        tot_outVars_y%nppOther(iTotYearly)       = outVars_y%nppOther   ! According to SPRUCE-MIP, stem means above ground woody tissues which is different from wood tissues.
+        tot_outVars_y%ra(iTotYearly)             = outVars_y%ra
+        tot_outVars_y%raLeaf(iTotYearly)         = outVars_y%raLeaf
+        tot_outVars_y%raStem(iTotYearly)         = outVars_y%raStem
+        tot_outVars_y%raRoot(iTotYearly)         = outVars_y%raRoot
+        tot_outVars_y%raOther(iTotYearly)        = outVars_y%raOther
+        tot_outVars_y%rMaint(iTotYearly)         = outVars_y%rMaint
+        tot_outVars_y%rGrowth(iTotYearly)        = outVars_y%rGrowth                                             ! maintenance respiration and growth respiration
+        tot_outVars_y%rh(iTotYearly)             = outVars_y%rh
+        tot_outVars_y%nbp(iTotYearly)            = outVars_y%nbp                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
+        tot_outVars_y%wetlandCH4(iTotYearly)     = outVars_y%wetlandCH4
+        tot_outVars_y%wetlandCH4prod(iTotYearly) = outVars_y%wetlandCH4prod
+        tot_outVars_y%wetlandCH4cons(iTotYearly) = outVars_y%wetlandCH4cons                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
+        ! Carbon Pools  (KgC m-2)
+        tot_outVars_y%cLeaf(iTotYearly)          = outVars_y%cLeaf
+        tot_outVars_y%cStem(iTotYearly)          = outVars_y%cStem
+        tot_outVars_y%cRoot(iTotYearly)          = outVars_y%cRoot
+        tot_outVars_y%cOther(iTotYearly)         = outVars_y%cOther                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
+        tot_outVars_y%cLitter(iTotYearly)        = outVars_y%cLitter
+        tot_outVars_y%cLitterCwd(iTotYearly)     = outVars_y%cLitterCwd                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
+        tot_outVars_y%cSoil(iTotYearly)          = outVars_y%cSoil
+        tot_outVars_y%cSoilLevels(iTotYearly,:)  = outVars_y%cSoilLevels
+        tot_outVars_y%cSoilFast(iTotYearly)      = outVars_y%cSoilFast
+        tot_outVars_y%cSoilSlow(iTotYearly)      = outVars_y%cSoilSlow
+        tot_outVars_y%cSoilPassive(iTotYearly)   = outVars_y%cSoilPassive                           ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
+        tot_outVars_y%CH4(iTotYearly,:)         = outVars_y%CH4                                                      ! methane concentration
+        ! Nitrogen fluxes (kgN m-2 s-1)
+        tot_outVars_y%fBNF(iTotYearly)           = outVars_y%fBNF
+        tot_outVars_y%fN2O(iTotYearly)           = outVars_y%fN2O
+        tot_outVars_y%fNloss(iTotYearly)         = outVars_y%fNloss
+        tot_outVars_y%fNnetmin(iTotYearly)       = outVars_y%fNnetmin
+        tot_outVars_y%fNdep(iTotYearly)          = outVars_y%fNdep                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
+        ! Nitrogen pools (kgN m-2)
+        tot_outVars_y%nLeaf(iTotYearly)          = outVars_y%nLeaf
+        tot_outVars_y%nStem(iTotYearly)          = outVars_y%nStem
+        tot_outVars_y%nRoot(iTotYearly)          = outVars_y%nRoot
+        tot_outVars_y%nOther(iTotYearly)         = outVars_y%nOther
+        tot_outVars_y%nLitter(iTotYearly)        = outVars_y%nLitter
+        tot_outVars_y%nLitterCwd(iTotYearly)     = outVars_y%nLitterCwd
+        tot_outVars_y%nSoil(iTotYearly)          = outVars_y%nSoil
+        tot_outVars_y%nMineral(iTotYearly)       = outVars_y%nMineral                    ! nMineral: Mineral nitrogen pool
+        ! energy fluxes (W m-2)
+        tot_outVars_y%hfls(iTotYearly)           = outVars_y%hfls
+        tot_outVars_y%hfss(iTotYearly)           = outVars_y%hfss
+        tot_outVars_y%SWnet(iTotYearly)          = outVars_y%SWnet
+        tot_outVars_y%LWnet(iTotYearly)          = outVars_y%LWnet                                ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
+        ! water fluxes (kg m-2 s-1)
+        tot_outVars_y%ec(iTotYearly)             = outVars_y%ec
+        tot_outVars_y%tran(iTotYearly)           = outVars_y%tran
+        tot_outVars_y%es(iTotYearly)             = outVars_y%es                                             ! Canopy evaporation; Canopy transpiration; Soil evaporation
+        tot_outVars_y%hfsbl(iTotYearly)          = outVars_y%hfsbl                                                         ! Snow sublimation
+        tot_outVars_y%mrro(iTotYearly)           = outVars_y%mrro
+        tot_outVars_y%mrros(iTotYearly)          = outVars_y%mrros
+        tot_outVars_y%mrrob(iTotYearly)          = outVars_y%mrrob 
+        ! Other
+        tot_outVars_y%mrso(iTotYearly,:)         = outVars_y%mrso                                         ! Kg m-2, soil moisture in each soil layer
+        tot_outVars_y%tsl(iTotYearly,:)          = outVars_y%tsl                                         ! K, soil temperature in each soil layer
+        tot_outVars_y%tsland(iTotYearly)         = outVars_y%tsland                                                 ! K, surface temperature
+        tot_outVars_y%wtd(iTotYearly)            = outVars_y%wtd                                                 ! m, Water table depth
+        tot_outVars_y%snd(iTotYearly)            = outVars_y%snd                                                 ! m, Total snow depth
+        tot_outVars_y%lai(iTotYearly)            = outVars_y%lai                                                 ! m2 m-2, Leaf area index
+
+        iTotYearly = iTotYearly + 1
+    end subroutine summaryYearly
 end module mod_upAndSum

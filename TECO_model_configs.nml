@@ -40,7 +40,7 @@
    Stemmax    = 1000
    SapR       = 1
    SapS       = 0.5
-   SLA        = 50.3
+   SLAx       = 50.3
    GLmax      = 10.56
    GRmax      = 21.71
    Gsmax      = 27.03
@@ -155,14 +155,9 @@
     
     ! methane module. update: Shuang methane bog species even more shallowly rooted than the tundra. add initials for methane module Shuang version
     init_CH4_V  = 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.
-    ! CH4  = (/0.0952,0.1232,0.2128,0.3024,0.352,0.8,0.8,0.86,0.86,0.86/)
     init_CH4    = 0.000152, 0.05, 0.6, 0.7, 0.7, 1.7, 1.7, 1.7, 1.7, 1.7
-    !  #1.EBG put this paragraph outside of the time loop, initialization step
-    init_Vp(1:3)=0., 0., 0., 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,             !assume in the very beginning no bubbles exist in the first three layers (30cm)
-    // init_Vp(4:6)=0.001!0.005
-    // init_Vp(7:10)=0.01  !unit m3
+    init_Vp     = 0., 0., 0., 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,             !assume in the very beginning no bubbles exist in the first three layers (30cm)
     init_bubble_methane_tot  = 0.
-    ! f            = 0.1
     init_Nbub      = 100.
     ! bubprob      = 0.1
     ! Vmaxfraction = 0.1

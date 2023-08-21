@@ -10,23 +10,33 @@ program TECO
     ! character(len=1000) :: outDir_nc, outfile 
 
     call read_TECO_model_configs()  ! get the file of "TECO_model_configs.nml", including parameters
-    call createNewCase()            ! create the TECO case, mainly creating the output dir
 
-    if (do_spinup) call init_spinup_variables()
+    ! create the TECO case, mainly creating the output dir
+    call createNewCase()
 
+
+    if (do_spinup)then
+        ! outDir_sp  = adjustl(trim(outdir))//"/res_spinup_nc"
+        ! outFile_sp = adjustl(trim(outDir_sp))//"/results_spinup.nc"
+        ! call CreateFolder(adjustl(trim(outDir_sp)))
+        call init_spinup_variables()
+    endif
+
+    ! call get_params()                           ! read parameters values
     call get_forcingdata()                      ! read forcing data
     if (.not. do_snow) call get_snowdepth()
-
-    nHours  = nforcing
-    nDays   = int(nHours/24.)
-    nYears  = int(nforcing/(365*24))
-    nMonths = nYears*12 
+    
+    ! nHours  = nforcing
+    ! nDays   = nHours/24.
+    ! nYears  = int(nforcing/(365*24))
+    ! nMonths = nYears*12 
+    ! Write(*,*)nHours, nDays, nMonths, nYears
     call assign_all_results(nHours, nDays, nMonths, nYears)
+    if (.not. do_snow) call get_snowdepth()
     
     call initialize()                           ! initializations
-
     if (do_restart)then
-        call read_restart(restartfile)     ! this module in "writeOutput2nc.f90"
+        call read_restart(restartfile)
         call initialize_with_restart()
     endif
     ! itest = 0
@@ -57,22 +67,32 @@ program TECO
     call spruce_mip_cmip6Format()
     call write_restart()
     ! end of the simulation, then deallocate the forcing_data
-    call deallocate_date_type()
+    deallocate(forcing%year)
+    deallocate(forcing%doy)
+    deallocate(forcing%hour)
+    deallocate(forcing%Tair)
+    deallocate(forcing%Tsoil)
+    deallocate(forcing%RH)
+    deallocate(forcing%VPD)
+    deallocate(forcing%Rain)
+    deallocate(forcing%WS)
+    deallocate(forcing%PAR)
+    deallocate(forcing%CO2)
+    deallocate(forcing%PBOT)
+    deallocate(forcing%Ndep)
+    ! deallocate the snow_in
+    if (.not. do_snow) deallocate(snow_in)
     call deallocate_all_results()
 end program TECO
 
-subroutine createNewCase(simu_name)
-    implicit none
+subroutine createNewCase()
     ! create a new case to run the TECO model
     !   * create the output path
     character(1000) :: new_outdir,   new_outdir_nc, new_outdir_csv
     character(1000) :: new_outdir_h, new_outdir_d,  new_outdir_m
     character(1000) :: new_outDir_spinup
-    character(50) :: simu_name_new
 
-    simu_name_new = simu_name
-
-    new_outdir = adjustl(trim(outdir))//"/"//adjustl(trim(simu_name_new))
+    new_outdir = adjustl(trim(outdir))//"/"//adjustl(trim(simu_name))
     call CreateFolder(adjustl(trim(new_outdir)))
     new_outdir_nc  = adjustl(trim(new_outdir))//"/"//adjustl(trim(outDir_nc))
     new_outdir_csv = adjustl(trim(new_outdir))//"/"//adjustl(trim(outDir_csv))

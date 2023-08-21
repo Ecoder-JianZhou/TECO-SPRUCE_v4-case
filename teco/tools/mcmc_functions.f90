@@ -188,7 +188,7 @@ module mcmc_functions
         INQUIRE(FILE=vars4MCMC%gpp_d%filepath, EXIST=toExistOrNot)
         vars4MCMC%gpp_d%existOrNot = toExistOrNot
         if (vars4MCMC%gpp_d%existOrNot) then
-            call ReadLineNumFromObsFile(vars4MCMC%gpp_d%filepath, toCountLines)
+            call ReadLineNumFromFile(vars4MCMC%gpp_d%filepath, toCountLines)
             allocate(vars4MCMC%gpp_d%obsData(toCountLines, 5))
             call ReadObsDataFromFile(vars4MCMC%gpp_d%filepath, toCountLines, vars4MCMC%gpp_d%obsData)
             allocate(vars4MCMC%gpp_d%mdData(toCountLines, 4))
@@ -197,7 +197,7 @@ module mcmc_functions
         INQUIRE(FILE=vars4MCMC%nee_d%filepath, EXIST=toExistOrNot)
         vars4MCMC%nee_d%existOrNot = toExistOrNot
         if (vars4MCMC%nee_d%existOrNot) then
-            call ReadLineNumFromObsFile(vars4MCMC%nee_d%filepath, toCountLines)
+            call ReadLineNumFromFile(vars4MCMC%nee_d%filepath, toCountLines)
             allocate(vars4MCMC%nee_d%obsData(toCountLines, 5))
             call ReadObsDataFromFile(vars4MCMC%nee_d%filepath, toCountLines, vars4MCMC%nee_d%obsData)
             allocate(vars4MCMC%nee_d%mdData(toCountLines, 4))
@@ -206,7 +206,7 @@ module mcmc_functions
         INQUIRE(FILE=vars4MCMC%reco_d%filepath, EXIST=toExistOrNot)
         vars4MCMC%reco_d%existOrNot = toExistOrNot
         if (vars4MCMC%reco_d%existOrNot) then
-            call ReadLineNumFromObsFile(vars4MCMC%reco_d%filepath, toCountLines)
+            call ReadLineNumFromFile(vars4MCMC%reco_d%filepath, toCountLines)
             allocate(vars4MCMC%reco_d%obsData(toCountLines, 5))
             call ReadObsDataFromFile(vars4MCMC%reco_d%filepath, toCountLines, vars4MCMC%reco_d%obsData)
             allocate(vars4MCMC%reco_d%mdData(toCountLines, 4))
@@ -215,7 +215,7 @@ module mcmc_functions
         INQUIRE(FILE=vars4MCMC%gpp_h%filepath, EXIST=toExistOrNot)
         vars4MCMC%gpp_h%existOrNot = toExistOrNot
         if (vars4MCMC%gpp_h%existOrNot) then
-            call ReadLineNumFromObsFile(vars4MCMC%gpp_h%filepath, toCountLines)
+            call ReadLineNumFromFile(vars4MCMC%gpp_h%filepath, toCountLines)
             allocate(vars4MCMC%gpp_h%obsData(toCountLines, 5))
             call ReadObsDataFromFile(vars4MCMC%gpp_h%filepath, toCountLines, vars4MCMC%gpp_h%obsData)
             allocate(vars4MCMC%gpp_h%mdData(toCountLines, 4))
@@ -224,7 +224,7 @@ module mcmc_functions
         INQUIRE(FILE=vars4MCMC%nee_h%filepath, EXIST=toExistOrNot)
         vars4MCMC%nee_h%existOrNot = toExistOrNot
         if (vars4MCMC%nee_h%existOrNot) then
-            call ReadLineNumFromObsFile(vars4MCMC%nee_h%filepath, toCountLines)
+            call ReadLineNumFromFile(vars4MCMC%nee_h%filepath, toCountLines)
             allocate(vars4MCMC%nee_h%obsData(toCountLines, 5))
             call ReadObsDataFromFile(vars4MCMC%nee_h%filepath, toCountLines, vars4MCMC%nee_h%obsData)
             allocate(vars4MCMC%nee_h%mdData(toCountLines, 4))
@@ -233,7 +233,7 @@ module mcmc_functions
         INQUIRE(FILE=vars4MCMC%reco_h%filepath, EXIST=toExistOrNot)
         vars4MCMC%reco_h%existOrNot = toExistOrNot
         if (vars4MCMC%reco_h%existOrNot) then
-            call ReadLineNumFromObsFile(vars4MCMC%reco_h%filepath, toCountLines)
+            call ReadLineNumFromFile(vars4MCMC%reco_h%filepath, toCountLines)
             allocate(vars4MCMC%reco_h%obsData(toCountLines, 5))
             call ReadObsDataFromFile(vars4MCMC%reco_h%filepath, toCountLines, vars4MCMC%reco_h%obsData)
             allocate(vars4MCMC%reco_h%mdData(toCountLines, 4))
@@ -242,7 +242,7 @@ module mcmc_functions
         INQUIRE(FILE=vars4MCMC%ch4_h%filepath, EXIST=toExistOrNot)
         vars4MCMC%ch4_h%existOrNot = toExistOrNot
         if (vars4MCMC%ch4_h%existOrNot) then
-            call ReadLineNumFromObsFile(vars4MCMC%ch4_h%filepath, toCountLines)
+            call ReadLineNumFromFile(vars4MCMC%ch4_h%filepath, toCountLines)
             allocate(vars4MCMC%ch4_h%obsData(toCountLines, 5))
             call ReadObsDataFromFile(vars4MCMC%ch4_h%filepath, toCountLines, vars4MCMC%ch4_h%obsData)
             allocate(vars4MCMC%ch4_h%mdData(toCountLines, 4))
@@ -251,7 +251,7 @@ module mcmc_functions
         INQUIRE(FILE=vars4MCMC%cleaf%filepath, EXIST=toExistOrNot)
         vars4MCMC%cleaf%existOrNot = toExistOrNot
         if (vars4MCMC%cleaf%existOrNot) then
-            call ReadLineNumFromObsFile(vars4MCMC%cleaf%filepath, toCountLines)
+            call ReadLineNumFromFile(vars4MCMC%cleaf%filepath, toCountLines)
             allocate(vars4MCMC%cleaf%obsData(toCountLines, 5))
             call ReadObsDataFromFile(vars4MCMC%cleaf%filepath, toCountLines, vars4MCMC%cleaf%obsData)
             allocate(vars4MCMC%cleaf%mdData(toCountLines, 4))
@@ -260,7 +260,7 @@ module mcmc_functions
         INQUIRE(FILE=vars4MCMC%cwood%filepath, EXIST=toExistOrNot)
         vars4MCMC%cwood%existOrNot = toExistOrNot
         if (vars4MCMC%cwood%existOrNot) then
-            call ReadLineNumFromObsFile(vars4MCMC%cwood%filepath, toCountLines)
+            call ReadLineNumFromFile(vars4MCMC%cwood%filepath, toCountLines)
             allocate(vars4MCMC%cwood%obsData(toCountLines, 5))
             call ReadObsDataFromFile(vars4MCMC%cwood%filepath, toCountLines, vars4MCMC%cwood%obsData)
             allocate(vars4MCMC%cwood%mdData(toCountLines, 4))
@@ -271,7 +271,7 @@ module mcmc_functions
     subroutine renewMDpars()
         implicit none
         lat         = parval(1)
-        long        = parval(2)
+        lon         = parval(2)
         wsmax       = parval(3)
         wsmin       = parval(4)                                            
         LAIMAX      = parval(5)
@@ -342,7 +342,7 @@ module mcmc_functions
 
     !     INQUIRE(FILE=filepath, EXIST=existOrNot)
     !     if(existOrNot)then
-    !         call ReadLineNumFromObsFile(filepath, count_lines)
+    !         call ReadLineNumFromFile(filepath, count_lines)
     !         allocate(data(count_lines, 5))
     !         call ReadObsDataFromFile(filepath, count_lines, data)
     !     end if
@@ -435,7 +435,7 @@ module mcmc_functions
                 vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 1) = mc_iyear
                 vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 2) = mc_iday
                 vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 3) = mc_ihour
-                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 4) = gpp_d
+                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 4) = outVars_d%gpp
             endif
         endif
         ! nee_d
@@ -447,7 +447,7 @@ module mcmc_functions
                 vars4MCMC%nee_d%mdData(mc_itime_nee_d, 1) = mc_iyear
                 vars4MCMC%nee_d%mdData(mc_itime_nee_d, 2) = mc_iday
                 vars4MCMC%nee_d%mdData(mc_itime_nee_d, 3) = mc_ihour
-                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 4) = nbp_d    ! the same in TECO model
+                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 4) = outVars_d%nbp    ! the same in TECO model
             endif
         endif
         ! reco_d
@@ -459,7 +459,7 @@ module mcmc_functions
                 vars4MCMC%reco_d%mdData(mc_itime_reco_d, 1) = mc_iyear
                 vars4MCMC%reco_d%mdData(mc_itime_reco_d, 2) = mc_iday
                 vars4MCMC%reco_d%mdData(mc_itime_reco_d, 3) = mc_ihour
-                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 4) = rh_d + ra_d
+                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 4) = outVars_d%rh + outVars_d%ra
             endif
         endif
         ! gpp_h
@@ -471,7 +471,7 @@ module mcmc_functions
                 vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 1) = mc_iyear
                 vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 2) = mc_iday
                 vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 3) = mc_ihour
-                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 4) = gpp_h
+                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 4) = outVars_h%gpp
             endif
         endif
         ! nee_h
@@ -483,7 +483,7 @@ module mcmc_functions
                 vars4MCMC%nee_h%mdData(mc_itime_nee_h, 1) = mc_iyear
                 vars4MCMC%nee_h%mdData(mc_itime_nee_h, 2) = mc_iday
                 vars4MCMC%nee_h%mdData(mc_itime_nee_h, 3) = mc_ihour
-                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 4) = nbp_h
+                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 4) = outVars_h%nbp
             endif
         endif
         ! reco_h
@@ -495,7 +495,7 @@ module mcmc_functions
                 vars4MCMC%reco_h%mdData(mc_itime_reco_h, 1) = mc_iyear
                 vars4MCMC%reco_h%mdData(mc_itime_reco_h, 2) = mc_iday
                 vars4MCMC%reco_h%mdData(mc_itime_reco_h, 3) = mc_ihour
-                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 4) = rh_h + ra_h
+                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 4) = outVars_h%rh + outVars_h%ra
             endif
         endif
         ! ch4_h
@@ -539,22 +539,22 @@ module mcmc_functions
 
     
 
-    subroutine ReadLineNumFromObsFile(filepath, count_lines)
-        implicit none
-        character(len=*), intent(in) :: filepath
-        character(len=100) header, line
-        integer STAT, count_lines
+    ! subroutine ReadLineNumFromFile(filepath, count_lines)
+    !     implicit none
+    !     character(len=*), intent(in) :: filepath
+    !     character(len=100) header, line
+    !     integer STAT, count_lines
 
-        open(38, file=trim(filepath), status="old", action="read", iostat=STAT) ! open file
-        read(38, '(a100)') header           ! read the header of the file
-        count_lines = 0                     ! initilize the count_lines
-        do while(.TRUE.)
-            read(38, *, iostat=STAT) line   ! read each line
-            if(STAT .ne. 0) exit            ! until the end of the file
-            count_lines = count_lines + 1   ! recording the count of the lines
-        enddo
-        return
-    end subroutine ReadLineNumFromObsFile
+    !     open(38, file=trim(filepath), status="old", action="read", iostat=STAT) ! open file
+    !     read(38, '(a100)') header           ! read the header of the file
+    !     count_lines = 0                     ! initilize the count_lines
+    !     do while(.TRUE.)
+    !         read(38, *, iostat=STAT) line   ! read each line
+    !         if(STAT .ne. 0) exit            ! until the end of the file
+    !         count_lines = count_lines + 1   ! recording the count of the lines
+    !     enddo
+    !     return
+    ! end subroutine ReadLineNumFromFile
 
     subroutine ReadObsDataFromFile(filepath, count_lines, resData)
         ! Jian: note that this subroutine is used to read the observational data. 

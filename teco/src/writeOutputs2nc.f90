@@ -14,7 +14,7 @@ module mod_ncd_io
         !              nbp (=gpp - Rh - Ra - other losses)
         !              wetlandCH4, wetlandCH4prod, wetlandCH4cons
         ! carbon pools (KgC m-2): cLeaf, cStem, cRoot, cOther, cLitter (excluding coarse wood debris), cLitterCwd
-        !              cSoil, cSoilLevels, cSoilPools (soil organic carbon for each pool), cCH4 (Methane concentration)
+        !              cSoil, cSoilLevels, cSoilPools (soil organic carbon for each pool), CH4 (Methane concentration)
         ! Nitrogen flux (KgN m-2 s-1) : fBNF(biological nitrogen fixation), fN2O, fNloss, fNnetmin, fNdep
         ! Nitrogen pools (KgN m-2): nleaf, nStem, nRoot, nOther, nLitter, nLitterCwd, nSoil, nMineral
         ! Energy Fluxes (W m-2): hfls(sensible heat flux), hfss(Latent heat flux), SWnet (Net Shortwave radiation), LWnet(Net Longwave radiation)
@@ -25,464 +25,260 @@ module mod_ncd_io
         ! ===================================================================================================================================================
         ! carbon fluxes variables
         ! ----------:-----------:----------:-----------------------
-        write(str_startyr,"(I4)")forcing%year(1)
-        write(str_endyr,"(I4)")forcing%year(nforcing)
+        write(str_startyr,"(I4)")forcing(1)%year
+        write(str_endyr,"(I4)")forcing(nforcing)%year
         
 
         ! hourly outputs
-        ! :----------:-----------:----------:-----------:----------:-----------:----------:-----------
-        ! hourly GPP
-        call write_nc(outDir_h,nHours,all_gpp_h,"gpp","kgC m-2 s-1", "gross primary productivity","hourly",1)
-        ! hourly NPP
-        call write_nc(outDir_h,nHours,all_npp_h,"npp","kgC m-2 s-1", "Total net primary productivity","hourly",1)
-        ! hourly leaf NPP
-        call write_nc(outDir_h,nHours,all_nppLeaf_h,"nppLeaf","kgC m-2 s-1", "NPP allocated to leaf tissues","hourly",1)
-        ! Hourly wood NPP
-        call write_nc(outDir_h,nHours,all_nppWood_h,"nppWood","kgC m-2 s-1", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%gpp,"gpp","kgC m-2 s-1", "gross primary productivity","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%npp,"npp","kgC m-2 s-1", "Total net primary productivity","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nppLeaf,"nppLeaf","kgC m-2 s-1", "NPP allocated to leaf tissues","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nppWood,"nppWood","kgC m-2 s-1", &
             & "NPP allocated to above ground woody tissues","hourly",1)
-        ! Hourly stem NPP
-        call write_nc(outDir_h,nHours,all_nppStem_h,"nppStem","kgC m-2 s-1", "NPP allocated to stem tissues","hourly",1)
-        ! Hourly root NPP
-        call write_nc(outDir_h,nHours,all_nppRoot_h,"nppRoot","kgC m-2 s-1", "NPP allocated to root tissues","hourly",1)
-        ! Hourly other NPP
-        call write_nc(outDir_h,nHours,all_nppOther_h,"nppOther","kgC m-2 s-1", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%nppStem,"nppStem","kgC m-2 s-1", "NPP allocated to stem tissues","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nppRoot,"nppRoot","kgC m-2 s-1", "NPP allocated to root tissues","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nppOther,"nppOther","kgC m-2 s-1", &
             & "NPP allocated to other plant organs (reserves, fruits, exudates)","hourly",1)
-        ! Hourly ra 
-        call write_nc(outDir_h,nHours,all_ra_h,"ra","kgC m-2 s-1", "Plant Autotrophic Respiration","hourly",1)
-        ! Hourly leaf ra
-        call write_nc(outDir_h,nHours,all_raLeaf_h,"raLeaf","kgC m-2 s-1", "Ra from leaves","hourly",1)
-        ! Hourly stem ra
-        call write_nc(outDir_h,nHours,all_raStem_h,"raStem","kgC m-2 s-1", "Ra from above ground woody tissues","hourly",1)
-        ! Hourly raRoot_h
-        call write_nc(outDir_h,nHours,all_raRoot_h,"raRoot","kgC m-2 s-1", "Ra from fine roots","hourly",1)
-        ! Hourly raOther_h
-        call write_nc(outDir_h,nHours,all_raOther_h,"raOther","kgC m-2 s-1", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%ra,"ra","kgC m-2 s-1", "Plant Autotrophic Respiration","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%raLeaf,"raLeaf","kgC m-2 s-1", "Ra from leaves","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%raStem,"raStem","kgC m-2 s-1", "Ra from above ground woody tissues","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%raRoot,"raRoot","kgC m-2 s-1", "Ra from fine roots","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%raOther,"raOther","kgC m-2 s-1", &
             & "Ra from other plant organs (reserves, fruits, exudates)","hourly",1)
-        ! Hourly rMaint_h
-        call write_nc(outDir_h,nHours,all_rMaint_h,"rMaint","kgC m-2 s-1", "Maintenance respiration","hourly",1)
-        ! Hourly rGrowth_h                                             ! maintenance respiration and growth respiration
-        call write_nc(outDir_h,nHours,all_rGrowth_h,"rGrowth","kgC m-2 s-1", "Growth respiration","hourly",1)
-        ! Hourly rh_h
-        call write_nc(outDir_h,nHours,all_rh_h,"rh","kgC m-2 s-1", "Heterotrophic respiration rate","hourly",1)
-        ! Hourly nbp_h                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        call write_nc(outDir_h,nHours,all_nbp_h,"nbp","kgC m-2 s-1", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%rMaint,"rMaint","kgC m-2 s-1", "Maintenance respiration","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%rGrowth,"rGrowth","kgC m-2 s-1", "Growth respiration","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%rh,"rh","kgC m-2 s-1", "Heterotrophic respiration rate","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nbp,"nbp","kgC m-2 s-1", &
             &"Net Biome productivity (NBP = GPP - Rh - Ra - other losses)","hourly",1)
-        ! Hourly wetlandCH4_h
-        call write_nc(outDir_h,nHours,all_wetlandCH4_h,"wetlandCH4","kgC m-2 s-1", "Net fluxes of CH4","hourly",1)
-        ! Hourly wetlandCH4prod_h
-        call write_nc(outDir_h,nHours,all_wetlandCH4prod_h,"wetlandCH4prod","kgC m-2 s-1", "CH4 production","hourly",1)
-        ! Hourly wetlandCH4cons_h                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-        call write_nc(outDir_h,nHours,all_wetlandCH4cons_h,"wetlandCH4cons","kgC m-2 s-1", "CH4 consumption","hourly",1)
-
-        ! Carbon Pools  (KgC m-2)
-        ! Hourly cLeaf_h
-        call write_nc(outDir_h,nHours,all_cLeaf_h,"cLeaf","kgC m-2", "Carbon biomass in leaves","hourly",1)
-        ! Hourly cStem_h
-        call write_nc(outDir_h,nHours,all_cStem_h,"cStem","kgC m-2", "Carbon above ground woody biomass","hourly",1)
-        ! Hourly cRoot_h
-        call write_nc(outDir_h,nHours,all_cRoot_h,"cRoot","kgC m-2", "Carbon biomass in roots","hourly",1)
-        ! Hourly cOther_h                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        call write_nc(outDir_h,nHours,all_cOther_h,"cOther","kgC m-2", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%wetlandCH4,"wetlandCH4","kgC m-2 s-1", "Net fluxes of CH4","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%wetlandCH4prod,"wetlandCH4prod","kgC m-2 s-1", "CH4 production","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%wetlandCH4cons,"wetlandCH4cons","kgC m-2 s-1", "CH4 consumption","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%cLeaf,"cLeaf","kgC m-2", "Carbon biomass in leaves","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%cStem,"cStem","kgC m-2", "Carbon above ground woody biomass","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%cRoot,"cRoot","kgC m-2", "Carbon biomass in roots","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%cOther,"cOther","kgC m-2", &
             & "Carbon biomass in other plant organs (reserves, fruits)","hourly",1)
-        ! Hourly cLitter_h
-        call write_nc(outDir_h,nHours,all_cLitter_h,"cLitter","kgC m-2", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%cLitter,"cLitter","kgC m-2", &
             & "Carbon in litter (excluding coarse woody debris)","hourly",1)
-        ! Hourly cLitterCwd_h                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-        call write_nc(outDir_h,nHours,all_cLitterCwd_h,"cLitterCwd","kgC m-2", "Carbon in coarse woody debris","hourly",1)
-        ! Hourly cSoil_h
-        call write_nc(outDir_h,nHours,all_cSoil_h,"cSoil","kgC m-2", "Total soil organic carbon","hourly",1)
-
-        ! Hourly cSoilLevels_h
-        call write_nc(outDir_h,nHours,all_cSoilLevels_h,"cSoilLevels","kgC m-2", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%cLitterCwd,"cLitterCwd","kgC m-2", "Carbon in coarse woody debris","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%cSoil,"cSoil","kgC m-2", "Total soil organic carbon","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%cSoilLevels,"cSoilLevels","kgC m-2", &
             & "Depth-specific soil organic carbon","hourly",nlayers)
-        
-        ! Hourly cSoilFast_h
-        call write_nc(outDir_h,nHours,all_cSoilFast_h,"cSoilFast","kgC m-2", "Fast soil organic carbon","hourly",1)
-        ! Hourly cSoilSlow_h
-        call write_nc(outDir_h,nHours,all_cSoilSlow_h,"cSoilSlow","kgC m-2 s-1", "Slow soil organic carbon","hourly",1)
-        ! Hourly cSoilPassive_h                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-        call write_nc(outDir_h,nHours,all_cSoilPassive_h,"cSoilPassive","kgC m-2 s-1", "Passive soil organic carbon","hourly",1)
-        ! Hourly cCH4_h                                                        ! methane concentration
-        call write_nc(outDir_h,nHours,all_cCH4_h,"cCH4","kgC m-2 s-1", "Methane concentration","hourly",nlayers)
-        
-        ! Nitrogen fluxes (kgN m-2 s-1)
-        ! Hourly fBNF_h
-        call write_nc(outDir_h,nHours,all_fBNF_h,"fBNF","kgN m-2 s-1", "biological nitrogen fixation","hourly",1)
-        ! Hourly fN2O_h
-        call write_nc(outDir_h,nHours,all_fN2O_h,"fN2O","kgN m-2 s-1", "loss of nitrogen through emission of N2O","hourly",1)
-        ! Hourly fNloss_h
-        call write_nc(outDir_h,nHours,all_fNloss_h,"fNloss","kgN m-2 s-1", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%cSoilFast,"cSoilFast","kgC m-2", "Fast soil organic carbon","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%cSoilSlow,"cSoilSlow","kgC m-2 s-1", "Slow soil organic carbon","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%cSoilPassive,"cSoilPassive","kgC m-2 s-1", &
+            & "Passive soil organic carbon","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%CH4,"CH4","kgC m-2 s-1", "Methane concentration","hourly",nlayers)
+        call write_nc(outDir_h,nHours,tot_outVars_h%fBNF,"fBNF","kgN m-2 s-1", "biological nitrogen fixation","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%fN2O,"fN2O","kgN m-2 s-1", &
+            & "loss of nitrogen through emission of N2O","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%fNloss,"fNloss","kgN m-2 s-1", &
             & "Total loss of nitrogen to the atmosphere and from leaching","hourly",1)
-        ! Hourly fNnetmin_h
-        call write_nc(outDir_h,nHours,all_fNnetmin_h,"fNnetmin","kgN m-2 s-1", "net mineralization of N","hourly",1)
-        ! Hourly fNdep_h                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-        call write_nc(outDir_h,nHours,all_fNdep_h,"fNdep","kgN m-2 s-1", "Nitrogen deposition","hourly",1)
-        
-        ! Hourly  Nitrogen pools (kgN m-2)
-        ! Hourly nLeaf_h
-        call write_nc(outDir_h,nHours,all_nLeaf_h,"nLeaf","kgN m-2", "Nitrogen in leaves","hourly",1)
-        ! Hourly nStem_h
-        call write_nc(outDir_h,nHours,all_nStem_h,"nStem","kgN m-2", "Nitrogen in stems","hourly",1)
-        ! Hourly nRoot_h
-        call write_nc(outDir_h,nHours,all_nRoot_h,"nRoot","kgN m-2", "Nirogen in roots","hourly",1)
-        ! Hourly nOther_h
-        call write_nc(outDir_h,nHours,all_nOther_h,"nOther","kgN m-2", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%fNnetmin,"fNnetmin","kgN m-2 s-1", "net mineralization of N","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%fNdep,"fNdep","kgN m-2 s-1", "Nitrogen deposition","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nLeaf,"nLeaf","kgN m-2", "Nitrogen in leaves","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nStem,"nStem","kgN m-2", "Nitrogen in stems","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nRoot,"nRoot","kgN m-2", "Nirogen in roots","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nOther,"nOther","kgN m-2", &
             & "nitrogen in other plant organs (reserves, fruits)","hourly",1)
-        ! Hourly nLitter_h
-        call write_nc(outDir_h,nHours,all_nLitter_h,"nLitter","kgN m-2", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%nLitter,"nLitter","kgN m-2", &
             & "Nitrogen in litter (excluding coarse woody debris)","hourly",1)
-        ! Hourly nLitterCwd_h
-        call write_nc(outDir_h,nHours,all_nLitterCwd_h,"nLitterCwd","kgN m-2", &
+        call write_nc(outDir_h,nHours,tot_outVars_h%nLitterCwd,"nLitterCwd","kgN m-2", &
             & "Nitrogen in coarse woody debris","hourly",1)
-        ! Hourly nSoil_h
-        call write_nc(outDir_h,nHours,all_nSoil_h,"nSoil","kgN m-2", "Nitrogen in soil organic matter","hourly",1)
-        ! Hourly nMineral_h                    ! nMineral: Mineral nitrogen pool
-        call write_nc(outDir_h,nHours,all_nMineral_h,"nMineral","kgN m-2", "Mineral nitrogen pool","hourly",1)
-
-        ! Hourly ! energy fluxes (W m-2)
-        ! Hourly hfls_h
-        call write_nc(outDir_h,nHours,all_hfls_h,"hfls","W m-2", "Sensible heat flux","hourly",1)
-        ! Hourly hfss_h
-        call write_nc(outDir_h,nHours,all_hfss_h,"hfss","W m-2", "Latent heat flux","hourly",1)
-        ! Hourly SWnet_h
-        call write_nc(outDir_h,nHours,all_SWnet_h,"SWnet","W m-2", "Net shortwave radiation","hourly",1)
-        ! Hourly LWnet_h                               ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-        call write_nc(outDir_h,nHours,all_LWnet_h,"LWnet","W m-2", "Net longwave radiation","hourly",1)
-
-        ! Hourly ! water fluxes (kg m-2 s-1)
-        ! Hourly ec_h
-        call write_nc(outDir_h,nHours,all_ec_h,"ec","kg m-2 s-1", "Canopy evaporation","hourly",1)
-        ! Hourly tran_h
-        call write_nc(outDir_h,nHours,all_tran_h,"tran","kg m-2 s-1", "Canopy transpiration","hourly",1)
-        ! Hourly es_h                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-        call write_nc(outDir_h,nHours,all_es_h,"es","kg m-2 s-1", "Soil evaporation","hourly",1)
-        ! Hourly hfsbl_h                                                         ! Snow sublimation
-        call write_nc(outDir_h,nHours,all_hfsbl_h,"hfsbl","kg m-2 s-1", "Snow sublimation","hourly",1)
-        ! Hourly mrro_h
-        call write_nc(outDir_h,nHours,all_mrro_h,"mrro","kg m-2 s-1", "Total runoff","hourly",1)
-        ! Hourly mrros_h
-        call write_nc(outDir_h,nHours,all_mrros_h,"mrros","kg m-2 s-1", "Surface runoff","hourly",1)
-        ! Hourly mrrob_h                                        ! Total runoff; Surface runoff; Subsurface runoff
-        call write_nc(outDir_h,nHours,all_mrrob_h,"mrrob","kg m-2 s-1", "Subsurface runoff","hourly",1)
-        ! Hourly Other
-        ! Hourly mrso_h
-        call write_nc(outDir_h,nHours,all_mrso_h,"mrso","kg m-2", "soil moisture in each soil layer","hourly",nlayers)      ! Kg m-2, soil moisture in each soil layer
-        ! Hourly tsl_h 
-        call write_nc(outDir_h,nHours,all_tsl_h,"tsl","K", "soil temperature in each soil layer","hourly",nlayers)
-        ! Hourly tsland_h
-        call write_nc(outDir_h,nHours,all_tsland_h,"tsland","K", "surface temperature","hourly",1)
-        ! Hourly wtd_h
-        call write_nc(outDir_h,nHours,all_wtd_h,"wtd","m", "Water table depth","hourly",1)
-        ! Hourly snd_h
-        call write_nc(outDir_h,nHours,all_snd_h,"snd","m", "Total snow depth","hourly",1)
-        ! Hourly lai_h
-        call write_nc(outDir_h,nHours,all_lai_h,"lai","m2 m-2", "Leaf area index","hourly",1)
-        call write_nc(outDir_h,nHours,all_gdd5_h,"GDD5","m2 m-2", "GDD5","hourly",1)
-        call write_nc(outDir_h,nHours,all_onset_h,"onset","m2 m-2", "onset","hourly",1)
-        call write_nc(outDir_h,nHours,all_storage_h,"storage","m2 m-2", "onset","hourly",1)
-        call write_nc(outDir_h,nHours,all_add_h,"add","m2 m-2", "onset","hourly",1)
-        call write_nc(outDir_h,nHours,all_accumulation_h,"accumulation","m2 m-2", "accumulation","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nSoil,"nSoil","kgN m-2", "Nitrogen in soil organic matter","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%nMineral,"nMineral","kgN m-2", "Mineral nitrogen pool","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%hfls,"hfls","W m-2", "Sensible heat flux","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%hfss,"hfss","W m-2", "Latent heat flux","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%SWnet,"SWnet","W m-2", "Net shortwave radiation","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%LWnet,"LWnet","W m-2", "Net longwave radiation","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%ec,"ec","kg m-2 s-1", "Canopy evaporation","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%tran,"tran","kg m-2 s-1", "Canopy transpiration","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%es,"es","kg m-2 s-1", "Soil evaporation","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%hfsbl,"hfsbl","kg m-2 s-1", "Snow sublimation","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%mrro,"mrro","kg m-2 s-1", "Total runoff","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%mrros,"mrros","kg m-2 s-1", "Surface runoff","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%mrrob,"mrrob","kg m-2 s-1", "Subsurface runoff","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%mrso,"mrso","kg m-2", "soil moisture in each soil layer","hourly",nlayers)
+        call write_nc(outDir_h,nHours,tot_outVars_h%tsl,"tsl","K", "soil temperature in each soil layer","hourly",nlayers)
+        call write_nc(outDir_h,nHours,tot_outVars_h%tsland,"tsland","K", "surface temperature","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%wtd,"wtd","m", "Water table depth","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%snd,"snd","m", "Total snow depth","hourly",1)
+        call write_nc(outDir_h,nHours,tot_outVars_h%lai,"lai","m2 m-2", "Leaf area index","hourly",1)
+        ! call write_nc(outDir_h,nHours,all_gdd5_h,"GDD5","m2 m-2", "GDD5","hourly",1)
+        ! call write_nc(outDir_h,nHours,all_onset_h,"onset","m2 m-2", "onset","hourly",1)
+        ! call write_nc(outDir_h,nHours,all_storage_h,"storage","m2 m-2", "onset","hourly",1)
+        ! call write_nc(outDir_h,nHours,all_add_h,"add","m2 m-2", "onset","hourly",1)
+        ! call write_nc(outDir_h,nHours,all_accumulation_h,"accumulation","m2 m-2", "accumulation","hourly",1)
         ! call write_nc(outDir_h,nHours,all_test_h,"test_gpp","m2 m-2", "test_gpp","hourly",9)
-
-
 
         ! daily: 
         ! ---------------------------------------------------------------------
         ! carbon fluxes (KgC m-2 s-1)
-        ! Daily gpp_d
-        call write_nc(outDir_d,nDays,all_gpp_d,"gpp","kgC m-2 s-1", "gross primary productivity","daily",1)
-        ! daily NPP
-        call write_nc(outDir_d,nDays,all_npp_d,"npp","kgC m-2 s-1", "Total net primary productivity","daily",1)
-        ! daily leaf NPP
-        call write_nc(outDir_d,nDays,all_nppLeaf_d,"nppLeaf","kgC m-2 s-1", "NPP allocated to leaf tissues","daily",1)
-        ! daily wood NPP
-        call write_nc(outDir_d,nDays,all_nppWood_d,"nppWood","kgC m-2 s-1", &
+        call write_nc(outDir_d,nDays,tot_outVars_d%gpp,"gpp","kgC m-2 s-1", "gross primary productivity","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%npp,"npp","kgC m-2 s-1", "Total net primary productivity","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nppLeaf,"nppLeaf","kgC m-2 s-1", "NPP allocated to leaf tissues","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nppWood,"nppWood","kgC m-2 s-1", &
             & "NPP allocated to above ground woody tissues","daily",1)
-        ! daily stem NPP
-        call write_nc(outDir_d,nDays,all_nppStem_d,"nppStem","kgC m-2 s-1", "NPP allocated to stem tissues","daily",1)
-        ! daily root NPP
-        call write_nc(outDir_d,nDays,all_nppRoot_d,"nppRoot","kgC m-2 s-1", "NPP allocated to root tissues","daily",1)
-        ! daily other NPP
-        call write_nc(outDir_d,nDays,all_nppOther_d,"nppOther","kgC m-2 s-1", &
+        call write_nc(outDir_d,nDays,tot_outVars_d%nppStem,"nppStem","kgC m-2 s-1", "NPP allocated to stem tissues","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nppRoot,"nppRoot","kgC m-2 s-1", "NPP allocated to root tissues","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nppOther,"nppOther","kgC m-2 s-1", &
             & "NPP allocated to other plant organs (reserves, fruits, exudates)","daily",1)
-        ! daily ra 
-        call write_nc(outDir_d,nDays,all_ra_d,"ra","kgC m-2 s-1", "Plant Autotrophic Respiration","daily",1)
-        ! daily leaf ra
-        call write_nc(outDir_d,nDays,all_raLeaf_d,"raLeaf","kgC m-2 s-1", "Ra from leaves","daily",1)
-        ! daily stem ra
-        call write_nc(outDir_d,nDays,all_raStem_d,"raStem","kgC m-2 s-1", "Ra from above ground woody tissues","daily",1)
-        ! daily raRoot_d
-        call write_nc(outDir_d,nDays,all_raRoot_d,"raRoot","kgC m-2 s-1", "Ra from fine roots","daily",1)
-        ! daily raOther_d
-        call write_nc(outDir_d,nDays,all_raOther_d,"raOther","kgC m-2 s-1", &
+        call write_nc(outDir_d,nDays,tot_outVars_d%ra,"ra","kgC m-2 s-1", "Plant Autotrophic Respiration","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%raLeaf,"raLeaf","kgC m-2 s-1", "Ra from leaves","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%raStem,"raStem","kgC m-2 s-1", "Ra from above ground woody tissues","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%raRoot,"raRoot","kgC m-2 s-1", "Ra from fine roots","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%raOther,"raOther","kgC m-2 s-1", &
             & "Ra from other plant organs (reserves, fruits, exudates)","daily",1)
-        ! daily rMaint_d
-        call write_nc(outDir_d,nDays,all_rMaint_d,"rMaint","kgC m-2 s-1", "Maintenance respiration","daily",1)
-        ! daily rGrowth_d                                             ! maintenance respiration and growth respiration
-        call write_nc(outDir_d,nDays,all_rGrowth_d,"rGrowth","kgC m-2 s-1", "Growth respiration","daily",1)
-        ! daily rh_d
-        call write_nc(outDir_d,nDays,all_rh_d,"rh","kgC m-2 s-1", "Heterotrophic respiration rate","daily",1)
-        ! daily nbp_d                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        call write_nc(outDir_d,nDays,all_nbp_d,"nbp","kgC m-2 s-1", &
+        call write_nc(outDir_d,nDays,tot_outVars_d%rMaint,"rMaint","kgC m-2 s-1", "Maintenance respiration","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%rGrowth,"rGrowth","kgC m-2 s-1", "Growth respiration","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%rh,"rh","kgC m-2 s-1", "Heterotrophic respiration rate","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nbp,"nbp","kgC m-2 s-1", &
             & "Net Biome productivity (NBP = GPP - Rh - Ra - other losses)","daily",1)
-        ! daily wetlandCH4_d
-        call write_nc(outDir_d,nDays,all_wetlandCH4_d,"wetlandCH4","kgC m-2 s-1", "Net fluxes of CH4","daily",1)
-        ! daily wetlandCH4prod_d
-        call write_nc(outDir_d,nDays,all_wetlandCH4prod_d,"wetlandCH4prod","kgC m-2 s-1", "CH4 production","daily",1)
-        ! daily wetlandCH4cons_d                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-        call write_nc(outDir_d,nDays,all_wetlandCH4cons_d,"wetlandCH4cons","kgC m-2 s-1", "CH4 consumption","daily",1)
-
+        call write_nc(outDir_d,nDays,tot_outVars_d%wetlandCH4,"wetlandCH4","kgC m-2 s-1", "Net fluxes of CH4","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%wetlandCH4prod,"wetlandCH4prod","kgC m-2 s-1", "CH4 production","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%wetlandCH4cons,"wetlandCH4cons","kgC m-2 s-1", "CH4 consumption","daily",1)
         ! Carbon Pools  (KgC m-2)
-        ! daily cLeaf_d
-        call write_nc(outDir_d,nDays,all_cLeaf_d,"cLeaf","kgC m-2", "Carbon biomass in leaves","daily",1)
-        ! daily cStem_d
-        call write_nc(outDir_d,nDays,all_cStem_d,"cStem","kgC m-2", "Carbon above ground woody biomass","daily",1)
-        ! daily cRoot_d
-        call write_nc(outDir_d,nDays,all_cRoot_d,"cRoot","kgC m-2", "Carbon biomass in roots","daily",1)
-        ! daily cOther_d                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        call write_nc(outDir_d,nDays,all_cOther_d,"cOther","kgC m-2", &
+        call write_nc(outDir_d,nDays,tot_outVars_d%cLeaf,"cLeaf","kgC m-2", "Carbon biomass in leaves","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%cStem,"cStem","kgC m-2", "Carbon above ground woody biomass","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%cRoot,"cRoot","kgC m-2", "Carbon biomass in roots","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%cOther,"cOther","kgC m-2", &
             & "Carbon biomass in other plant organs (reserves, fruits)","daily",1)
-        ! daily cLitter_d
-        call write_nc(outDir_d,nDays,all_cLitter_d,"cLitter","kgC m-2", &
+        call write_nc(outDir_d,nDays,tot_outVars_d%cLitter,"cLitter","kgC m-2", &
             & "Carbon in litter (excluding coarse woody debris)","daily",1)
-        ! daily cLitterCwd_d                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-        call write_nc(outDir_d,nDays,all_cLitterCwd_d,"cLitterCwd","kgC m-2", "Carbon in coarse woody debris","daily",1)
-        ! daily cSoil_d
-        call write_nc(outDir_d,nDays,all_cSoil_d,"cSoil","kgC m-2", "Total soil organic carbon","daily",1)
-
-        ! daily cSoilLevels_d
-        call write_nc(outDir_d,nDays,all_cSoilLevels_d,"cSoilLevels","kgC m-2", &
+        call write_nc(outDir_d,nDays,tot_outVars_d%cLitterCwd,"cLitterCwd","kgC m-2", "Carbon in coarse woody debris","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%cSoil,"cSoil","kgC m-2", "Total soil organic carbon","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%cSoilLevels,"cSoilLevels","kgC m-2", &
             & "Depth-specific soil organic carbon","daily",nlayers)
-        
-        ! daily cSoilFast_d
-        call write_nc(outDir_d,nDays,all_cSoilFast_d,"cSoilFast","kgC m-2", "Fast soil organic carbon","daily",1)
-        ! daily cSoilSlow_d
-        call write_nc(outDir_d,nDays,all_cSoilSlow_d,"cSoilSlow","kgC m-2 s-1", "Slow soil organic carbon","daily",1)
-        ! daily cSoilPassive_d                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-        call write_nc(outDir_d,nDays,all_cSoilPassive_d,"cSoilPassive","kgC m-2 s-1", "Passive soil organic carbon","daily",1)
-        ! daily cCH4_d                                                        ! methane concentration
-        call write_nc(outDir_d,nDays,all_cCH4_d,"cCH4","kgC m-2 s-1", "Methane concentration","daily",nlayers)
-        
+        call write_nc(outDir_d,nDays,tot_outVars_d%cSoilFast,"cSoilFast","kgC m-2", "Fast soil organic carbon","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%cSoilSlow,"cSoilSlow","kgC m-2 s-1", "Slow soil organic carbon","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%cSoilPassive,"cSoilPassive","kgC m-2 s-1", &
+            & "Passive soil organic carbon","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%CH4,"CH4","kgC m-2 s-1", "Methane concentration","daily",nlayers)
         ! Nitrogen fluxes (kgN m-2 s-1)
-        ! daily fBNF_d
-        call write_nc(outDir_d,nDays,all_fBNF_d,"fBNF","kgN m-2 s-1", "biological nitrogen fixation","daily",1)
-        ! daily fN2O_d
-        call write_nc(outDir_d,nDays,all_fN2O_d,"fN2O","kgN m-2 s-1", "loss of nitrogen through emission of N2O","daily",1)
-        ! daily fNloss_d
-        call write_nc(outDir_d,nDays,all_fNloss_d,"fNloss","kgN m-2 s-1", &
+        call write_nc(outDir_d,nDays,tot_outVars_d%fBNF,"fBNF","kgN m-2 s-1", "biological nitrogen fixation","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%fN2O,"fN2O","kgN m-2 s-1", &
+            & "loss of nitrogen through emission of N2O","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%fNloss,"fNloss","kgN m-2 s-1", &
             & "Total loss of nitrogen to the atmosphere and from leaching","daily",1)
-        ! daily fNnetmin_d
-        call write_nc(outDir_d,nDays,all_fNnetmin_d,"fNnetmin","kgN m-2 s-1", "net mineralization of N","daily",1)
-        ! daily fNdep_d                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-        call write_nc(outDir_d,nDays,all_fNdep_d,"fNdep","kgN m-2 s-1", "Nitrogen deposition","daily",1)
-        
+        call write_nc(outDir_d,nDays,tot_outVars_d%fNnetmin,"fNnetmin","kgN m-2 s-1", "net mineralization of N","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%fNdep,"fNdep","kgN m-2 s-1", "Nitrogen deposition","daily",1)
         ! daily  Nitrogen pools (kgN m-2)
-        ! daily nLeaf_d
-        call write_nc(outDir_d,nDays,all_nLeaf_d,"nLeaf","kgN m-2", "Nitrogen in leaves","daily",1)
-        ! daily nStem_d
-        call write_nc(outDir_d,nDays,all_nStem_d,"nStem","kgN m-2", "Nitrogen in stems","daily",1)
-        ! daily nRoot_d
-        call write_nc(outDir_d,nDays,all_nRoot_d,"nRoot","kgN m-2", "Nirogen in roots","daily",1)
-        ! daily nOther_d
-        call write_nc(outDir_d,nDays,all_nOther_d,"nOther","kgN m-2", &
+        call write_nc(outDir_d,nDays,tot_outVars_d%nLeaf,"nLeaf","kgN m-2", "Nitrogen in leaves","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nStem,"nStem","kgN m-2", "Nitrogen in stems","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nRoot,"nRoot","kgN m-2", "Nirogen in roots","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nOther,"nOther","kgN m-2", &
             &"nitrogen in other plant organs (reserves, fruits)","daily",1)
-        ! daily nLitter_d
-        call write_nc(outDir_d,nDays,all_nLitter_d,"nLitter","kgN m-2",&
+        call write_nc(outDir_d,nDays,tot_outVars_d%nLitter,"nLitter","kgN m-2",&
             & "Nitrogen in litter (excluding coarse woody debris)","daily",1)
-        ! daily nLitterCwd_d
-        call write_nc(outDir_d,nDays,all_nLitterCwd_d,"nLitterCwd","kgN m-2", "Nitrogen in coarse woody debris","daily",1)
-        ! daily nSoil_d
-        call write_nc(outDir_d,nDays,all_nSoil_d,"nSoil","kgN m-2", "Nitrogen in soil organic matter","daily",1)
-        ! daily nMineral_d                    ! nMineral: Mineral nitrogen pool
-        call write_nc(outDir_d,nDays,all_nMineral_d,"nMineral","kgN m-2", "Mineral nitrogen pool","daily",1)
-
+        call write_nc(outDir_d,nDays,tot_outVars_d%nLitterCwd,"nLitterCwd","kgN m-2", &
+            & "Nitrogen in coarse woody debris","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nSoil,"nSoil","kgN m-2", "Nitrogen in soil organic matter","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%nMineral,"nMineral","kgN m-2", "Mineral nitrogen pool","daily",1)
         ! daily ! energy fluxes (W m-2)
-        ! daily hfls_d
-        call write_nc(outDir_d,nDays,all_hfls_d,"hfls","W m-2", "Sensible heat flux","daily",1)
-        ! daily hfss_d
-        call write_nc(outDir_d,nDays,all_hfss_d,"hfss","W m-2", "Latent heat flux","daily",1)
-        ! daily SWnet_d
-        call write_nc(outDir_d,nDays,all_SWnet_d,"SWnet","W m-2", "Net shortwave radiation","daily",1)
-        ! daily LWnet_d                               ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-        call write_nc(outDir_d,nDays,all_LWnet_d,"LWnet","W m-2", "Net longwave radiation","daily",1)
-
+        call write_nc(outDir_d,nDays,tot_outVars_d%hfls,"hfls","W m-2", "Sensible heat flux","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%hfss,"hfss","W m-2", "Latent heat flux","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%SWnet,"SWnet","W m-2", "Net shortwave radiation","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%LWnet,"LWnet","W m-2", "Net longwave radiation","daily",1)
         ! daily ! water fluxes (kg m-2 s-1)
-        ! daily ec_d
-        call write_nc(outDir_d,nDays,all_ec_d,"ec","kg m-2 s-1", "Canopy evaporation","daily",1)
-        ! daily tran_d
-        call write_nc(outDir_d,nDays,all_tran_d,"tran","kg m-2 s-1", "Canopy transpiration","daily",1)
-        ! daily es_d                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-        call write_nc(outDir_d,nDays,all_es_d,"es","kg m-2 s-1", "Soil evaporation","daily",1)
-        ! daily hfsbl_d                                                         ! Snow sublimation
-        call write_nc(outDir_d,nDays,all_hfsbl_d,"hfsbl","kg m-2 s-1", "Snow sublimation","daily",1)
-        ! daily mrro_d
-        call write_nc(outDir_d,nDays,all_mrro_d,"mrro","kg m-2 s-1", "Total runoff","daily",1)
-        ! daily mrros_d
-        call write_nc(outDir_d,nDays,all_mrros_d,"mrros","kg m-2 s-1", "Surface runoff","daily",1)
-        ! daily mrrob_d                                        ! Total runoff; Surface runoff; Subsurface runoff
-        call write_nc(outDir_d,nDays,all_mrrob_d,"mrrob","kg m-2 s-1", "Subsurface runoff","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%ec,"ec","kg m-2 s-1", "Canopy evaporation","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%tran,"tran","kg m-2 s-1", "Canopy transpiration","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%es,"es","kg m-2 s-1", "Soil evaporation","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%hfsbl,"hfsbl","kg m-2 s-1", "Snow sublimation","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%mrro,"mrro","kg m-2 s-1", "Total runoff","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%mrros,"mrros","kg m-2 s-1", "Surface runoff","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%mrrob,"mrrob","kg m-2 s-1", "Subsurface runoff","daily",1)
         ! daily Other
-        ! daily mrso_d
-        call write_nc(outDir_d,nDays,all_mrso_d,"mrso","kg m-2", "soil moisture in each soil layer","daily",nlayers)      ! Kg m-2, soil moisture in each soil layer
-        ! daily tsl_d 
-        call write_nc(outDir_d,nDays,all_tsl_d,"tsl","K", "soil temperature in each soil layer","daily",nlayers)
-        ! daily tsland_d
-        call write_nc(outDir_d,nDays,all_tsland_d,"tsland","K", "surface temperature","daily",1)
-        ! daily wtd_d
-        call write_nc(outDir_d,nDays,all_wtd_d,"wtd","m", "Water table depth","daily",1)
-        ! daily snd_d
-        call write_nc(outDir_d,nDays,all_snd_d,"snd","m", "Total snow depth","daily",1)
-        ! daily lai_d
-        call write_nc(outDir_d,nDays,all_lai_d,"lai","m2 m-2", "Leaf area index","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%mrso,"mrso","kg m-2", "soil moisture in each soil layer","daily",nlayers)      ! Kg m-2, soil moisture in each soil layer
+        call write_nc(outDir_d,nDays,tot_outVars_d%tsl,"tsl","K", "soil temperature in each soil layer","daily",nlayers)
+        call write_nc(outDir_d,nDays,tot_outVars_d%tsland,"tsland","K", "surface temperature","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%wtd,"wtd","m", "Water table depth","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%snd,"snd","m", "Total snow depth","daily",1)
+        call write_nc(outDir_d,nDays,tot_outVars_d%lai,"lai","m2 m-2", "Leaf area index","daily",1)
 
         ! monthly
         ! ---------------------------------------------------------------------
         ! carbon fluxes (KgC m-2 s-1)
-        ! monthly gpp_m
-        call write_nc(outDir_m,nMonths,all_gpp_m,"gpp","kgC m-2 s-1", "gross primary productivity","monthly",1)
-        ! monthly NPP
-        call write_nc(outDir_m,nMonths,all_npp_m,"npp","kgC m-2 s-1", "Total net primary productivity","monthly",1)
-        ! monthly leaf NPP
-        call write_nc(outDir_m,nMonths,all_nppLeaf_m,"nppLeaf","kgC m-2 s-1", "NPP allocated to leaf tissues","monthly",1)
-        ! monthly wood NPP
-        call write_nc(outDir_m,nMonths,all_nppWood_m,"nppWood","kgC m-2 s-1", &
+        call write_nc(outDir_m,nMonths,tot_outVars_m%gpp,"gpp","kgC m-2 s-1", "gross primary productivity","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%npp,"npp","kgC m-2 s-1", "Total net primary productivity","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nppLeaf,"nppLeaf","kgC m-2 s-1", "NPP allocated to leaf tissues","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nppWood,"nppWood","kgC m-2 s-1", &
             & "NPP allocated to above ground woody tissues","monthly",1)
-        ! monthly stem NPP
-        call write_nc(outDir_m,nMonths,all_nppStem_m,"nppStem","kgC m-2 s-1", "NPP allocated to stem tissues","monthly",1)
-        ! monthly root NPP
-        call write_nc(outDir_m,nMonths,all_nppRoot_m,"nppRoot","kgC m-2 s-1", "NPP allocated to root tissues","monthly",1)
-        ! monthly other NPP
-        call write_nc(outDir_m,nMonths,all_nppOther_m,"nppOther","kgC m-2 s-1", &
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nppStem,"nppStem","kgC m-2 s-1", "NPP allocated to stem tissues","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nppRoot,"nppRoot","kgC m-2 s-1", "NPP allocated to root tissues","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nppOther,"nppOther","kgC m-2 s-1", &
             & "NPP allocated to other plant organs (reserves, fruits, exudates)","monthly",1)
-        ! monthly ra 
-        call write_nc(outDir_m,nMonths,all_ra_m,"ra","kgC m-2 s-1", "Plant Autotrophic Respiration","monthly",1)
-        ! monthly leaf ra
-        call write_nc(outDir_m,nMonths,all_raLeaf_m,"raLeaf","kgC m-2 s-1", "Ra from leaves","monthly",1)
-        ! monthly stem ra
-        call write_nc(outDir_m,nMonths,all_raStem_m,"raStem","kgC m-2 s-1", "Ra from above ground woody tissues","monthly",1)
-        ! monthly raRoot_m
-        call write_nc(outDir_m,nMonths,all_raRoot_m,"raRoot","kgC m-2 s-1", "Ra from fine roots","monthly",1)
-        ! monthly raOther_m
-        call write_nc(outDir_m,nMonths,all_raOther_m,"raOther","kgC m-2 s-1", &
+        call write_nc(outDir_m,nMonths,tot_outVars_m%ra,"ra","kgC m-2 s-1", "Plant Autotrophic Respiration","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%raLeaf,"raLeaf","kgC m-2 s-1", "Ra from leaves","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%raStem,"raStem","kgC m-2 s-1", &
+            & "Ra from above ground woody tissues","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%raRoot,"raRoot","kgC m-2 s-1", "Ra from fine roots","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%raOther,"raOther","kgC m-2 s-1", &
             & "Ra from other plant organs (reserves, fruits, exudates)","monthly",1)
-        ! monthly rMaint_m
-        call write_nc(outDir_m,nMonths,all_rMaint_m,"rMaint","kgC m-2 s-1", "Maintenance respiration","monthly",1)
-        ! monthly rGrowth_m                                             ! maintenance respiration and growth respiration
-        call write_nc(outDir_m,nMonths,all_rGrowth_m,"rGrowth","kgC m-2 s-1", "Growth respiration","monthly",1)
-        ! monthly rh_m
-        call write_nc(outDir_m,nMonths,all_rh_m,"rh","kgC m-2 s-1", "Heterotrophic respiration rate","monthly",1)
-        ! monthly nbp_m                                                    ! heterotrophic respiration. NBP(net biome productivity) = GPP - Rh - Ra - other losses  
-        call write_nc(outDir_m,nMonths,all_nbp_m,"nbp","kgC m-2 s-1",&
+        call write_nc(outDir_m,nMonths,tot_outVars_m%rMaint,"rMaint","kgC m-2 s-1", "Maintenance respiration","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%rGrowth,"rGrowth","kgC m-2 s-1", "Growth respiration","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%rh,"rh","kgC m-2 s-1", "Heterotrophic respiration rate","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nbp,"nbp","kgC m-2 s-1",&
             & "Net Biome productivity (NBP = GPP - Rh - Ra - other losses)","monthly",1)
-        ! monthly wetlandCH4_m
-        call write_nc(outDir_m,nMonths,all_wetlandCH4_m,"wetlandCH4","kgC m-2 s-1", "Net fluxes of CH4","monthly",1)
-        ! monthly wetlandCH4prod_m
-        call write_nc(outDir_m,nMonths,all_wetlandCH4prod_m,"wetlandCH4prod","kgC m-2 s-1", "CH4 production","monthly",1)
-        ! monthly wetlandCH4cons_m                ! wetland net fluxes of CH4, CH4 production, CH4 consumption
-        call write_nc(outDir_m,nMonths,all_wetlandCH4cons_m,"wetlandCH4cons","kgC m-2 s-1", "CH4 consumption","monthly",1)
-
+        call write_nc(outDir_m,nMonths,tot_outVars_m%wetlandCH4,"wetlandCH4","kgC m-2 s-1", "Net fluxes of CH4","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%wetlandCH4prod,"wetlandCH4prod","kgC m-2 s-1", "CH4 production","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%wetlandCH4cons,"wetlandCH4cons","kgC m-2 s-1", "CH4 consumption","monthly",1)
         ! Carbon Pools  (KgC m-2)
-        ! monthly cLeaf_m
-        call write_nc(outDir_m,nMonths,all_cLeaf_m,"cLeaf","kgC m-2", "Carbon biomass in leaves","monthly",1)
-        ! monthly cStem_m
-        call write_nc(outDir_m,nMonths,all_cStem_m,"cStem","kgC m-2", "Carbon above ground woody biomass","monthly",1)
-        ! monthly cRoot_m
-        call write_nc(outDir_m,nMonths,all_cRoot_m,"cRoot","kgC m-2", "Carbon biomass in roots","monthly",1)
-        ! monthly cOther_m                             ! cOther: carbon biomass in other plant organs(reserves, fruits), Jian: maybe NSC storage in TECO?
-        call write_nc(outDir_m,nMonths,all_cOther_m,"cOther","kgC m-2", &
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cLeaf,"cLeaf","kgC m-2", "Carbon biomass in leaves","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cStem,"cStem","kgC m-2", "Carbon above ground woody biomass","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cRoot,"cRoot","kgC m-2", "Carbon biomass in roots","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cOther,"cOther","kgC m-2", &
             & "Carbon biomass in other plant organs (reserves, fruits)","monthly",1)
-        ! monthly cLitter_m
-        call write_nc(outDir_m,nMonths,all_cLitter_m,"cLitter","kgC m-2", &
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cLitter,"cLitter","kgC m-2", &
             & "Carbon in litter (excluding coarse woody debris)","monthly",1)
-        ! monthly cLitterCwd_m                                         ! litter (excluding coarse woody debris), Jian: fine litter in TECO?, cLitterCwd: carbon in coarse woody debris
-        call write_nc(outDir_m,nMonths,all_cLitterCwd_m,"cLitterCwd","kgC m-2", "Carbon in coarse woody debris","monthly",1)
-        ! monthly cSoil_m
-        call write_nc(outDir_m,nMonths,all_cSoil_m,"cSoil","kgC m-2", "Total soil organic carbon","monthly",1)
-
-        ! monthly cSoilLevels_m
-        call write_nc(outDir_m,nMonths,all_cSoilLevels_m,"cSoilLevels","kgC m-2", &
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cLitterCwd,"cLitterCwd","kgC m-2", "Carbon in coarse woody debris","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cSoil,"cSoil","kgC m-2", "Total soil organic carbon","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cSoilLevels,"cSoilLevels","kgC m-2", &
             & "Depth-specific soil organic carbon","monthly",nlayers)
-        
-        ! monthly cSoilFast_m
-        call write_nc(outDir_m,nMonths,all_cSoilFast_m,"cSoilFast","kgC m-2", "Fast soil organic carbon","monthly",1)
-        ! monthly cSoilSlow_m
-        call write_nc(outDir_m,nMonths,all_cSoilSlow_m,"cSoilSlow","kgC m-2", "Slow soil organic carbon","monthly",1)
-        ! monthly cSoilPassive_m                            ! cSoil: soil organic carbon (Jian: total soil carbon); cSoilLevels(depth-specific soil organic carbon, Jian: depth?); cSoilPools (different pools without depth)
-        call write_nc(outDir_m,nMonths,all_cSoilPassive_m,"cSoilPassive","kgC m-2", "Passive soil organic carbon","monthly",1)
-        ! monthly cCH4_m                                                        ! methane concentration
-        call write_nc(outDir_m,nMonths,all_cCH4_m,"cCH4","kgC m-2", "Methane concentration","monthly",nlayers)
-        
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cSoilFast,"cSoilFast","kgC m-2", "Fast soil organic carbon","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cSoilSlow,"cSoilSlow","kgC m-2", "Slow soil organic carbon","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%cSoilPassive,"cSoilPassive","kgC m-2", &
+            & "Passive soil organic carbon","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%CH4,"CH4","kgC m-2", "Methane concentration","monthly",nlayers)
         ! Nitrogen fluxes (kgN m-2 s-1)
-        ! monthly fBNF_m
-        call write_nc(outDir_m,nMonths,all_fBNF_m,"fBNF","kgN m-2 s-1", "biological nitrogen fixation","monthly",1)
-        ! monthly fN2O_m
-        call write_nc(outDir_m,nMonths,all_fN2O_m,"fN2O","kgN m-2 s-1", "loss of nitrogen through emission of N2O","monthly",1)
-        ! monthly fNloss_m
-        call write_nc(outDir_m,nMonths,all_fNloss_m,"fNloss","kgN m-2 s-1", &
+        call write_nc(outDir_m,nMonths,tot_outVars_m%fBNF,"fBNF","kgN m-2 s-1", "biological nitrogen fixation","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%fN2O,"fN2O","kgN m-2 s-1", &
+            & "loss of nitrogen through emission of N2O","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%fNloss,"fNloss","kgN m-2 s-1", &
             & "Total loss of nitrogen to the atmosphere and from leaching","monthly",1)
-        ! monthly fNnetmin_m
-        call write_nc(outDir_m,nMonths,all_fNnetmin_m,"fNnetmin","kgN m-2 s-1", "net mineralization of N","monthly",1)
-        ! monthly fNdep_m                   ! fBNF: biological nitrogen fixation; fN2O: loss of nitrogen through emission of N2O; fNloss:Total loss of nitrogen to the atmosphere and from leaching; net mineralizaiton and deposition of N
-        call write_nc(outDir_m,nMonths,all_fNdep_m,"fNdep","kgN m-2 s-1", "Nitrogen deposition","monthly",1)
-        
+        call write_nc(outDir_m,nMonths,tot_outVars_m%fNnetmin,"fNnetmin","kgN m-2 s-1", "net mineralization of N","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%fNdep,"fNdep","kgN m-2 s-1", "Nitrogen deposition","monthly",1)
         ! monthly  Nitrogen pools (kgN m-2)
-        ! monthly nLeaf_m
-        call write_nc(outDir_m,nMonths,all_nLeaf_m,"nLeaf","kgN m-2", "Nitrogen in leaves","monthly",1)
-        ! monthly nStem_m
-        call write_nc(outDir_m,nMonths,all_nStem_m,"nStem","kgN m-2", "Nitrogen in stems","monthly",1)
-        ! monthly nRoot_m
-        call write_nc(outDir_m,nMonths,all_nRoot_m,"nRoot","kgN m-2", "Nirogen in roots","monthly",1)
-        ! monthly nOther_m
-        call write_nc(outDir_m,nMonths,all_nOther_m,"nOther","kgN m-2", &
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nLeaf,"nLeaf","kgN m-2", "Nitrogen in leaves","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nStem,"nStem","kgN m-2", "Nitrogen in stems","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nRoot,"nRoot","kgN m-2", "Nirogen in roots","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nOther,"nOther","kgN m-2", &
             &"nitrogen in other plant organs (reserves, fruits)","monthly",1)
-        ! monthly nLitter_m
-        call write_nc(outDir_m,nMonths,all_nLitter_m,"nLitter","kgN m-2",&
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nLitter,"nLitter","kgN m-2",&
             & "Nitrogen in litter (excluding coarse woody debris)","monthly",1)
-        ! monthly nLitterCwd_m
-        call write_nc(outDir_m,nMonths,all_nLitterCwd_m,"nLitterCwd","kgN m-2", "Nitrogen in coarse woody debris","monthly",1)
-        ! monthly nSoil_m
-        call write_nc(outDir_m,nMonths,all_nSoil_m,"nSoil","kgN m-2", "Nitrogen in soil organic matter","monthly",1)
-        ! monthly nMineral_m                    ! nMineral: Mineral nitrogen pool
-        call write_nc(outDir_m,nMonths,all_nMineral_m,"nMineral","kgN m-2", "Mineral nitrogen pool","monthly",1)
-
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nLitterCwd,"nLitterCwd","kgN m-2", &
+            & "Nitrogen in coarse woody debris","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nSoil,"nSoil","kgN m-2", "Nitrogen in soil organic matter","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%nMineral,"nMineral","kgN m-2", "Mineral nitrogen pool","monthly",1)
         ! monthly ! energy fluxes (W m-2)
-        ! monthly hfls_m
-        call write_nc(outDir_m,nMonths,all_hfls_m,"hfls","W m-2", "Sensible heat flux","monthly",1)
-        ! monthly hfss_m
-        call write_nc(outDir_m,nMonths,all_hfss_m,"hfss","W m-2", "Latent heat flux","monthly",1)
-        ! monthly SWnet_m
-        call write_nc(outDir_m,nMonths,all_SWnet_m,"SWnet","W m-2", "Net shortwave radiation","monthly",1)
-        ! monthly LWnet_m                               ! Sensible heat flux; Latent heat flux; Net shortwave radiation; Net longwave radiation
-        call write_nc(outDir_m,nMonths,all_LWnet_m,"LWnet","W m-2", "Net longwave radiation","monthly",1)
-
+        call write_nc(outDir_m,nMonths,tot_outVars_m%hfls,"hfls","W m-2", "Sensible heat flux","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%hfss,"hfss","W m-2", "Latent heat flux","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%SWnet,"SWnet","W m-2", "Net shortwave radiation","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%LWnet,"LWnet","W m-2", "Net longwave radiation","monthly",1)
         ! monthly ! water fluxes (kg m-2 s-1)
-        ! monthly ec_m
-        call write_nc(outDir_m,nMonths,all_ec_m,"ec","kg m-2 s-1", "Canopy evaporation","monthly",1)
-        ! monthly tran_m
-        call write_nc(outDir_m,nMonths,all_tran_m,"tran","kg m-2 s-1", "Canopy transpiration","monthly",1)
-        ! monthly es_m                                              ! Canopy evaporation; Canopy transpiration; Soil evaporation
-        call write_nc(outDir_m,nMonths,all_es_m,"es","kg m-2 s-1", "Soil evaporation","monthly",1)
-        ! monthly hfsbl_m                                                         ! Snow sublimation
-        call write_nc(outDir_m,nMonths,all_hfsbl_m,"hfsbl","kg m-2 s-1", "Snow sublimation","monthly",1)
-        ! monthly mrro_m
-        call write_nc(outDir_m,nMonths,all_mrro_m,"mrro","kg m-2 s-1", "Total runoff","monthly",1)
-        ! monthly mrros_m
-        call write_nc(outDir_m,nMonths,all_mrros_m,"mrros","kg m-2 s-1", "Surface runoff","monthly",1)
-        ! monthly mrrob_m                                        ! Total runoff; Surface runoff; Subsurface runoff
-        call write_nc(outDir_m,nMonths,all_mrrob_m,"mrrob","kg m-2 s-1", "Subsurface runoff","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%ec,"ec","kg m-2 s-1", "Canopy evaporation","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%tran,"tran","kg m-2 s-1", "Canopy transpiration","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%es,"es","kg m-2 s-1", "Soil evaporation","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%hfsbl,"hfsbl","kg m-2 s-1", "Snow sublimation","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%mrro,"mrro","kg m-2 s-1", "Total runoff","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%mrros,"mrros","kg m-2 s-1", "Surface runoff","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%mrrob,"mrrob","kg m-2 s-1", "Subsurface runoff","monthly",1)
         ! monthly Other
-        ! monthly mrso_m
-        call write_nc(outDir_m,nMonths,all_mrso_m,"mrso","kg m-2", "soil moisture in each soil layer","monthly",nlayers)      ! Kg m-2, soil moisture in each soil layer
-        ! monthly tsl_m 
-        call write_nc(outDir_m,nMonths,all_tsl_m,"tsl","K", "soil temperature in each soil layer","monthly",nlayers)
-        ! monthly tsland_m
-        call write_nc(outDir_m,nMonths,all_tsland_m,"tsland","K", "surface temperature","monthly",1)
-        ! monthly wtd_m
-        call write_nc(outDir_m,nMonths,all_wtd_m,"wtd","m", "Water table depth","monthly",1)
-        ! monthly snd_m
-        call write_nc(outDir_m,nMonths,all_snd_m,"snd","m", "Total snow depth","monthly",1)
-        ! monthly lai_m
-        call write_nc(outDir_m,nMonths,all_lai_m,"lai","m2 m-2", "Leaf area index","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%mrso,"mrso","kg m-2", "soil moisture in each soil layer","monthly",nlayers)      ! Kg m-2, soil moisture in each soil layer
+        call write_nc(outDir_m,nMonths,tot_outVars_m%tsl,"tsl","K", "soil temperature in each soil layer","monthly",nlayers)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%tsland,"tsland","K", "surface temperature","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%wtd,"wtd","m", "Water table depth","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%snd,"snd","m", "Total snow depth","monthly",1)
+        call write_nc(outDir_m,nMonths,tot_outVars_m%lai,"lai","m2 m-2", "Leaf area index","monthly",1)
         
     end subroutine spruce_mip_cmip6Format
     ! ----------------------------------------------
@@ -941,7 +737,7 @@ module mod_ncd_io
         integer(kind=4) :: id_test
 
         !Create the netCDF file.
-        CALL check(nf90_create(outFile_sp, NF90_CLOBBER, ncid))
+        CALL check(nf90_create(outFile_restart, NF90_CLOBBER, ncid))
         !Define the dimensions.
         CALL check(nf90_def_dim(ncid, "time",     nloops, dimid_nloops))
         call check(nf90_def_dim(ncid, "n_layers", nlayers, dimid_nlayer))
@@ -966,7 +762,7 @@ module mod_ncd_io
         CALL check(nf90_def_var(ncid, "cSoilFast",      NF90_FLOAT, dimid_nloops, id_sp_cSoilFast))
         CALL check(nf90_def_var(ncid, "cSoilSlow",      NF90_FLOAT, dimid_nloops, id_sp_cSoilSlow))
         CALL check(nf90_def_var(ncid, "cSoilPassive",   NF90_FLOAT, dimid_nloops, id_sp_cSoilPassive))
-        CALL check(nf90_def_var(ncid, "cCH4",           NF90_FLOAT, (/dimid_nloops,dimid_nlayer/), id_sp_cCH4))
+        CALL check(nf90_def_var(ncid, "CH4",           NF90_FLOAT, (/dimid_nloops,dimid_nlayer/), id_sp_cCH4))
         ! Nitrogen fluxes (kgN m-2 s-1)
         CALL check(nf90_def_var(ncid, "fBNF",           NF90_FLOAT, dimid_nloops, id_sp_fBNF))
         CALL check(nf90_def_var(ncid, "fN2O",           NF90_FLOAT, dimid_nloops, id_sp_fN2O))
@@ -998,53 +794,52 @@ module mod_ncd_io
 
         CALL check(nf90_enddef(ncid)) !End Definitions
 
-        CALL check(nf90_put_var(ncid, id_sp_gpp,            sp_gpp_y))
-        CALL check(nf90_put_var(ncid, id_sp_npp,            sp_npp_y))
-        CALL check(nf90_put_var(ncid, id_sp_ra,             sp_ra_y))
-        CALL check(nf90_put_var(ncid, id_sp_rh,             sp_rh_y))
-        CALL check(nf90_put_var(ncid, id_sp_wetlandCH4,     sp_wetlandCH4_y))
-        CALL check(nf90_put_var(ncid, id_sp_wetlandCH4prod, sp_wetlandCH4prod_y))
-        CALL check(nf90_put_var(ncid, id_sp_wetlandCH4cons, sp_wetlandCH4cons_y))
+        CALL check(nf90_put_var(ncid, id_sp_gpp,            tot_outVars_spinup%gpp))
+        CALL check(nf90_put_var(ncid, id_sp_npp,            tot_outVars_spinup%npp))
+        CALL check(nf90_put_var(ncid, id_sp_ra,             tot_outVars_spinup%ra))
+        CALL check(nf90_put_var(ncid, id_sp_rh,             tot_outVars_spinup%rh))
+        CALL check(nf90_put_var(ncid, id_sp_wetlandCH4,     tot_outVars_spinup%wetlandCH4))
+        CALL check(nf90_put_var(ncid, id_sp_wetlandCH4prod, tot_outVars_spinup%wetlandCH4prod))
+        CALL check(nf90_put_var(ncid, id_sp_wetlandCH4cons, tot_outVars_spinup%wetlandCH4cons))
         ! Carbon Pools  (KgC m-2)
-        CALL check(nf90_put_var(ncid, id_sp_cLeaf,          sp_cLeaf_y))
-        CALL check(nf90_put_var(ncid, id_sp_cStem,          sp_cStem_y))
-        CALL check(nf90_put_var(ncid, id_sp_cRoot,          sp_cRoot_y))
-        CALL check(nf90_put_var(ncid, id_sp_cOther,         sp_cOther_y))
-        CALL check(nf90_put_var(ncid, id_sp_cLitter,        sp_cLitter_y))
-        CALL check(nf90_put_var(ncid, id_sp_cLitterCwd,     sp_cLitterCwd_y))
-        CALL check(nf90_put_var(ncid, id_sp_cSoil,          sp_cSoil_y))
-        CALL check(nf90_put_var(ncid, id_sp_cSoilFast,      sp_cSoilFast_y))
-        CALL check(nf90_put_var(ncid, id_sp_cSoilSlow,      sp_cSoilSlow_y))
-        CALL check(nf90_put_var(ncid, id_sp_cSoilPassive,   sp_cSoilPassive_y))
-        CALL check(nf90_put_var(ncid, id_sp_cCH4,           sp_cCH4_y))
+        CALL check(nf90_put_var(ncid, id_sp_cLeaf,          tot_outVars_spinup%cLeaf))
+        CALL check(nf90_put_var(ncid, id_sp_cStem,          tot_outVars_spinup%cStem))
+        CALL check(nf90_put_var(ncid, id_sp_cRoot,          tot_outVars_spinup%cRoot))
+        CALL check(nf90_put_var(ncid, id_sp_cOther,         tot_outVars_spinup%cOther))
+        CALL check(nf90_put_var(ncid, id_sp_cLitter,        tot_outVars_spinup%cLitter))
+        CALL check(nf90_put_var(ncid, id_sp_cLitterCwd,     tot_outVars_spinup%cLitterCwd))
+        CALL check(nf90_put_var(ncid, id_sp_cSoil,          tot_outVars_spinup%cSoil))
+        CALL check(nf90_put_var(ncid, id_sp_cSoilFast,      tot_outVars_spinup%cSoilFast))
+        CALL check(nf90_put_var(ncid, id_sp_cSoilSlow,      tot_outVars_spinup%cSoilSlow))
+        CALL check(nf90_put_var(ncid, id_sp_cSoilPassive,   tot_outVars_spinup%cSoilPassive))
+        CALL check(nf90_put_var(ncid, id_sp_cCH4,           tot_outVars_spinup%CH4))
         ! Nitrogen fluxes (kgN m-2 s-1)
-        CALL check(nf90_put_var(ncid, id_sp_fBNF,           sp_fBNF_y))
-        CALL check(nf90_put_var(ncid, id_sp_fN2O,           sp_fN2O_y))
-        CALL check(nf90_put_var(ncid, id_sp_fNloss,         sp_fNloss_y))
-        CALL check(nf90_put_var(ncid, id_sp_fNnetmin,       sp_fNnetmin_y))
-        CALL check(nf90_put_var(ncid, id_sp_fNdep,          sp_fNdep_y))
+        CALL check(nf90_put_var(ncid, id_sp_fBNF,           tot_outVars_spinup%fBNF))
+        CALL check(nf90_put_var(ncid, id_sp_fN2O,           tot_outVars_spinup%fN2O))
+        CALL check(nf90_put_var(ncid, id_sp_fNloss,         tot_outVars_spinup%fNloss))
+        CALL check(nf90_put_var(ncid, id_sp_fNnetmin,       tot_outVars_spinup%fNnetmin))
+        CALL check(nf90_put_var(ncid, id_sp_fNdep,          tot_outVars_spinup%fNdep))
         ! Nitrogen pools (kgN m-2)
-        CALL check(nf90_put_var(ncid, id_sp_nLeaf,          sp_nLeaf_y))
-        CALL check(nf90_put_var(ncid, id_sp_nStem,          sp_nStem_y))
-        CALL check(nf90_put_var(ncid, id_sp_nRoot,          sp_nRoot_y))
-        CALL check(nf90_put_var(ncid, id_sp_nOther,         sp_nOther_y))
-        CALL check(nf90_put_var(ncid, id_sp_nLitter,        sp_nLitter_y))
-        CALL check(nf90_put_var(ncid, id_sp_nLitterCwd,     sp_nLitterCwd_y))
-        CALL check(nf90_put_var(ncid, id_sp_nSoil,          sp_nSoil_y))
-        CALL check(nf90_put_var(ncid, id_sp_nMineral,       sp_nMineral_y))
+        CALL check(nf90_put_var(ncid, id_sp_nLeaf,          tot_outVars_spinup%nLeaf))
+        CALL check(nf90_put_var(ncid, id_sp_nStem,          tot_outVars_spinup%nStem))
+        CALL check(nf90_put_var(ncid, id_sp_nRoot,          tot_outVars_spinup%nRoot))
+        CALL check(nf90_put_var(ncid, id_sp_nOther,         tot_outVars_spinup%nOther))
+        CALL check(nf90_put_var(ncid, id_sp_nLitter,        tot_outVars_spinup%nLitter))
+        CALL check(nf90_put_var(ncid, id_sp_nLitterCwd,     tot_outVars_spinup%nLitterCwd))
+        CALL check(nf90_put_var(ncid, id_sp_nSoil,          tot_outVars_spinup%nSoil))
+        CALL check(nf90_put_var(ncid, id_sp_nMineral,       tot_outVars_spinup%nMineral))
         ! energy fluxes (W m-2)
-        CALL check(nf90_put_var(ncid, id_sp_hfls,           sp_hfls_y))
-        CALL check(nf90_put_var(ncid, id_sp_hfss,           sp_hfss_y))
+        CALL check(nf90_put_var(ncid, id_sp_hfls,           tot_outVars_spinup%hfls))
+        CALL check(nf90_put_var(ncid, id_sp_hfss,           tot_outVars_spinup%hfss))
         ! water fluxes (kg m-2 s-1)
-        CALL check(nf90_put_var(ncid, id_sp_ec,             sp_ec_y))
-        CALL check(nf90_put_var(ncid, id_sp_tran,           sp_tran_y))
-        CALL check(nf90_put_var(ncid, id_sp_es,             sp_es_y))
-        CALL check(nf90_put_var(ncid, id_sp_hfsbl,          sp_hfsbl_y))
-        CALL check(nf90_put_var(ncid, id_sp_mrro,           sp_mrro_y))
-        CALL check(nf90_put_var(ncid, id_sp_mrros,          sp_mrros_y))
-        CALL check(nf90_put_var(ncid, id_sp_mrrob,          sp_mrrob_y))
-        CALL check(nf90_put_var(ncid, id_sp_lai,            sp_lai_y))
-        CALL check(nf90_put_var(ncid, id_test,              sp_test_y))
+        CALL check(nf90_put_var(ncid, id_sp_ec,             tot_outVars_spinup%ec))
+        CALL check(nf90_put_var(ncid, id_sp_tran,           tot_outVars_spinup%tran))
+        CALL check(nf90_put_var(ncid, id_sp_es,             tot_outVars_spinup%es))
+        CALL check(nf90_put_var(ncid, id_sp_hfsbl,          tot_outVars_spinup%hfsbl))
+        CALL check(nf90_put_var(ncid, id_sp_mrro,           tot_outVars_spinup%mrro))
+        CALL check(nf90_put_var(ncid, id_sp_mrros,          tot_outVars_spinup%mrros))
+        CALL check(nf90_put_var(ncid, id_sp_mrrob,          tot_outVars_spinup%mrrob))
+        CALL check(nf90_put_var(ncid, id_sp_lai,            tot_outVars_spinup%lai))
         ! endif
         CALL check(nf90_close(ncid))
     end subroutine write_spinup_res

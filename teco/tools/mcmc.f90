@@ -211,7 +211,7 @@ module mod_mcmc
                     ! write(*,*)"new_here", Daparmax-DAparmin !DApar(igenPar)
                     if((DApar(igenPar) .gt. DAparmax(igenPar)) &
                         &   .or. (DApar(igenPar) .lt. DAparmin(igenPar))) then 
-                            write(*,*) igenPar, DApar(igenPar), DAparmin(igenPar), DAparmax(igenPar), i
+                            write(*,*) igenPar, DApar(igenPar), DAparmin(igenPar), DAparmax(igenPar), igenPar
                             goto 999                  ! judge the range of new parameter
                     endif
                 enddo
@@ -459,7 +459,7 @@ module mod_mcmc
     !! algorithms, the subroutine use the Square root	  !!
     !! matrix of gamma									  !!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        integer npara
+        integer npara, i
         real gamma_racine(npara,npara)
         real x(npara),xold(npara),xnew(npara)
         
@@ -522,7 +522,7 @@ module mod_mcmc
     !! Compute the centered matrix, ie. the matrix minus  !!
     !! the column means									  !!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        integer npara,ncov
+        integer npara,i,ncov
         real mat(ncov,npara),mat_out(ncov,npara)
         ! real mean
 

@@ -38,6 +38,7 @@ module mod_transfer
         real ScNloss
         ! added for soil thermal
         real frac_soc(10),tsoil_layer(11)       ! tsoill(10),
+        integer i, j
         ! logical do_soilphy
         
         tsoil_layer = testout
@@ -308,6 +309,7 @@ module mod_transfer
     end subroutine TCS_CN
 
     subroutine matrix_struct()
+        
         ! this is used to create the TECO_matrix version: leaf, stem, root, lit_m, lit_s, soil_f, soil_s, soil_p
         ! mark: QC(1)/0.48 = bmleaf, bmleaf*0.48*gamma_N = L_fall, L_fall = outC(1), gamma_N = 1.0/TauC(1)*Sw
         !       NPP_L = alpha_L * NPP
@@ -329,7 +331,7 @@ module mod_transfer
         ! QC(7) = QC(7) - QC(7)*(1.0/tauC(7))*S_omega*S_T(4)              + f_C2S*OutC(5)+f_M2S*OutC(6)
         ! QC(8) = QC(8) - QC(8)*(1.0/tauC(8))*S_omega*S_T(5)              + f_M2P*OutC(6)+f_S2P*OutC(7)
         implicit none
-        ! integer i, j
+        integer i, j
         real mat_outC(8,1), test_hhh(8,8), test_hhh2(8,1)
 
         do i = 1, 8

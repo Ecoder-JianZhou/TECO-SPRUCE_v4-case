@@ -12,7 +12,7 @@ module mod_soil
         real infilt_max
         real DWCL(10), evapl(10), wupl(10), Tr_ratio(10)
         real SRDT(10), rain_new, rain_t
-        integer nfr
+        integer nfr, i
         real infilt_dbmemo, twtadd, wtadd, omegaL(10)
         real exchangeL,supply,demand
         real Tsrdt, tr_allo
@@ -21,7 +21,7 @@ module mod_soil
         real zwt1,zwt2,zwt3
         real fw(10), ome(10)
         real test_a, test_b
-        real omegaL_max, omegaL_min
+        ! real omegaL_max, omegaL_min
 
         infilt_max = 15.
         WILTPT_x   = wsmin/100.000
@@ -419,7 +419,7 @@ module mod_soil
         real resht_lai,snow_depth_t
         real condu_s,tsoill_0,diff_air,d_cor                !,condu_b,dcount,dcount_soil
         real sftmp_pre
-        integer n_layers
+        integer n_layers, i
         real, allocatable ::depth_z(:) 
         n_layers=10
         allocate(depth_z(n_layers))      
@@ -826,7 +826,7 @@ module mod_soil
         !****************************************************************************************************************************** 
         implicit none
         ! integer i,MEMCMC
-        ! integer i
+        integer i
         ! integer,parameter :: nlayers=10       !use this statement to set the parameter value
         ! real zwt    
         real consum
@@ -840,7 +840,7 @@ module mod_soil
         !     CH4 Production      
         !******************************************************************************************************************************      
         !      real Rhetero
-        real Rh_resp(nlayers)!,Rh_pools(5),Rh_h,ProCH4(nlayers),Pro_sum
+        real Rh_resp(nlayers), Rh_h !,Rh_pools(5),Rh_h,ProCH4(nlayers),Pro_sum
         ! real r_me         !release ratio of CH4 to CO2
         ! real Q10pro
         real fSTP(nlayers)         !CH4 production factor of soil temperature
@@ -1565,7 +1565,7 @@ module mod_soil
             !CH4 and diffused up
 
         implicit none
-        integer mwt,ind
+        integer mwt,ind, i
         ! INPUT parameters:
         real rouwater!,g,Rgas
         ! integer, parameter :: nlayers=10

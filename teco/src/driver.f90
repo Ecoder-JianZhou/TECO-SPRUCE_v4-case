@@ -8,7 +8,7 @@ module driver
     use mcmc_functions
     implicit none
     ! some paramaters for cycle and saving results
-    integer iyear,  iday, ihour
+    ! integer iyear,  iday, ihour
     integer daysOfyear, hoursOfmonth, hoursOfYear, daysOfmonth(12) 
     integer iTotHourly, iTotDaily, iTotMonthly  ! used to cycle the record of different frequences of the results
 
@@ -31,7 +31,7 @@ module driver
         aaatest = 0
 
         ! Jian: start the cycle of the forcing data
-        first_year  = forcing%year(1)
+        first_year  = forcing(1)%year
         do iforcing = 1, nforcing 
             ! write(*,*)"iforcing: ", iforcing, N_deposit
             if (iforcing .eq. 1) then
@@ -41,9 +41,9 @@ module driver
                 iTotMonthly = 1
                 call init_year()                                ! initilization the variables of a year
             endif
-            iyear = forcing%year(iforcing)                      ! force%year
-            iday  = forcing%doy(iforcing)                    
-            ihour = forcing%hour(iforcing)
+            iyear = forcing(iforcing)%year                      ! force%year
+            iday  = forcing(iforcing)%doy                    
+            ihour = forcing(iforcing)%hour
             ! if it is a new year
 
             if ((iday .eq. 1) .and. (ihour .eq. 0)) call init_update_year()
@@ -100,22 +100,22 @@ module driver
             ! if ((itest .eq.1) .and. (iforcing .eq. 180)) stop
 
             ! forcing data --------------------------------------------------------------------------------
-            Tair  = forcing%Tair(iforcing)                      ! Tair
-            Tsoil = forcing%Tsoil(iforcing)                     ! SLT
-            co2ca = forcing%CO2(iforcing)*1.0E-6                ! CO2 concentration,ppm-->1.0E-6
+            Tair  = forcing(iforcing)%Tair                      ! Tair
+            Tsoil = forcing(iforcing)%Tsoil                     ! SLT
+            co2ca = forcing(iforcing)%CO2*1.0E-6                ! CO2 concentration,ppm-->1.0E-6
             if (co2ca .lt. 0) co2ca = 380.0*1.0E-6              ! Jian: if no CO2 (-9999), then use the default value 
             Tair  = Tair  + Ttreat                              ! Jian: whether it has the treatment
             Tsoil = Tsoil + Ttreat
             if (CO2treat .ne. 0.) co2ca = CO2treat*1.0E-6 
             ! ----------------------------------------------------------                
-            RH     = forcing%RH(iforcing)
-            Dair   = forcing%VPD(iforcing)                      ! air water vapour defficit? Unit Pa
-            rain   = forcing%Rain(iforcing)                     ! rain fal per hour
-            wind   = ABS(forcing%WS(iforcing))                  ! wind speed m s-1
-            PAR    = forcing%PAR(iforcing)                      ! Unit ? umol/s/m-2
-            radsol = forcing%PAR(iforcing)                      ! unit ? PAR actually  Jian: or incoming shortwave/longwave radiation?
-            dpatm  = forcing%PBOT(iforcing)
-            if (do_ndep) N_deposit = forcing%Ndep(iforcing)*3600
+            RH     = forcing(iforcing)%RH
+            Dair   = forcing(iforcing)%VPD                      ! air water vapour defficit? Unit Pa
+            rain   = forcing(iforcing)%Rain                     ! rain fal per hour
+            wind   = ABS(forcing(iforcing)%WS)                  ! wind speed m s-1
+            PAR    = forcing(iforcing)%PAR                      ! Unit ? umol/s/m-2
+            radsol = forcing(iforcing)%PAR                      ! unit ? PAR actually  Jian: or incoming shortwave/longwave radiation?
+            dpatm  = forcing(iforcing)%PBOT
+            if (do_ndep) N_deposit = forcing(iforcing)%Ndep*3600
             ! Ajust some unreasonable values 
             RH     = AMAX1(0.01,AMIN1(99.99,RH))                ! relative humidity
             esat1  = 610.78*exp(17.27*Tair/(Tair + 237.3))      ! intermediate parameter
@@ -196,7 +196,7 @@ module driver
             bmroot  = QC(3)/0.48
             bmplant = bmleaf+bmroot+bmstem
             LAI     = bmleaf*SLA
-            NMIN_d  = NMIN_d+N_miner
+            ! NMIN_d  = NMIN_d+N_miner
             ! output hourly
             Recoh   = Rhetero+Rauto
             ETh     = ET !*1000.
@@ -226,80 +226,80 @@ module driver
             endif
 
             if (iforcing .eq. 1) then
-                i_record = 1
-                nday4out = 0
+                ! i_record = 1
+                ! nday4out = 0
             endif
             if (ihour .eq. 23) then
                 call summaryDaily(iTotDaily)
-                nday4out = nday4out+1
-                Simu_dailyflux14(1,i_record)  = gpp_d_old 
-                Simu_dailyflux14(2,i_record)  = NEE_d                   
-                Simu_dailyflux14(3,i_record)  = Reco_d	!Rh             
-                Simu_dailyflux14(4,i_record)  = npp_d_old!*1.5
-                Simu_dailyflux14(5,i_record)  = ra_d_old!*1.5
-                ! Simu_dailyflux14(6,i_record)  = QC(1)!mat_x(1)!QC(1)
-                ! Simu_dailyflux14(7,i_record)  = QC(2)!mat_x(2)!QC(2)
-                ! Simu_dailyflux14(8,i_record)  = QC(3)!mat_x(3)!QC(3)
-                ! Simu_dailyflux14(9,i_record)  = QC(4)!mat_x(4)!QC(4)
-                ! Simu_dailyflux14(10,i_record) = QC(5)!mat_x(5)!QC(5)
-                ! Simu_dailyflux14(11,i_record) = QC(6)!mat_x(6)!QC(6)
-                ! Simu_dailyflux14(12,i_record) = QC(7)!mat_x(7)!QC(7)
-                ! Simu_dailyflux14(13,i_record) = QC(8)!mat_x(8)!QC(8)!*0.48
-                Simu_dailyflux14(6,i_record)  = mat_x(1,1)!QC(1)
-                Simu_dailyflux14(7,i_record)  = mat_x(2,1)!QC(2)
-                Simu_dailyflux14(8,i_record)  = mat_x(3,1)!QC(3)
-                Simu_dailyflux14(9,i_record)  = mat_x(4,1)!QC(4)
-                Simu_dailyflux14(10,i_record) = mat_x(5,1)!QC(5)
-                Simu_dailyflux14(11,i_record) = mat_x(6,1)!QC(6)
-                Simu_dailyflux14(12,i_record) = mat_x(7,1)!QC(7)
-                Simu_dailyflux14(13,i_record) = mat_x(8,1)!QC(8)!*0.48
-                Simu_dailyflux14(14,i_record) = rh_d_old
+                ! nday4out = nday4out+1
+                ! Simu_dailyflux14(1,i_record)  = gpp_d_old 
+                ! Simu_dailyflux14(2,i_record)  = NEE_d                   
+                ! Simu_dailyflux14(3,i_record)  = Reco_d	!Rh             
+                ! Simu_dailyflux14(4,i_record)  = npp_d_old!*1.5
+                ! Simu_dailyflux14(5,i_record)  = ra_d_old!*1.5
+                ! ! Simu_dailyflux14(6,i_record)  = QC(1)!mat_x(1)!QC(1)
+                ! ! Simu_dailyflux14(7,i_record)  = QC(2)!mat_x(2)!QC(2)
+                ! ! Simu_dailyflux14(8,i_record)  = QC(3)!mat_x(3)!QC(3)
+                ! ! Simu_dailyflux14(9,i_record)  = QC(4)!mat_x(4)!QC(4)
+                ! ! Simu_dailyflux14(10,i_record) = QC(5)!mat_x(5)!QC(5)
+                ! ! Simu_dailyflux14(11,i_record) = QC(6)!mat_x(6)!QC(6)
+                ! ! Simu_dailyflux14(12,i_record) = QC(7)!mat_x(7)!QC(7)
+                ! ! Simu_dailyflux14(13,i_record) = QC(8)!mat_x(8)!QC(8)!*0.48
+                ! Simu_dailyflux14(6,i_record)  = mat_x(1,1)!QC(1)
+                ! Simu_dailyflux14(7,i_record)  = mat_x(2,1)!QC(2)
+                ! Simu_dailyflux14(8,i_record)  = mat_x(3,1)!QC(3)
+                ! Simu_dailyflux14(9,i_record)  = mat_x(4,1)!QC(4)
+                ! Simu_dailyflux14(10,i_record) = mat_x(5,1)!QC(5)
+                ! Simu_dailyflux14(11,i_record) = mat_x(6,1)!QC(6)
+                ! Simu_dailyflux14(12,i_record) = mat_x(7,1)!QC(7)
+                ! Simu_dailyflux14(13,i_record) = mat_x(8,1)!QC(8)!*0.48
+                ! Simu_dailyflux14(14,i_record) = rh_d_old
 
-                Simu_dailyflux14_2023(1,i_record)  = gpp_d_old 
-                Simu_dailyflux14_2023(2,i_record)  = NEE_d                   
-                Simu_dailyflux14_2023(3,i_record)  = Reco_d	!Rh             
-                Simu_dailyflux14_2023(4,i_record)  = npp_d_old!*1.5
-                Simu_dailyflux14_2023(5,i_record)  = ra_d_old!*1.5
-                Simu_dailyflux14_2023(6,i_record)  = QC(1)!mat_x(1)!QC(1)
-                Simu_dailyflux14_2023(7,i_record)  = QC(2)!mat_x(2)!QC(2)
-                Simu_dailyflux14_2023(8,i_record)  = QC(3)!mat_x(3)!QC(3)
-                Simu_dailyflux14_2023(9,i_record)  = QC(4)!mat_x(4)!QC(4)
-                Simu_dailyflux14_2023(10,i_record) = QC(5)!mat_x(5)!QC(5)
-                Simu_dailyflux14_2023(11,i_record) = QC(6)!mat_x(6)!QC(6)
-                Simu_dailyflux14_2023(12,i_record) = QC(7)!mat_x(7)!QC(7)
-                Simu_dailyflux14_2023(13,i_record) = QC(8)!mat_x(8)!QC(8)!*0.48
-                ! Simu_dailyflux14_2023(6,i_record)  = mat_x(1) ! QC(1)
-                ! Simu_dailyflux14_2023(7,i_record)  = mat_x(2) ! QC(2)
-                ! Simu_dailyflux14_2023(8,i_record)  = mat_x(3) ! QC(3)
-                ! Simu_dailyflux14_2023(9,i_record)  = mat_x(4) ! QC(4)
-                ! Simu_dailyflux14_2023(10,i_record) = mat_x(5) ! QC(5)
-                ! Simu_dailyflux14_2023(11,i_record) = mat_x(6) ! QC(6)
-                ! Simu_dailyflux14_2023(12,i_record) = mat_x(7) ! QC(7)
-                ! Simu_dailyflux14_2023(13,i_record) = mat_x(8) ! QC(8)!*0.48
-                Simu_dailyflux14_2023(14,i_record) = rh_d_old
-                Simu_dailyflux14_2023(15,i_record) = ta       ! for environmental scalar
-                Simu_dailyflux14_2023(16,i_record) = omega_d  !  
-                Simu_dailyflux14_2023(17,i_record) = mat_B(1,1)
-                Simu_dailyflux14_2023(18,i_record) = mat_B(2,1)       ! for environmental scalar
-                Simu_dailyflux14_2023(19,i_record) = mat_B(3,1)  !  
-                Simu_dailyflux14_2023(20,i_record) = mat_x(1,1) ! QC(1)
-                Simu_dailyflux14_2023(21,i_record) = mat_x(2,1) ! QC(2)
-                Simu_dailyflux14_2023(22,i_record) = mat_x(3,1) ! QC(3)
-                Simu_dailyflux14_2023(23,i_record) = mat_x(4,1) ! QC(4)
-                Simu_dailyflux14_2023(24,i_record) = mat_x(5,1) ! QC(5)
-                Simu_dailyflux14_2023(25,i_record) = mat_x(6,1) ! QC(6)
-                Simu_dailyflux14_2023(26,i_record) = mat_x(7,1) ! QC(7)
-                Simu_dailyflux14_2023(27,i_record) = mat_x(8,1) ! QC(8)!*0.48
-                Simu_dailyflux14_2023(28,i_record) = mat_Rh_d   
-                ! record_yr(i_record) = iyear
-                i_record = i_record+1
+                ! Simu_dailyflux14_2023(1,i_record)  = gpp_d_old 
+                ! Simu_dailyflux14_2023(2,i_record)  = NEE_d                   
+                ! Simu_dailyflux14_2023(3,i_record)  = Reco_d	!Rh             
+                ! Simu_dailyflux14_2023(4,i_record)  = npp_d_old!*1.5
+                ! Simu_dailyflux14_2023(5,i_record)  = ra_d_old!*1.5
+                ! Simu_dailyflux14_2023(6,i_record)  = QC(1)!mat_x(1)!QC(1)
+                ! Simu_dailyflux14_2023(7,i_record)  = QC(2)!mat_x(2)!QC(2)
+                ! Simu_dailyflux14_2023(8,i_record)  = QC(3)!mat_x(3)!QC(3)
+                ! Simu_dailyflux14_2023(9,i_record)  = QC(4)!mat_x(4)!QC(4)
+                ! Simu_dailyflux14_2023(10,i_record) = QC(5)!mat_x(5)!QC(5)
+                ! Simu_dailyflux14_2023(11,i_record) = QC(6)!mat_x(6)!QC(6)
+                ! Simu_dailyflux14_2023(12,i_record) = QC(7)!mat_x(7)!QC(7)
+                ! Simu_dailyflux14_2023(13,i_record) = QC(8)!mat_x(8)!QC(8)!*0.48
+                ! ! Simu_dailyflux14_2023(6,i_record)  = mat_x(1) ! QC(1)
+                ! ! Simu_dailyflux14_2023(7,i_record)  = mat_x(2) ! QC(2)
+                ! ! Simu_dailyflux14_2023(8,i_record)  = mat_x(3) ! QC(3)
+                ! ! Simu_dailyflux14_2023(9,i_record)  = mat_x(4) ! QC(4)
+                ! ! Simu_dailyflux14_2023(10,i_record) = mat_x(5) ! QC(5)
+                ! ! Simu_dailyflux14_2023(11,i_record) = mat_x(6) ! QC(6)
+                ! ! Simu_dailyflux14_2023(12,i_record) = mat_x(7) ! QC(7)
+                ! ! Simu_dailyflux14_2023(13,i_record) = mat_x(8) ! QC(8)!*0.48
+                ! Simu_dailyflux14_2023(14,i_record) = rh_d_old
+                ! Simu_dailyflux14_2023(15,i_record) = ta       ! for environmental scalar
+                ! Simu_dailyflux14_2023(16,i_record) = omega_d  !  
+                ! Simu_dailyflux14_2023(17,i_record) = mat_B(1,1)
+                ! Simu_dailyflux14_2023(18,i_record) = mat_B(2,1)       ! for environmental scalar
+                ! Simu_dailyflux14_2023(19,i_record) = mat_B(3,1)  !  
+                ! Simu_dailyflux14_2023(20,i_record) = mat_x(1,1) ! QC(1)
+                ! Simu_dailyflux14_2023(21,i_record) = mat_x(2,1) ! QC(2)
+                ! Simu_dailyflux14_2023(22,i_record) = mat_x(3,1) ! QC(3)
+                ! Simu_dailyflux14_2023(23,i_record) = mat_x(4,1) ! QC(4)
+                ! Simu_dailyflux14_2023(24,i_record) = mat_x(5,1) ! QC(5)
+                ! Simu_dailyflux14_2023(25,i_record) = mat_x(6,1) ! QC(6)
+                ! Simu_dailyflux14_2023(26,i_record) = mat_x(7,1) ! QC(7)
+                ! Simu_dailyflux14_2023(27,i_record) = mat_x(8,1) ! QC(8)!*0.48
+                ! Simu_dailyflux14_2023(28,i_record) = mat_Rh_d   
+                ! ! record_yr(i_record) = iyear
+                ! i_record = i_record+1
             end if
             call update_summary_monthly()
             
             if (do_mcmc) call GetSimuData(iyear, iday, ihour)
                  
             if (iforcing < nforcing)then
-                if (forcing%year(iforcing+1)>iyear) then            
+                if (forcing(iforcing+1)%year>iyear) then            
                     year0 = iyear                                   ! update the record of year (year0)
                     storage      = accumulation
                     stor_use     = Storage/times_storage_use
