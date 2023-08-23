@@ -54,14 +54,7 @@ contains
       radabv(2) = 0.5*radsol                    !(2) - NIR
       ! call multilayer model of Leuning - uses Gaussian integration but radiation scheme
       call xlayers() 
-      ! if (itest .gt.  847) then
-      !    iitest = iitest + 1
-      !    if (mod(iitest, 252) .eq. 0)then
-      !       ! write(*,*)"test Acan1:", Vcmxx, Tlk, -0.0089*Vcmxx*exp(0.069*(Tlk - 293.2)), Tair, Aleaf, Aleafx
-      !       write(*,*)"test Vcmxx: ", Vcmx0, scalex, extkn,flai, Vcmxx
-      !    endif 
-      ! endif
-      ! run Tsoil simulation
+
       if (do_soilphy) call Tsoil_simu()                  ! *** ..int   added 'testout,Rsoilab1,Rsoilab2,QLleaf,QLair,raero,do_soilphy,G,Esoil,Hsoil'
       ! summary the results of canopy
       Acanop = Acan1 + Acan2                                
@@ -70,7 +63,7 @@ contains
       transp = AMAX1(Ecanop*3600.0/(1.0e6*(2.501 - 0.00236*Tair)), 0.) ! mm H2O /hour
       evap   = AMAX1(Esoil *3600.0/(1.0e6*(2.501 - 0.00236*Tair)), 0.)
       ! write(*,*)"test_new_evap: ", Esoil, Tair
-      ! write(*,*)"GPP: ", Acan1, Acan2
+      ! if (Acanop .gt. 0.)  write(*,*)"GPP: ", Acan1, Acan2, Acanop
       return
    end subroutine canopy
 
@@ -172,17 +165,16 @@ contains
 
       ! Scalars for plant growth
       ! Sps=Amin1(1.0,3.33*AMAX1(0.0,1.0 - fnsc))
-      Sps = Sps*(1.-exp(-phiN*NSN))                                                        ! Sps is not assigned previous, something is wrong. -JJJJJJJJJJJJJJJJJJJJJ
-      Ss = AMIN1(1.0, 2.*fnsc)
-      RS_0 = 1.0
-      RS = bmR/bmL
+      Sps   = Sps*(1.-exp(-phiN*NSN))                                                        ! Sps is not assigned previous, something is wrong. -JJJJJJJJJJJJJJJJJJJJJ
+      Ss    = AMIN1(1.0, 2.*fnsc)
+      RS_0  = 1.0
+      RS    = bmR/bmL
       SL_rs = RS/(RS + RS_0*(2.-W))
       SR_rs = (RS_0*(2.-W))/(RS + RS_0*(2.-W))
-      Slai = amin1(1.0, 2.333*(LAIMAX - LAI)/(LAIMAX - LAIMIN))
-      St = AMAX1(0.0, 1.0 - exp(-(Tair - gddonset/10.)/5.0))  !0.5 !
-      ! Sw=AMAX1(0.333, 0.333+omega)
-      Sw = AMIN1(0.5, AMAX1(0.333, 0.333 + omega))
-      W = AMIN1(1.0, 3.333*omega)
+      Slai  = amin1(1.0, 2.333*(LAIMAX - LAI)/(LAIMAX - LAIMIN))
+      St    = AMAX1(0.0, 1.0 - exp(-(Tair - gddonset/10.)/5.0))  !0.5 !
+      Sw    = AMIN1(0.5, AMAX1(0.333, 0.333 + omega))
+      W     = AMIN1(1.0, 3.333*omega)
 
       ! Plant growth and allocation, based on LM3V
       GPmax   = (GLmax*bmL + GSmax*StemSap + GRmax*bmR)                        !/acP
@@ -197,9 +189,6 @@ contains
       GrowthLaccu = GrowthLaccu + GrowthL
       GrowthRaccu = GrowthRaccu + GrowthR
       GrowthSaccu = GrowthSaccu + GrowthS
-      ! test_gpp = (/GrowthL,GrowthR,GrowthS,add,0.,0.,0.,0.,0./)
-      ! test_gpp = (/GPmax*fnsc*St*(1.-exp(-NSN)),0.004*NSC,0.004*NSN*CNp0,GPmax,fnsc,nsn,CNP0,GLmax,bmL/)
-      ! test_gpp = (/GPmax*fnsc*St*(1.-exp(-NSN)),0.004*NSC,0.004*NSN*CNp0,GPmax,fnsc,QC(1),bmleaf,bmleaf*0.48,bmL/)
       
       if (NPP .eq. 0.0) then
          alpha_L = 0.333

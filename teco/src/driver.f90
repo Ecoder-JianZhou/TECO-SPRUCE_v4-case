@@ -32,14 +32,13 @@ module driver
 
         ! Jian: start the cycle of the forcing data
         first_year  = forcing(1)%year
+
         do iforcing = 1, nforcing 
-            ! write(*,*)"iforcing: ", iforcing, N_deposit
             if (iforcing .eq. 1) then
                 year0 = first_year             ! Jian: record whether it is a new year.
                 iTotHourly  = 1
                 iTotDaily   = 1
                 iTotMonthly = 1
-                call init_year()                                ! initilization the variables of a year
             endif
             iyear = forcing(iforcing)%year                      ! force%year
             iday  = forcing(iforcing)%doy                    
@@ -97,7 +96,6 @@ module driver
                 if(Ta.gt.5.0) GDD5 = GDD5+Ta
                 call init_day()                                 ! Jian: initilize the daily data.
             endif
-            ! if ((itest .eq.1) .and. (iforcing .eq. 180)) stop
 
             ! forcing data --------------------------------------------------------------------------------
             Tair  = forcing(iforcing)%Tair                      ! Tair
@@ -158,8 +156,11 @@ module driver
             Vcmx0 = Vcmax0*SNvcmax*1.0e-6
             eJmx0 = 1.67*Vcmx0 ! Weng 02/21/2011 Medlyn et al. 2002 
             eJmx0 = JV*Vcmx0   ! added for acclimation study,replace 1.67 with JV Feb 19 2019 Shuang    
-            ! run canopy module
-            call canopy()
+            
+            ! write(*,*)"test_vcmx0_ejmx0: ", Vcmx0, SNvcmax, eJmx0, JV
+            ! if (iforcing .gt. 4320) stop
+            
+            call canopy()      ! run canopy module
             ! run soil water processes
             call soilwater()                      
             ET = evap+transp
@@ -300,14 +301,14 @@ module driver
                  
             if (iforcing < nforcing)then
                 if (forcing(iforcing+1)%year>iyear) then            
-                    year0 = iyear                                   ! update the record of year (year0)
+                    year0        = iyear                      ! update the record of year (year0)
                     storage      = accumulation
                     stor_use     = Storage/times_storage_use
                     accumulation = 0.0
                     onset        = 0
                 endif
             else
-                year0        = iyear                                     ! update the record of year (year0)
+                year0        = iyear                          ! update the record of year (year0)
                 storage      = accumulation
                 stor_use     = Storage/times_storage_use
                 accumulation = 0.0

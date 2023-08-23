@@ -1,25 +1,25 @@
 &nml_simu_settings
-    simu_name  = "9degree_AmbCO2"
+    simu_name  = "run_MCMC_SPRUCE_test"
     do_spinup  = False                     ! run spinup or not
-    do_mcmc    = False                     ! run mcmc or not
+    do_mcmc    = True                     ! run mcmc or not
     do_snow    = True                      ! do soil snow process
     do_soilphy = True                      ! do soil physics
     do_matrix  = True                      ! do matrix run
     do_EBG     = False                     ! run EBG or not based on Ma et al, 2022
-    do_restart = True
+    do_restart = False
     do_ndep    = False
     do_simu    = True
     do_leap    = False
 
     dtimes     = 24                          ! hourly simulation
     ! input path and files (input files must be put in the input filepath)
-    filepath_in    = "/mnt/d/3_case_SPRUCE_data_analysis/2_TECO-SPRUCE_data_assimilation/2_code_based_on_Ma/input" ! keep the length of it under 200 characters
-    climfile       = "f1p1forcing2011_2018.txt"          ! less than 100 characters
+    filepath_in    = "/mnt/d/3_case_SPRUCE_data_analysis/2_TECO-SPRUCE_data_assimilation/2_code_based_on_Ma/inputs" ! keep the length of it under 200 characters
+    climfile       = "SPRUCE_forcing_plot07.txt"          ! less than 100 characters
     snowdepthfile  = "SPRUCE_Snow_Depth_2011-2014.txt"   ! less than 100 characters
     watertablefile = "watertablefile.txt" 
     restartfile    = "restart.nc"                        ! less than 100 characters
     ! output direction
-    outdir        = "/mnt/d/3_case_SPRUCE_data_analysis/2_TECO-SPRUCE_data_assimilation/2_code_based_on_Ma/output" ! keep the length of it under 200 characters
+    outdir        = "/mnt/d/3_case_SPRUCE_data_analysis/2_TECO-SPRUCE_data_assimilation/2_code_based_on_Ma/outputs" ! keep the length of it under 200 characters
 /
 
 &nml_exps
@@ -47,7 +47,7 @@
    stom_n     = 2
    a1         = 8
    Ds0        = 2000
-   Vcmx0      = 61.38
+   Vcmax0      = 61.38
    extkU      = 0.51
    xfang      = 0
    alpha      = 0.385
@@ -61,6 +61,7 @@
    Tau_Passive = 200.99
    gddonset    = 157.85
    Q10         = 2.74
+   Q10rh       = 2.74
    Rl0         = 13.03
    Rs0         = 6.32
    Rr0         = 34.88
@@ -117,9 +118,6 @@
     init_topfws         = 1.0
     init_omega          = 1.0
     init_zwt            = 0.0
-    // init_water_tw       = zwt*0.001 
-    // WILTPT         = wsmin/100.0
-    // FILDCP         = wsmax/100.0
     init_infilt         = 0.
     ! soil thermal dynamics in Yuanyuanversion
     init_sftmp          = -0.
@@ -127,13 +125,11 @@
     init_Twater         = 0.0
     init_Tice           = 0.0
     G                   = 20.5
-    // Esoil          = 0.5*G
     init_snow_dsim      = 0.575
     init_dcount         = 50.
     init_dcount_soil    = 50.
     init_ice_tw         = 0.0   
     init_Tsoill         = -0.09, 0.73, 1.3, 1.95, 2.3, 3., 4., 4.5, 5., 5.98,  ! JJ MS thksl 10 20 30 40 50 70 90 110 130 150...  
-    ! ice               = (/0.1, 0.0, 0., 0., 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/) 
     init_ice            = 0.021, 0.0, 0., 0., 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     init_shcap_snow     = 1000000.  ! tuneice worker better
     init_condu_snow     = 0.1

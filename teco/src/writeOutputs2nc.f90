@@ -27,7 +27,6 @@ module mod_ncd_io
         ! ----------:-----------:----------:-----------------------
         write(str_startyr,"(I4)")forcing(1)%year
         write(str_endyr,"(I4)")forcing(nforcing)%year
-        
 
         ! hourly outputs
         call write_nc(outDir_h,nHours,tot_outVars_h%gpp,"gpp","kgC m-2 s-1", "gross primary productivity","hourly",1)

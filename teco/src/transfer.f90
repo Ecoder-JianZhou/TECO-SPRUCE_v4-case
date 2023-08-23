@@ -106,8 +106,6 @@ module mod_transfer
         ! ----------------------------------------------------------------
         ! Jian: add for matrix run
 
-
-
         ! Calculating NPP allocation and changes of each C pool
         NPP_L = alpha_L * NPP           ! NPP allocation
         NPP_W = alpha_W * NPP
@@ -248,7 +246,10 @@ module mod_transfer
             &   + f_S2M*OutC(7)+f_P2M * OutC(8)
         QC(7) = QC(7) - OutC(7)+f_C2S*OutC(5)+f_M2S*OutC(6)
         QC(8) = QC(8) - OutC(8)+f_M2P*OutC(6)+f_S2P*OutC(7)
-        
+
+        ! write(*,*) QC(4), OutC(4), OutC(1)+etaW*OutC(2)+OutC(3), OutC(1),etaW,OutC(2),OutC(3)
+        ! write(*,*) QC(4), tauC(4), S_omega, S_T(1), CN(4), CN0(4)
+
         if (QC(2) <-huge(1)) STOP
         Q_plant = QC(1) + QC(2) + QC(3)
         ! update nitrogen pools

@@ -419,8 +419,9 @@ module mod_soil
         real resht_lai,snow_depth_t
         real condu_s,tsoill_0,diff_air,d_cor                !,condu_b,dcount,dcount_soil
         real sftmp_pre
-        integer n_layers, i
+        integer n_layers, i, itest
         real, allocatable ::depth_z(:) 
+
         n_layers=10
         allocate(depth_z(n_layers))      
         ! write(*,*),thd_t
@@ -555,7 +556,8 @@ module mod_soil
         ! if (isnan(Esoil)) then
         !     write(*,*) "Esoil is NAN: ", albedo_snow, Rsoilab1, Rsoilab2, Rsoilab3
         ! endif
-        ! write(*,*)"test sftmp: ", sftmp, delta, sftmp_pre, resdh, drsdh, Rsoilabs, Hsoil, Esoil, G
+        ! write(*,*)"test sftmp1: ", sftmp, delta, sftmp_pre, resdh, drsdh, Rsoilabs, Hsoil, Esoil, G
+
         if(isnan(sftmp)) then
             write(*,*)"test sftmp: ", sftmp, delta, sftmp_pre, resdh, drsdh, Rsoilabs, Hsoil, Esoil, G
             stop

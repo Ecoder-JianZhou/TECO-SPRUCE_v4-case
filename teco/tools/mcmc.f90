@@ -78,7 +78,6 @@ module mod_mcmc
         integer temp_upgraded
         real rand
         
-
         write(*,*)"Start to run mcmc ..."
 
         do iDAsimu = 1, nDAsimu
@@ -211,7 +210,7 @@ module mod_mcmc
                     ! write(*,*)"new_here", Daparmax-DAparmin !DApar(igenPar)
                     if((DApar(igenPar) .gt. DAparmax(igenPar)) &
                         &   .or. (DApar(igenPar) .lt. DAparmin(igenPar))) then 
-                            write(*,*) igenPar, DApar(igenPar), DAparmin(igenPar), DAparmax(igenPar), igenPar
+                            write(*,*) igenPar, DApar(igenPar), DAparmin(igenPar), DAparmax(igenPar)
                             goto 999                  ! judge the range of new parameter
                     endif
                 enddo

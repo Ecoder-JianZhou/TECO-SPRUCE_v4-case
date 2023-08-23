@@ -11,7 +11,7 @@ module mod_upAndSum
         convert_g2kg = 0.001
         convert_h2s  = 1/3600.
         ! carbon fluxes (KgC m-2 s-1) Jian: TECO unit is gC m-2 h-1
-        outVars_h%gpp     = gpp*convert_g2kg*convert_h2s
+        outVars_h%gpp             = gpp*convert_g2kg*convert_h2s
         outVars_h%npp             = npp*convert_g2kg*convert_h2s
         outVars_h%nppLeaf         = NPP_L*convert_g2kg*convert_h2s
         outVars_h%nppWood         = NPP_W*convert_g2kg*convert_h2s  
@@ -78,6 +78,7 @@ module mod_upAndSum
         outVars_h%wtd             = zwt/1000                                       ! m, Water table depth
         outVars_h%snd             = snow_depth/100                                ! m, Total snow depth, Jian: change from m to cm in code, and now change from cm to m
         outVars_h%lai             = LAI                                           ! m2 m-2, Leaf area index
+        
     end subroutine updateHourly
 
     subroutine updateDaily()

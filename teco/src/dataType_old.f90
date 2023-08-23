@@ -997,28 +997,6 @@ module mod_data
         ! not used in SPRUCE-MIP
     end subroutine init_monthly
 
-    subroutine init_year()
-        implicit none
-        ! GDD5      = 0.0; 
-        ! onset     = 0;   
-        ! phenoset  = 0; 
-        !  diff_yr=0.0; gpp_yr=0.0
-        ! R_Ntr_yr = 0.;  NPP_yr    = 0.0; Rh_yr =0.0;  Rh4_yr=0.0; Rh5_yr=0.0
-        ! Rh6_yr   = 0.0; Rh7_yr    = 0.0; Rh8_yr=0.0;  Ra_yr =0.0; GL_yr=0.0
-        ! GW_yr    = 0.0; GR_yr     = 0.0; Pool1=0.0;   Pool2=0.0; Pool3=0.0
-        ! Pool4    = 0.0; Pool5     = 0.0; Pool6=0.0;   Pool7=0.0; Pool8=0.0
-        ! out1_yr  = 0.0; out2_yr   = 0.0; out3_yr=0.0; out4_yr = 0.0; out5_yr = 0.0
-        ! out6_yr  = 0.0; out7_yr   = 0.0; out8_yr   = 0.0;  NEE_yr    = 0.0
-        ! ! water fluxes
-        ! rain_yr  = 0.0; transp_yr = 0.0; evap_yr   = 0.0; runoff_yr = 0.0
-        ! ! Nitrogen fluxes
-        ! N_up_yr  = 0;   N_fix_yr  = 0.; N_dep_yr=0.; N_leach_yr=0.; N_vol_yr=0.
-        ! ! ============================== test variable
-        ! fwsoil_yr=0.;  omega_yr=0.
-        ! topfws_yr=0.
-        ! hoy=0
-    end subroutine init_year
-
     subroutine init_update_year()
         GDD5      = 0.0 
         onset     = 0

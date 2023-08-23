@@ -15,21 +15,23 @@ module mod_data
 
     integer :: dtimes                 ! 24: hourly simulation
     character(200) :: filepath_in     ! input file path
-    character(100) :: climfile        ! climate file name
-    character(100) :: snowdepthfile   ! snow depthfile
-    character(100) :: restartfile     ! restartfile
-    character(100) :: watertablefile  ! Jian: maybe used when not run soil_physical
+    character(300) :: climfile        ! climate file name
+    character(300) :: snowdepthfile   ! snow depthfile
+    character(300) :: restartfile     ! restartfile
+    character(300) :: watertablefile  ! Jian: maybe used when not run soil_physical
    
-    character(100) :: outdir          ! output path
+    character(200) :: outdir          ! output path
+    character(250) :: outdir_case
     ! fixed output path 
-    character(50), parameter :: outDir_nc       = "results_nc_format"
-    character(50), parameter :: outDir_csv      = "results_csv_format"
-    character(50), parameter :: outDir_h        = "Hourly"
-    character(50), parameter :: outDir_d        = "Daily"
-    character(50), parameter :: outDir_m        = "Monthly"
-    character(50), parameter :: outfile_restart = "restart"
-    character(50), parameter :: outDir_spinup   = "results_spinup"
-    character(50), parameter :: outfile_spinup  = "results_spinup.nc"
+    character(250) :: outDir_nc       = "results_nc_format"
+    character(250) :: outDir_csv      = "results_csv_format"
+    character(250) :: outDir_h        = "Hourly"
+    character(250) :: outDir_d        = "Daily"
+    character(250) :: outDir_m        = "Monthly"
+    character(250) :: outDir_y        = "Yearly"
+    character(250) :: outfile_restart = "restart.nc"
+    character(250) :: outDir_spinup   = "results_spinup"
+    character(250) :: outfile_spinup  = "results_spinup.nc"
     
     ! experiment settings
     real :: Ttreat     = 0.        ! Temperature treatment, warming in air and soil temperature
@@ -133,8 +135,8 @@ module mod_data
     type(forcing_data_type), allocatable, save :: forcing(:)
     
     ! type init_date_type
-    real :: init_QC
-    real :: init_CN0
+    real :: init_QC(8)
+    real :: init_CN0(8)
     real :: init_NSCmin
     real :: init_Storage
     real :: init_nsc
@@ -145,9 +147,9 @@ module mod_data
     real :: init_NSN
     real :: init_QNminer
     real :: init_N_deficit
-    real :: init_thksl
-    real :: init_FRLEN
-    real :: init_liq_water
+    real :: init_thksl(10)
+    real :: init_FRLEN(10)
+    real :: init_liq_water(10)
     real :: init_fwsoil
     real :: init_topfws
     real :: init_omega
@@ -162,8 +164,8 @@ module mod_data
     real :: init_dcount
     real :: init_dcount_soil
     real :: init_ice_tw
-    real :: init_Tsoill
-    real :: init_ice
+    real :: init_Tsoill(10)
+    real :: init_ice(10)
     real :: init_shcap_snow
     real :: init_condu_snow
     real :: init_condu_b
@@ -179,9 +181,9 @@ module mod_data
     real :: init_fsub
     real :: init_rho_snow
     real :: init_decay_m
-    real :: init_CH4_V
-    real :: init_CH4
-    real :: init_Vp
+    real :: init_CH4_V(10)
+    real :: init_CH4(10)
+    real :: init_Vp(10)
     real :: init_bubble_methane_tot
     real :: init_Nbub
     real :: init_depth_1
@@ -503,22 +505,23 @@ module mod_data
         implicit none
         integer io
 
-        namelist /nml_simu_settings/ simu_name, do_spinup, do_mcmc,          & 
-            do_snow, do_soilphy, do_matrix, do_EBG, do_restart, do_ndep,     &
-            do_simu, do_leap, dtimes, filepath_in,  climfile, snowdepthfile, & 
-            watertablefile, restartfile, outdir
+        namelist /nml_simu_settings/ simu_name, do_spinup, do_mcmc, do_snow,         & 
+            do_soilphy, do_matrix, do_EBG, do_restart, do_ndep, do_simu, do_leap,    &
+            dtimes, filepath_in,  climfile, snowdepthfile, watertablefile,           &
+            restartfile, outdir 
         namelist /nml_exps/ Ttreat, CO2treat, N_fert
-        namelist /nml_params/ lat, lon, wsmax, wsmin, LAIMAX, LAIMIN, rdepth,  & 
-            Rootmax, Stemmax, SapR, SapS, SLAx, GLmax, GRmax, Gsmax, stom_n,    &
-            a1, Ds0, Vcmx0, extkU, xfang, alpha, Tau_Leaf, Tau_Wood, Tau_Root, &
-            Tau_F, Tau_C, Tau_Micro, Tau_SlowSOM, Tau_Passive, gddonset, Q10,  &
-            Rl0, Rs0, Rr0, r_me, Q10pro, kCH4, Omax, CH4_thre, Tveg, Tpro_me,  & 
-            Toxi, f, bubprob, Vmaxfraction
-        namelist /nml_initial_states/ init_QC, init_CN0, init_NSCmin, init_Storage, &
-            init_nsc, init_accumulation, init_SNvcmax, init_N_deposit, init_alphaN, & 
-            init_NSN, init_QNminer, init_N_deficit, init_thksl, init_FRLEN,         &
-            init_liq_water, init_fwsoil, init_topfws, init_omega, init_zwt,         &
-            init_infilt, init_sftmp, init_Tsnow, init_Twater, init_Tice, G,         &
+        namelist /nml_params/ lat, lon, wsmax, wsmin, LAIMAX, LAIMIN, rdepth,        & 
+            Rootmax, Stemmax, SapR, SapS, SLAx, GLmax, GRmax, Gsmax, stom_n,         &
+            a1, Ds0, Vcmax0, extkU, xfang, alpha, Tau_Leaf, Tau_Wood, Tau_Root,       &
+            Tau_F, Tau_C, Tau_Micro, Tau_SlowSOM, Tau_Passive, gddonset, Q10,Q10rh,  &
+            Rl0, Rs0, Rr0, r_me, Q10pro, kCH4, Omax, CH4_thre, Tveg, Tpro_me,        & 
+            Toxi, f, bubprob, Vmaxfraction, JV, Entrpy, etaL, etaW, etaR, f_F2M,     &
+            f_C2M, f_C2S, f_M2S, f_M2P, f_S2P, f_S2M, f_P2M
+        namelist /nml_initial_states/ init_QC, init_CN0, init_NSCmin, init_Storage,  &
+            init_nsc, init_accumulation, init_SNvcmax, init_N_deposit, init_alphaN,  & 
+            init_NSN, init_QNminer, init_N_deficit, init_thksl, init_FRLEN,          &
+            init_liq_water, init_fwsoil, init_topfws, init_omega, init_zwt,          &
+            init_infilt, init_sftmp, init_Tsnow, init_Twater, init_Tice, G,          &
             init_snow_dsim, init_dcount, init_dcount_soil, init_ice_tw, init_Tsoill, &
             init_ice, init_shcap_snow, init_condu_snow, init_condu_b, init_depth_ex, & 
             init_diff_s, init_diff_snow, init_albedo_snow, init_resht,               &
@@ -527,6 +530,7 @@ module mod_data
             init_bubble_methane_tot, init_Nbub, init_depth_1
         namelist /nml_spinup/ nloops 
 
+        print *, "read config nml..."
         open(388, file="TECO_model_configs.nml")
         read(388, nml=nml_simu_settings, iostat=io)
         read(388, nml=nml_exps, iostat=io)
@@ -535,6 +539,70 @@ module mod_data
         read(388, nml=nml_spinup, iostat=io)
         close(388)
 
+        ! write(*,*) "lat = ",   lat
+        ! write(*,*) "lon = ",   lon
+        ! write(*,*) "wsmax = ", wsmax
+        ! write(*,*) "wsmin = ",wsmin
+        ! write(*,*) "LAIMAX = ",LAIMAX
+        ! write(*,*) "LAIMIN = ",LAIMIN
+        ! write(*,*) "SLAx",SLAx
+        ! write(*,*) "rdepth",rdepth
+        ! write(*,*) "Rootmax",Rootmax
+        ! write(*,*) "Stemmax",Stemmax
+        ! write(*,*) "SapR",SapR
+        ! write(*,*) "SapS",SapS
+        ! write(*,*) "GLmax",GLmax
+        ! write(*,*) "GRmax",GRmax
+        ! write(*,*) "Gsmax",Gsmax
+        ! write(*,*) "stom_n",stom_n
+        ! write(*,*) "a1",a1
+        ! write(*,*) "Ds0",Ds0
+        ! write(*,*) "Vcmax0",Vcmax0            ! Jian: Vcmax0 and Vcmx0 is same? Vcmax0 is Vcmx0 in consts
+        ! write(*,*) "extkU",extkU
+        ! write(*,*) "xfang",xfang
+        ! write(*,*) "alpha",alpha             
+        ! write(*,*) "Tau_Leaf",Tau_Leaf
+        ! write(*,*) "Tau_Wood",Tau_Wood
+        ! write(*,*) "Tau_Root",Tau_Root          ! turnover rate of plant carbon pools : leaf, wood, root  
+        ! write(*,*) "Tau_F",Tau_F
+        ! write(*,*) "Tau_C",Tau_C             ! turnover rate of litter carbon pools: fine, coarse 
+        ! write(*,*) "Tau_Micro",Tau_Micro
+        ! write(*,*) "Tau_slowSOM",Tau_slowSOM
+        ! write(*,*) "Tau_Passive",Tau_Passive       ! turnover rate of soil carbon pools  : fast, slow, passive 
+        ! write(*,*) "gddonset",gddonset
+        ! write(*,*) "Q10",Q10
+        ! write(*,*) "Q10rh",Q10rh            ! Q10rh modified from Ma et al.,2023 for aclimate study, change in transfer module of Q10h
+        ! write(*,*) "Rl0",Q10rh
+        ! write(*,*) "Rs0",Rs0
+        ! write(*,*) "Rr0",Rr0
+        ! ! added for parameters in methane module   
+        ! write(*,*) "r_me",r_me
+        ! write(*,*) "Q10pro",Q10pro
+        ! write(*,*) "kCH4",kCH4
+        ! write(*,*) "Omax",Omax
+        ! write(*,*) "CH4_thre",CH4_thre
+        ! write(*,*) "Tveg",Tveg
+        ! write(*,*) "Tpro_me",Tpro_me
+        ! write(*,*) "Toxi",Toxi
+        ! ! add based on Ma et al., 2022
+        ! write(*,*) "f",f
+        ! write(*,*) "bubprob",bubprob
+        ! write(*,*) "Vmaxfraction",Vmaxfraction
+        ! ! add based on Ma et al., 2023
+        ! write(*,*) "JV",JV
+        ! write(*,*) "Entrpy",Entrpy
+        ! write(*,*) "etaL",etaL
+        ! write(*,*) "etaW",etaW
+        ! write(*,*) "etaR",etaR  ! etaL and etaR are not used.
+        ! write(*,*) "f_F2M",f_F2M
+        ! write(*,*) "f_C2M",f_C2M
+        ! write(*,*) "f_C2S",f_C2S
+        ! write(*,*) "f_M2S",f_M2S
+        ! write(*,*) "f_M2P",f_M2P
+        ! write(*,*) "f_S2P",f_S2P
+        ! write(*,*) "f_S2M",f_S2M
+        ! write(*,*) "f_P2M",f_P2M
+        
     end subroutine read_TECO_model_configs
 
     subroutine initialize()
@@ -896,6 +964,7 @@ module mod_data
         real    :: tmp_par, tmp_co2, tmp_pbot, tmp_ndep
 
         call ReadLineNumFromFile(climfile, nforcing)  ! get the line number
+
         allocate(forcing(nforcing))                   ! allocate the array
 
         COUNT = 0
@@ -903,7 +972,7 @@ module mod_data
         read(1,'(a160)') commts
         DO WHILE (.TRUE.)
             COUNT=COUNT+1
-            READ(1430,*,IOSTAT=STAT) tmp_yr, tmp_doy, tmp_h,             &
+            READ(1,*,IOSTAT=STAT) tmp_yr, tmp_doy, tmp_h,             &
                 tmp_Ta,  tmp_Ts,  tmp_rh, tmp_vpd, tmp_rain, tmp_ws, & 
                 tmp_par, tmp_co2, tmp_pbot, tmp_ndep
             IF(STAT .NE. 0) EXIT
@@ -921,7 +990,7 @@ module mod_data
             forcing(COUNT)%PBOT  = tmp_pbot
             forcing(COUNT)%Ndep  = tmp_ndep
         ENDDO
-        CLOSE(1430)
+        CLOSE(1)
     end subroutine get_forcingdata
 
     subroutine get_snowdepth()
