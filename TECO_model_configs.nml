@@ -1,5 +1,6 @@
 &nml_simu_settings
     simu_name  = "run_MCMC_SPRUCE_test"
+    do_simu    = False
     do_spinup  = False                     ! run spinup or not
     do_mcmc    = True                     ! run mcmc or not
     do_snow    = True                      ! do soil snow process
@@ -8,10 +9,10 @@
     do_EBG     = False                     ! run EBG or not based on Ma et al, 2022
     do_restart = False
     do_ndep    = False
-    do_simu    = True
     do_leap    = False
 
     dtimes     = 24                          ! hourly simulation
+    nSpecParams = 60
     ! input path and files (input files must be put in the input filepath)
     filepath_in    = "/mnt/d/3_case_SPRUCE_data_analysis/2_TECO-SPRUCE_data_assimilation/2_code_based_on_Ma/inputs" ! keep the length of it under 200 characters
     climfile       = "SPRUCE_forcing_plot07.txt"          ! less than 100 characters

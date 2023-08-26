@@ -313,6 +313,8 @@ module mod_ncd_io
         integer(kind=4) :: id_stor_use, id_water_tw, id_CN, id_QN
         integer(kind=4) :: id_Esoil,id_pwater,id_presP,id_methanebP,id_methaneP
   
+        write(*,*) "# Writing the restart file:"
+        write(*,*) "#    ", outfile_restart
         !Create the netCDF file.
         CALL check(nf90_create(outFile_restart, NF90_CLOBBER, ncid))
         !Define the dimensions.
@@ -911,8 +913,6 @@ module mod_ncd_io
         CALL check(nf90_close(ncid))
     end subroutine write_nc
 
-
-    
     ! check (ever so slightly modified from www.unidata.ucar.edu)
     subroutine check(istatus)
         ! use netcdf

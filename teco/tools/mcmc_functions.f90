@@ -4,7 +4,10 @@ module mcmc_functions
     implicit none
 
     ! parameters and observation files
-    integer npar
+
+    integer npar, nDAsimu, ncov
+    real search_scale
+
     real mc_lat, mc_Longitude, mc_wsmax, mc_wsmin
     real mc_LAIMAX, mc_LAIMIN, mc_rdepth, mc_Rootmax, mc_Stemmax
     real mc_SapR, mc_SapS, mc_SLA, mc_GLmax, mc_GRmax, mc_Gsmax, mc_stom_n
@@ -21,25 +24,7 @@ module mcmc_functions
     real mc_f_M2P, mc_f_S2P, mc_f_S2M, mc_f_P2M
 
     real, allocatable :: parval(:), parmin(:), parmax(:)
-    
-    ! type parameters4MCMC
-    !     real lat, Longitude, wsmax, wsmin                                                        
-    !     real LAIMAX, LAIMIN, rdepth, Rootmax, Stemmax                        
-    !     real SapR, SapS, SLA, GLmax, GRmax, Gsmax, stom_n                
-    !     real a1, Ds0, Vcmx0, extkU, xfang, alpha                    
-    !     real Tau_Leaf, Tau_Wood, Tau_Root, Tau_F
-    !     real Tau_C,  Tau_Micro, Tau_SlowSOM, Tau_Passive            
-    !     real gddonset, Q10, Rl0, Rs0, Rr0                        
-    !     real r_me, Q10pro, kCH4, Omax, CH4_thre
-    !     real Tveg, Tpro_me, Toxi            
-    !     real f, bubprob, Vmaxfraction                                    
-    !     real Q10rh, JV, Entrpy                                
-    !     real etaL, etaW, etaR
-    !     real f_F2M, f_C2M, f_C2S, f_M2S
-    !     real f_M2P, f_S2P, f_S2M, f_P2M
-    ! end type parameters4MCMC
-
-    ! type(parameters4MCMC) parmin, parmax, parval
+    character(20), allocatable :: parnames(:)
 
     ! observational file path
     character(500) :: obsfile_gpp_d, obsfile_nee_d, obsfile_reco_d
@@ -51,7 +36,7 @@ module mcmc_functions
 
     ! variables for calculating the cost in MCMC processes
     type interCostVariable
-        character(200) :: filepath
+        character(300) :: filepath
         logical :: existOrNot
         real, allocatable :: obsData(:,:)
         real, allocatable :: mdData(:,:)
@@ -85,27 +70,29 @@ module mcmc_functions
 
     subroutine mcmc_functions_init()
         implicit none
-        mc_itime_gpp_d  = 0
-        mc_itime_nee_d  = 0 
-        mc_itime_reco_d = 0
-        mc_itime_gpp_h  = 0
-        mc_itime_nee_h  = 0
-        mc_itime_reco_h = 0
-        mc_itime_ch4_h  = 0
-        mc_itime_cleaf  = 0
-        mc_itime_cwood  = 0
-        mc_iyear = 0
-        mc_iday  = 0
-        mc_ihour = 0
+        mc_itime_gpp_d  = 1
+        mc_itime_nee_d  = 1 
+        mc_itime_reco_d = 1
+        mc_itime_gpp_h  = 1
+        mc_itime_nee_h  = 1
+        mc_itime_reco_h = 1
+        mc_itime_ch4_h  = 1
+        mc_itime_cleaf  = 1
+        mc_itime_cwood  = 1
+        mc_iyear = 1
+        mc_iday  = 1
+        mc_ihour = 1
+        npar     = nSpecParams
+        allocate(parnames(npar))
     end subroutine mcmc_functions_init
 
     subroutine readConfsNml()
     ! default nml file name of "TECO_MCMC_configs.nml"
         implicit none
-        namelist /nml_parval/ mc_lat, mc_Longitude, mc_wsmax, mc_wsmin, &                                                    
-                mc_LAIMAX, mc_LAIMIN, mc_rdepth, mc_Rootmax, mc_Stemmax, &                        
+        namelist /nml_parval/ mc_lat, mc_Longitude, mc_wsmax, mc_wsmin,            &                                                    
+                mc_LAIMAX, mc_LAIMIN, mc_rdepth, mc_Rootmax, mc_Stemmax,           &                        
                 mc_SapR, mc_SapS, mc_SLA, mc_GLmax, mc_GRmax, mc_Gsmax, mc_stom_n, &            
-                mc_a1, mc_Ds0, mc_Vcmx0, mc_extkU, mc_xfang, mc_alpha, &                    
+                mc_a1, mc_Ds0, mc_Vcmx0, mc_extkU, mc_xfang, mc_alpha,             &                    
                 mc_Tau_Leaf, mc_Tau_Wood, mc_Tau_Root, mc_Tau_F, &
                 mc_Tau_C,  mc_Tau_Micro, mc_Tau_SlowSOM, mc_Tau_Passive, &            
                 mc_gddonset, mc_Q10, mc_Rl0, mc_Rs0, mc_Rr0, &        
@@ -148,12 +135,17 @@ module mcmc_functions
                 obsfile_gpp_h, obsfile_nee_h, obsfile_reco_h, obsfile_ch4_h, &
                 obsfile_cleaf, obsfile_cwood
 
-        npar = 60 ! total 60 parameters
+        namelist /nml_param_names/parnames
+
+        namelist /nml_mcmc_settings/ nDAsimu, search_scale, ncov
+
+        
 
         allocate(parval(npar), parmin(npar), parmax(npar))
         open(83, file="TECO_MCMC_configs.nml")
+        read(83, nml=nml_mcmc_settings)
         read(83, nml=nml_obsfiles)
-
+        read(83, nml=nml_param_names)
         read(83, nml=nml_parval)
         call giveValues2par(parval)
         read(83, nml=nml_parmin)
@@ -164,12 +156,12 @@ module mcmc_functions
         close(83)
 
         ! give the filepath to each variable
-        vars4MCMC%gpp_d%filepath  = trim(obsfile_gpp_d)
-        vars4MCMC%nee_d%filepath  = trim(obsfile_nee_d)
-        vars4MCMC%reco_d%filepath = trim(obsfile_reco_d)
-        vars4MCMC%gpp_h%filepath  = trim(obsfile_gpp_h)
-        vars4MCMC%nee_h%filepath  = trim(obsfile_nee_h)
-        vars4MCMC%reco_h%filepath = trim(obsfile_reco_h)
+        vars4MCMC%gpp_d%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_gpp_d))
+        vars4MCMC%nee_d%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_nee_d))
+        vars4MCMC%reco_d%filepath = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_reco_d))
+        vars4MCMC%gpp_h%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_gpp_h))
+        vars4MCMC%nee_h%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_nee_h))
+        vars4MCMC%reco_h%filepath = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_reco_h))
         ! methane   
         vars4MCMC%ch4_h%filepath  = trim(obsfile_ch4_h)
         ! c pools
@@ -285,13 +277,13 @@ module mcmc_functions
         GLmax       = parval(13)
         GRmax       = parval(14)
         Gsmax       = parval(15)
-        stom_n     = parval(16)         
+        stom_n      = parval(16)         
         a1          = parval(17)
         Ds0         = parval(18)
-        Vcmax0     = parval(19)
-        extkU     = parval(20)
-        xfang     = parval(21)
-        alpha   = parval(22)    
+        Vcmax0      = parval(19)
+        extkU       = parval(20)
+        xfang       = parval(21)
+        alpha       = parval(22)    
         Tau_Leaf    = parval(23)
         Tau_Wood    = parval(24)
         Tau_Root    = parval(25)
@@ -304,21 +296,21 @@ module mcmc_functions
         Q10         = parval(32)
         Rl0         = parval(33)     
         Rs0         = parval(34)    
-        Rr0            = parval(35)                    
+        Rr0         = parval(35)                    
         r_me        = parval(36)
         Q10pro      = parval(37)
         kCH4        = parval(38)
-        Omax        = parval(39)
-        CH4_thre    = parval(40)
-        Tveg        = parval(41)
-        Tpro_me     = parval(42)
-        Toxi           = parval(43)        
-        f           = parval(44)
+        Omax         = parval(39)
+        CH4_thre     = parval(40)
+        Tveg         = parval(41)
+        Tpro_me      = parval(42)
+        Toxi         = parval(43)        
+        f            = parval(44)
         bubprob      = parval(45)
         Vmaxfraction = parval(46)                                    
         Q10rh        = parval(47)
         JV           = parval(48)
-        Entrpy         = parval(49)                    
+        Entrpy       = parval(49)                    
         etaL         = parval(50)
         etaW         = parval(51)
         etaR         = parval(52)
@@ -416,122 +408,158 @@ module mcmc_functions
 
     end subroutine giveValues2par
 
-    
-
     subroutine GetSimuData(get_iyear, get_iday, get_ihour)
         implicit none
         integer get_iyear, get_iday, get_ihour
+        integer i
         ! vars4MCMC%
         mc_iyear = get_iyear
         mc_iday  = get_iday
-        mc_ihour = get_ihour
+        mc_ihour = get_ihour + 1
+
+        ! do i = 1, 20
+        !     write(*,*)vars4MCMC%gpp_d%obsData(i, :)
+        !     write(*,*)int(vars4MCMC%gpp_d%obsData(i, 1))
+        !     write(*,*)int(vars4MCMC%gpp_d%obsData(i, 2))
+        !     write(*,*)int(vars4MCMC%gpp_d%obsData(i, 3))
+        ! enddo
+        ! stop
 
         ! gpp_d
         if(vars4MCMC%gpp_d%existOrNot)then
-            if(vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 1) .eq. mc_iyear .and. &
-               vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 2) .eq. mc_iday  .and. &
-               vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 3) .eq. mc_ihour) then
+            ! write(*,*) "test here: ", vars4MCMC%gpp_d%obsData
+            if(mc_itime_gpp_d<=size(vars4MCMC%gpp_d%obsData, dim=1))then
+            do while(vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 1) .lt. forcing(1)%year)
+                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 4) = -9999
                 mc_itime_gpp_d = mc_itime_gpp_d + 1
-                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 1) = mc_iyear
-                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 2) = mc_iday
-                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 3) = mc_ihour
-                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 4) = outVars_d%gpp
+            enddo
+                if(vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 1) .eq. mc_iyear .and. &
+                vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 2) .eq. mc_iday  .and. &
+                vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 3) .eq. mc_ihour) then
+                    vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 1) = mc_iyear
+                    vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 2) = mc_iday
+                    vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 3) = mc_ihour
+                    vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 4) = outVars_d%gpp*86400000
+                    mc_itime_gpp_d = mc_itime_gpp_d + 1
+                endif
             endif
         endif
         ! nee_d
         if(vars4MCMC%nee_d%existOrNot)then
-            if(vars4MCMC%nee_d%obsData(mc_itime_nee_d, 1) .eq. mc_iyear .and. &
-               vars4MCMC%nee_d%obsData(mc_itime_nee_d, 2) .eq. mc_iday  .and. &
-               vars4MCMC%nee_d%obsData(mc_itime_nee_d, 3) .eq. mc_ihour) then
-                mc_itime_nee_d = mc_itime_nee_d + 1
-                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 1) = mc_iyear
-                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 2) = mc_iday
-                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 3) = mc_ihour
-                vars4MCMC%nee_d%mdData(mc_itime_nee_d, 4) = outVars_d%nbp    ! the same in TECO model
+            if(mc_itime_nee_d <= size(vars4MCMC%nee_d%obsData,dim=1))then
+                if(vars4MCMC%nee_d%obsData(mc_itime_nee_d, 1) .eq. mc_iyear .and. &
+                vars4MCMC%nee_d%obsData(mc_itime_nee_d, 2) .eq. mc_iday  .and. &
+                vars4MCMC%nee_d%obsData(mc_itime_nee_d, 3) .eq. mc_ihour) then
+                    vars4MCMC%nee_d%mdData(mc_itime_nee_d, 1) = mc_iyear
+                    vars4MCMC%nee_d%mdData(mc_itime_nee_d, 2) = mc_iday
+                    vars4MCMC%nee_d%mdData(mc_itime_nee_d, 3) = mc_ihour
+                    vars4MCMC%nee_d%mdData(mc_itime_nee_d, 4) = outVars_d%nbp*86400000    ! the same in TECO model
+                    mc_itime_nee_d = mc_itime_nee_d + 1
+                endif
             endif
         endif
         ! reco_d
         if(vars4MCMC%reco_d%existOrNot)then
-            if(vars4MCMC%reco_d%obsData(mc_itime_reco_d, 1) .eq. mc_iyear .and. &
-               vars4MCMC%reco_d%obsData(mc_itime_reco_d, 2) .eq. mc_iday  .and. &
-               vars4MCMC%reco_d%obsData(mc_itime_reco_d, 3) .eq. mc_ihour) then
-                mc_itime_reco_d = mc_itime_reco_d + 1
-                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 1) = mc_iyear
-                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 2) = mc_iday
-                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 3) = mc_ihour
-                vars4MCMC%reco_d%mdData(mc_itime_reco_d, 4) = outVars_d%rh + outVars_d%ra
+            if(mc_itime_reco_d <= size(vars4MCMC%reco_d%obsData, dim=1))then
+                if(vars4MCMC%reco_d%obsData(mc_itime_reco_d, 1) .eq. mc_iyear .and. &
+                vars4MCMC%reco_d%obsData(mc_itime_reco_d, 2) .eq. mc_iday  .and. &
+                vars4MCMC%reco_d%obsData(mc_itime_reco_d, 3) .eq. mc_ihour) then
+                    vars4MCMC%reco_d%mdData(mc_itime_reco_d, 1) = mc_iyear
+                    vars4MCMC%reco_d%mdData(mc_itime_reco_d, 2) = mc_iday
+                    vars4MCMC%reco_d%mdData(mc_itime_reco_d, 3) = mc_ihour
+                    vars4MCMC%reco_d%mdData(mc_itime_reco_d, 4) = (outVars_d%rh + outVars_d%ra)*86400000
+                    mc_itime_reco_d = mc_itime_reco_d + 1
+                endif
             endif
         endif
         ! gpp_h
         if(vars4MCMC%gpp_h%existOrNot)then
-            if(vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 1) .eq. mc_iyear .and. &
-               vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 2) .eq. mc_iday  .and. &
-               vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 3) .eq. mc_ihour) then
-                mc_itime_gpp_h = mc_itime_gpp_h + 1
-                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 1) = mc_iyear
-                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 2) = mc_iday
-                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 3) = mc_ihour
-                vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 4) = outVars_h%gpp
+            if(mc_itime_gpp_h <= size(vars4MCMC%gpp_h%obsData, dim=1) )then
+                if(vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 1) .eq. mc_iyear .and. &
+                vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 2) .eq. mc_iday  .and. &
+                vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 3) .eq. mc_ihour) then
+                    ! write(*,*) "test gpp hourly", mc_itime_gpp_h
+                    ! write(*,*) vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 1), mc_iyear
+                    ! write(*,*) vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 2), mc_iday
+                    ! write(*,*) vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 3), mc_ihour
+                    ! write(*,*) outVars_h%gpp, vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 4)
+                    
+                    vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 1) = mc_iyear
+                    vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 2) = mc_iday
+                    vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 3) = mc_ihour
+                    vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 4) = outVars_h%gpp*3600000
+                    mc_itime_gpp_h = mc_itime_gpp_h + 1
+                endif
             endif
         endif
         ! nee_h
         if(vars4MCMC%nee_h%existOrNot)then
-            if(vars4MCMC%nee_h%obsData(mc_itime_nee_h, 1) .eq. mc_iyear .and. &
-               vars4MCMC%nee_h%obsData(mc_itime_nee_h, 2) .eq. mc_iday  .and. &
-               vars4MCMC%nee_h%obsData(mc_itime_nee_h, 3) .eq. mc_ihour) then
-                mc_itime_nee_h = mc_itime_nee_h + 1
-                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 1) = mc_iyear
-                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 2) = mc_iday
-                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 3) = mc_ihour
-                vars4MCMC%nee_h%mdData(mc_itime_nee_h, 4) = outVars_h%nbp
+            if(mc_itime_nee_h <= size(vars4MCMC%nee_h%obsData, dim=1)) then
+                if(vars4MCMC%nee_h%obsData(mc_itime_nee_h, 1) .eq. mc_iyear .and. &
+                vars4MCMC%nee_h%obsData(mc_itime_nee_h, 2) .eq. mc_iday  .and. &
+                vars4MCMC%nee_h%obsData(mc_itime_nee_h, 3) .eq. mc_ihour) then
+                    vars4MCMC%nee_h%mdData(mc_itime_nee_h, 1) = mc_iyear
+                    vars4MCMC%nee_h%mdData(mc_itime_nee_h, 2) = mc_iday
+                    vars4MCMC%nee_h%mdData(mc_itime_nee_h, 3) = mc_ihour
+                    vars4MCMC%nee_h%mdData(mc_itime_nee_h, 4) = outVars_h%nbp*3600000
+                    mc_itime_nee_h = mc_itime_nee_h + 1
+                endif
             endif
         endif
         ! reco_h
         if(vars4MCMC%reco_h%existOrNot)then
-            if(vars4MCMC%reco_h%obsData(mc_itime_reco_h, 1) .eq. mc_iyear .and. &
-               vars4MCMC%reco_h%obsData(mc_itime_reco_h, 2) .eq. mc_iday  .and. &
-               vars4MCMC%reco_h%obsData(mc_itime_reco_h, 3) .eq. mc_ihour) then
-                mc_itime_reco_h = mc_itime_reco_h + 1
-                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 1) = mc_iyear
-                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 2) = mc_iday
-                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 3) = mc_ihour
-                vars4MCMC%reco_h%mdData(mc_itime_reco_h, 4) = outVars_h%rh + outVars_h%ra
+            if(mc_itime_reco_h <= size(vars4MCMC%reco_h%obsData, dim=1))then
+                if(vars4MCMC%reco_h%obsData(mc_itime_reco_h, 1) .eq. mc_iyear .and. &
+                vars4MCMC%reco_h%obsData(mc_itime_reco_h, 2) .eq. mc_iday  .and. &
+                vars4MCMC%reco_h%obsData(mc_itime_reco_h, 3) .eq. mc_ihour) then
+                    vars4MCMC%reco_h%mdData(mc_itime_reco_h, 1) = mc_iyear
+                    vars4MCMC%reco_h%mdData(mc_itime_reco_h, 2) = mc_iday
+                    vars4MCMC%reco_h%mdData(mc_itime_reco_h, 3) = mc_ihour
+                    vars4MCMC%reco_h%mdData(mc_itime_reco_h, 4) = (outVars_h%rh + outVars_h%ra)*3600000
+                    mc_itime_reco_h = mc_itime_reco_h + 1
+                endif
             endif
         endif
         ! ch4_h
         if(vars4MCMC%ch4_h%existOrNot)then
-            if(vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 1) .eq. mc_iyear .and. &
-               vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 2) .eq. mc_iday  .and. &
-               vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 3) .eq. mc_ihour) then
-                mc_itime_ch4_h = mc_itime_ch4_h + 1
-                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 1) = mc_iyear
-                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 2) = mc_iday
-                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 3) = mc_ihour
-                vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 4) = sum(CH4)
+            if(mc_itime_ch4_h <= size(vars4MCMC%ch4_h%obsData, dim=1))then
+                if(vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 1) .eq. mc_iyear .and. &
+                vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 2) .eq. mc_iday  .and. &
+                vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 3) .eq. mc_ihour) then
+                    vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 1) = mc_iyear
+                    vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 2) = mc_iday
+                    vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 3) = mc_ihour
+                    vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 4) = sum(CH4)*3600000
+                    mc_itime_ch4_h = mc_itime_ch4_h + 1
+                endif
             endif
         endif
         ! cleaf
         if(vars4MCMC%cleaf%existOrNot)then
-            if(vars4MCMC%cleaf%obsData(mc_itime_cleaf, 1) .eq. mc_iyear .and. &
-               vars4MCMC%cleaf%obsData(mc_itime_cleaf, 2) .eq. mc_iday  .and. &
-               vars4MCMC%cleaf%obsData(mc_itime_cleaf, 3) .eq. mc_ihour) then
-                mc_itime_cleaf = mc_itime_cleaf + 1
-                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 1) = mc_iyear
-                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 2) = mc_iday
-                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 3) = mc_ihour
-                vars4MCMC%cleaf%mdData(mc_itime_cleaf, 4) = QC(1) 
+            if(mc_itime_cleaf <= size(vars4MCMC%cleaf%obsData, dim=1))then
+                if(vars4MCMC%cleaf%obsData(mc_itime_cleaf, 1) .eq. mc_iyear .and. &
+                vars4MCMC%cleaf%obsData(mc_itime_cleaf, 2) .eq. mc_iday  .and. &
+                vars4MCMC%cleaf%obsData(mc_itime_cleaf, 3) .eq. mc_ihour) then
+                    vars4MCMC%cleaf%mdData(mc_itime_cleaf, 1) = mc_iyear
+                    vars4MCMC%cleaf%mdData(mc_itime_cleaf, 2) = mc_iday
+                    vars4MCMC%cleaf%mdData(mc_itime_cleaf, 3) = mc_ihour
+                    vars4MCMC%cleaf%mdData(mc_itime_cleaf, 4) = QC(1) 
+                    mc_itime_cleaf = mc_itime_cleaf + 1
+                endif
             endif
         endif
         ! cwood
         if(vars4MCMC%cwood%existOrNot)then
-            if(vars4MCMC%cwood%obsData(mc_itime_cwood, 1) .eq. mc_iyear .and. &
-               vars4MCMC%cwood%obsData(mc_itime_cwood, 2) .eq. mc_iday  .and. &
-               vars4MCMC%cwood%obsData(mc_itime_cwood, 3) .eq. mc_ihour) then
-                mc_itime_cwood = mc_itime_cwood + 1
-                vars4MCMC%cwood%mdData(mc_itime_cwood, 1) = mc_iyear
-                vars4MCMC%cwood%mdData(mc_itime_cwood, 2) = mc_iday
-                vars4MCMC%cwood%mdData(mc_itime_cwood, 3) = mc_ihour
-                vars4MCMC%cwood%mdData(mc_itime_cwood, 4) = QC(2)
+            if(mc_itime_cwood <= size(vars4MCMC%cwood%obsData, dim=1)) then
+                if(vars4MCMC%cwood%obsData(mc_itime_cwood, 1) .eq. mc_iyear .and. &
+                vars4MCMC%cwood%obsData(mc_itime_cwood, 2) .eq. mc_iday  .and. &
+                vars4MCMC%cwood%obsData(mc_itime_cwood, 3) .eq. mc_ihour) then
+                    vars4MCMC%cwood%mdData(mc_itime_cwood, 1) = mc_iyear
+                    vars4MCMC%cwood%mdData(mc_itime_cwood, 2) = mc_iday
+                    vars4MCMC%cwood%mdData(mc_itime_cwood, 3) = mc_ihour
+                    vars4MCMC%cwood%mdData(mc_itime_cwood, 4) = QC(2)
+                    mc_itime_cwood = mc_itime_cwood + 1
+                endif
             endif
         endif
            
@@ -563,16 +591,19 @@ module mcmc_functions
         character(len=*), intent(in) :: filepath
         character(len=100) header
         integer STAT, count_lines, iline, n
-        real resData(count_lines, 5) ! 5 colunms: year, doy, hour, value, std.
+        real resData(count_lines, 5), readData(5) ! 5 colunms: year, doy, hour, value, std.
 
         OPEN(34, FILE=trim(filepath), status='old', ACTION='read', IOSTAT=STAT) ! open file
         read(34, '(a100)') header
-        iline = 0
-        do while (.TRUE.)
+        iline = 1
+        do
+            read(34,*,iostat=STAT, end=567) (readData(n), n = 1, 5)
+            if(STAT .ne. 0) exit
+            resData(iline, :) = readData
             iline = iline + 1
-            read(34,*,iostat=STAT) (resData(iline, n), n = 1, 5)
-            if(STAT .ne. 0)exit
         end do
+567     continue
+        close(34)
         return
     end subroutine ReadObsDataFromFile
 

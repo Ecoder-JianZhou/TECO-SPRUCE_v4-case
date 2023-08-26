@@ -1,18 +1,87 @@
+&nml_mcmc_settings
+    nDAsimu       = 100                ! how many time to do data assimilation
+    search_scale  = 0.05               ! modify the scale of searching the new parameters
+    ncov          = 50                ! how many times of upgraded that change to use coveriance to create new parameters
+/
+
 &nml_obsfiles
-    obsfile_gpp_d   = "observation_files\obsfile_gpp_d.txt"
-    obsfile_nee_d   = "observation_files\obsfile_nee_d.txt"
-    obsfile_reco_d  = "observation_files\obsfile_reco_d.txt"
-    obsfile_gpp_h   = "observation_files\obsfile_gpp_h.txt"
-    obsfile_nee_h   = "observation_files\obsfile_nee_h.txt"
-    obsfile_reco_h  = "observation_files\obsfile_reco_h.txt"
+    obsfile_gpp_d   = "observation_files/obsfile_gpp_d.txt"
+    obsfile_nee_d   = "observation_files/obsfile_nee_d.txt"
+    obsfile_reco_d  = "observation_files/obsfile_reco_d.txt"
+    obsfile_gpp_h   = "observation_files/obsfile_gpp_h.txt"
+    obsfile_nee_h   = "observation_files/obsfile_nee_h.txt"
+    obsfile_reco_h  = "observation_files/obsfile_reco_h.txt"
     ! methane   
-    obsfile_ch4_h   = "observation_files\obsfile_ch4_h.txt"
+    obsfile_ch4_h   = "observation_files/obsfile_ch4_h.txt"
     ! c pools
-    obsfile_cleaf   = "observation_files\obsfile_cleaf_d.txt" ! foliage
-    obsfile_cwood   = "observation_files\obsfile_cwood_d.txt"
+    obsfile_cleaf   = "observation_files/obsfile_cleaf_d.txt" ! foliage
+    obsfile_cwood   = "observation_files/obsfile_cwood_d.txt"
 &end
 
-&nml_parval      ! This is for default parameters
+&nml_param_names
+   parnames(1)  = "lat"
+   parnames(2)  = "lon" 
+   parnames(3)  = "wsmax" 
+   parnames(4)  = "wsmin"
+   parnames(5)  = "LAIMAX" 
+   parnames(6)  = "LAIMIN"
+   parnames(7)  = "rdepth" 
+   parnames(8)  = "Rootmax"
+   parnames(9)  = "Stemmax" 
+   parnames(10) = "SapR" 
+   parnames(11) = "SapS" 
+   parnames(12) = "SLAx"
+   parnames(13) = "GLmax" 
+   parnames(14) = "GRmax" 
+   parnames(15) = "Gsmax" 
+   parnames(16) = "stom_n"
+   parnames(17) = "a1" 
+   parnames(18) = "Ds0"  
+   parnames(19) = "Vcmax0"
+   parnames(20) = "extkU" 
+   parnames(21) = "xfang" 
+   parnames(22) = "alpha" 
+   parnames(23) = "Tau_Leaf" 
+   parnames(24) = "Tau_Wood" 
+   parnames(25) = "Tau_Root" 
+   parnames(26) = "Tau_F" 
+   parnames(27) = "Tau_C" 
+   parnames(28) = "Tau_Micro"
+   parnames(29) = "Tau_SlowSOM"
+   parnames(30) = "Tau_Passive"
+   parnames(31) = "gddonset"
+   parnames(32) = "Q10"  
+   parnames(33) = "Q10rh" 
+   parnames(34) = "Rl0" 
+   parnames(35) = "Rs0" 
+   parnames(36) = "Rr0" 
+   parnames(37) = "r_me" 
+   parnames(38) = "Q10pro" 
+   parnames(39) = "kCH4" 
+   parnames(40) = "Omax" 
+   parnames(41) = "CH4_thre" 
+   parnames(42) = "Tveg" 
+   parnames(43) = "Tpro_me" 
+   parnames(44) = "Toxi" 
+   parnames(45) = "f"  
+   parnames(46) = "bubprob" 
+   parnames(47) = "Vmaxfraction"
+   parnames(48) = "JV" 
+   parnames(49) = "Entrpy"
+   parnames(50) = "etaL" 
+   parnames(51) = "etaW" 
+   parnames(52) = "etaR" 
+   parnames(53) = "f_F2M" 
+   parnames(54) = "f_C2M" 
+   parnames(55) = "f_C2S" 
+   parnames(56) = "f_M2S" 
+   parnames(57) = "f_M2P" 
+   parnames(58) = "f_S2P" 
+   parnames(59) = "f_S2M" 
+   parnames(60) = "f_P2M"  
+/
+
+&nml_parval      ! This is for default parameters, lat and longitude just for matching the parameter sets
     mc_lat         = 47.5
     mc_Longitude   = -93.45
     mc_wsmax       = 85.3
@@ -55,13 +124,13 @@
     mc_CH4_thre    = 1400
     mc_Tveg        = 1.9
     mc_Tpro_me     = 10
-    mc_Toxi        = 10					
+    mc_Toxi        = 10
     mc_f           = 0.31
     mc_bubprob     = 0.0708
-    mc_Vmaxfraction = 0.1697  											
+    mc_Vmaxfraction = 0.1697 
     mc_Q10rh        = 2.99
     mc_JV           = 1.5
-    mc_Entrpy		= 660.5								
+    mc_Entrpy		= 660.5	
     mc_etaL         = 0.6
     mc_etaW        = 0.15
     mc_etaR        = 0.85

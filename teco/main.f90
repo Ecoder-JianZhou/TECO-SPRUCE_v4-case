@@ -6,45 +6,69 @@ program TECO
     use mod_ncd_io
 
     implicit none
-
-    call read_TECO_model_configs()  ! get the file of "TECO_model_configs.nml", including parameters
+    integer :: count_mode 
+    character(50) :: str_mode
     
-    call createNewCase()            ! update the in-out path and create the revelent ouput paths
+    print *, ""
+    write(*,*) "# -----------------------------------------"
+    call read_TECO_model_configs()  ! get the file of "TECO_model_configs.nml", including parameters
 
-    if (do_spinup) call init_spinup_variables() ! initilize the spin-up variables
+    ! check the three mode: do_simu; do_mcmc; do_spinup
+    count_mode = 0
+    if (do_simu)   count_mode = count_mode + 1
+    if (do_mcmc)   count_mode = count_mode + 1
+    if (do_spinup) count_mode = count_mode + 1
+
+    if (count_mode .eq. 0) then
+        print *, "# You must choose a run mode."
+        print *, "# Please make sure one of the three modes is True in file of TECO_model_configs.nml"
+        print *, "#    *do_simu; *do_mcmc; *do_spinup"
+        print *, ""
+        stop
+    elseif (count_mode .gt. 1) then
+        print *, "# You can only select one mode out of the three, please check your file."
+        print *, "# Please check the file of TECO_model_configs.nml"
+        print *, "#    *do_simu; *do_mcmc; *do_spinup"
+        print *, ""
+        stop
+    else
+        continue
+    endif
+
+    write(*,*) "# Start to run the case of """, adjustl(trim(simu_name)), """"
+    ! update the in-out path and create the revelent ouput paths
+    call createNewCase() 
 
     call get_forcingdata()                      ! read forcing data
     nHours  = nforcing                          
     nDays   = int(nHours/24.)
     nYears  = int(nforcing/(365*24))
     nMonths = nYears*12
+    call assign_all_results(nHours, nDays, nMonths, nYears) 
 
     if (.not. do_snow) call get_snowdepth()
-
-    call assign_all_results(nHours, nDays, nMonths, nYears) 
-    
-    call initialize()                      ! initializations
-
+    call initialize()
     if (do_restart)then
         call read_restart(restartfile)     ! this module in "writeOutput2nc.f90"
         call initialize_with_restart()
     endif
-
-    if (do_spinup) then
-        call run_spinup()
-        call write_spinup_res()
-        call deallo_spinup_variables()
-    endif 
-
-    if (do_mcmc) then
-        call init_mcmc()
-        call run_mcmc()
-        call check_mcmc()
-    endif
     
-    call teco_simu()                    ! run simulation
-    call spruce_mip_cmip6Format()       
-    call write_restart()
+    if(do_simu)then
+        print *, "# Start to run simulation mode."
+        call teco_simu()                    ! run simulation
+        call spruce_mip_cmip6Format()  
+    elseif(do_spinup)then
+        call init_spinup_variables()    ! initilize the spin-up variables
+        call run_spinup()               ! run spin-up loops
+        call write_spinup_res()         ! write the results of SPIN-UP
+        call write_restart()            ! write the result file
+        call deallo_spinup_variables()  ! deallocate the variables of SPIN-UP
+    elseif(do_mcmc) then
+        call init_mcmc()                ! initilize the MCMC 
+        call run_mcmc()                 ! run MCMC
+        call deallocate_mcmc()          ! deallocate the MCMC variables 
+    endif
+     
     ! end of the simulation, then deallocate the forcing_data
     call deallocate_date_type()
     call deallocate_all_results()
@@ -55,6 +79,8 @@ subroutine createNewCase()
     implicit none
     ! create a new case to run the TECO model
     !   * create the output path
+
+    print *, "# Update and create the output dirs"
 
     ! update the full path of input file
     climfile        = adjustl(trim(filepath_in))//"/"//adjustl(trim(climfile))       ! climate file name
@@ -90,9 +116,14 @@ subroutine createNewCase()
     call CreateFolder(adjustl(trim(outDir_y)))
 
     if (do_spinup)then
-        outDir_spinup = adjustl(trim(outdir))//"/"//adjustl(trim(outDir_spinup))
+        outDir_spinup = adjustl(trim(outdir_case))//"/"//adjustl(trim(outDir_spinup))
         call CreateFolder(adjustl(trim(outDir_spinup)))
         outfile_restart = adjustl(trim(outDir_spinup))//"/restart.nc"
+    endif
+
+    if (do_mcmc)then
+        outDir_mcmc = adjustl(trim(outdir_case))//"/"//adjustl(trim(outDir_mcmc))
+        call CreateFolder(adjustl(trim(outDir_mcmc)))
     endif
 
     if(do_restart)then
@@ -122,9 +153,11 @@ subroutine check_inputfile(filepath, whatfile)
     inquire(file=filepath, exist=file_exists)
     
     if (file_exists) then
-        print *, whatfile," exists: ", filepath
+        print *, "# ", whatfile," exists: "
+        print *, "#     ", filepath
     else
-        print *, whatfile," does not exist: ", filepath
+        print *, "# ", whatfile," does not exist: "
+        print *, "#     ", filepath
         stop
     end if
 end subroutine check_inputfile

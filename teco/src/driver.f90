@@ -90,9 +90,6 @@ module driver
                 StemSap = AMIN1(Stemmax,SapS*bmStem)            ! Stemmax and SapS were input from parameter file, what are they? Unit? Maximum stem biomass? -JJJJJJJJJJJJJJJJJJJJJJ 
                 RootSap = AMIN1(Rootmax,SapR*bmRoot)
                 NSCmax  = 0.05*(StemSap+RootSap+QC(1))          ! Jian: update the NSCmax each step? and fixed NSCmin  = 5.? 
-                ! if (GDD5 .ne. 0.) write(*,*)"GDD: ",iforcing, GDD5
-                ! if (onset .eq. 1) write(*,*)"GDD: ",iforcing, GDD5
-                ! write(*,*) aaatest
                 if(Ta.gt.5.0) GDD5 = GDD5+Ta
                 call init_day()                                 ! Jian: initilize the daily data.
             endif
@@ -156,9 +153,6 @@ module driver
             Vcmx0 = Vcmax0*SNvcmax*1.0e-6
             eJmx0 = 1.67*Vcmx0 ! Weng 02/21/2011 Medlyn et al. 2002 
             eJmx0 = JV*Vcmx0   ! added for acclimation study,replace 1.67 with JV Feb 19 2019 Shuang    
-            
-            ! write(*,*)"test_vcmx0_ejmx0: ", Vcmx0, SNvcmax, eJmx0, JV
-            ! if (iforcing .gt. 4320) stop
             
             call canopy()      ! run canopy module
             ! run soil water processes
@@ -232,68 +226,6 @@ module driver
             endif
             if (ihour .eq. 23) then
                 call summaryDaily(iTotDaily)
-                ! nday4out = nday4out+1
-                ! Simu_dailyflux14(1,i_record)  = gpp_d_old 
-                ! Simu_dailyflux14(2,i_record)  = NEE_d                   
-                ! Simu_dailyflux14(3,i_record)  = Reco_d	!Rh             
-                ! Simu_dailyflux14(4,i_record)  = npp_d_old!*1.5
-                ! Simu_dailyflux14(5,i_record)  = ra_d_old!*1.5
-                ! ! Simu_dailyflux14(6,i_record)  = QC(1)!mat_x(1)!QC(1)
-                ! ! Simu_dailyflux14(7,i_record)  = QC(2)!mat_x(2)!QC(2)
-                ! ! Simu_dailyflux14(8,i_record)  = QC(3)!mat_x(3)!QC(3)
-                ! ! Simu_dailyflux14(9,i_record)  = QC(4)!mat_x(4)!QC(4)
-                ! ! Simu_dailyflux14(10,i_record) = QC(5)!mat_x(5)!QC(5)
-                ! ! Simu_dailyflux14(11,i_record) = QC(6)!mat_x(6)!QC(6)
-                ! ! Simu_dailyflux14(12,i_record) = QC(7)!mat_x(7)!QC(7)
-                ! ! Simu_dailyflux14(13,i_record) = QC(8)!mat_x(8)!QC(8)!*0.48
-                ! Simu_dailyflux14(6,i_record)  = mat_x(1,1)!QC(1)
-                ! Simu_dailyflux14(7,i_record)  = mat_x(2,1)!QC(2)
-                ! Simu_dailyflux14(8,i_record)  = mat_x(3,1)!QC(3)
-                ! Simu_dailyflux14(9,i_record)  = mat_x(4,1)!QC(4)
-                ! Simu_dailyflux14(10,i_record) = mat_x(5,1)!QC(5)
-                ! Simu_dailyflux14(11,i_record) = mat_x(6,1)!QC(6)
-                ! Simu_dailyflux14(12,i_record) = mat_x(7,1)!QC(7)
-                ! Simu_dailyflux14(13,i_record) = mat_x(8,1)!QC(8)!*0.48
-                ! Simu_dailyflux14(14,i_record) = rh_d_old
-
-                ! Simu_dailyflux14_2023(1,i_record)  = gpp_d_old 
-                ! Simu_dailyflux14_2023(2,i_record)  = NEE_d                   
-                ! Simu_dailyflux14_2023(3,i_record)  = Reco_d	!Rh             
-                ! Simu_dailyflux14_2023(4,i_record)  = npp_d_old!*1.5
-                ! Simu_dailyflux14_2023(5,i_record)  = ra_d_old!*1.5
-                ! Simu_dailyflux14_2023(6,i_record)  = QC(1)!mat_x(1)!QC(1)
-                ! Simu_dailyflux14_2023(7,i_record)  = QC(2)!mat_x(2)!QC(2)
-                ! Simu_dailyflux14_2023(8,i_record)  = QC(3)!mat_x(3)!QC(3)
-                ! Simu_dailyflux14_2023(9,i_record)  = QC(4)!mat_x(4)!QC(4)
-                ! Simu_dailyflux14_2023(10,i_record) = QC(5)!mat_x(5)!QC(5)
-                ! Simu_dailyflux14_2023(11,i_record) = QC(6)!mat_x(6)!QC(6)
-                ! Simu_dailyflux14_2023(12,i_record) = QC(7)!mat_x(7)!QC(7)
-                ! Simu_dailyflux14_2023(13,i_record) = QC(8)!mat_x(8)!QC(8)!*0.48
-                ! ! Simu_dailyflux14_2023(6,i_record)  = mat_x(1) ! QC(1)
-                ! ! Simu_dailyflux14_2023(7,i_record)  = mat_x(2) ! QC(2)
-                ! ! Simu_dailyflux14_2023(8,i_record)  = mat_x(3) ! QC(3)
-                ! ! Simu_dailyflux14_2023(9,i_record)  = mat_x(4) ! QC(4)
-                ! ! Simu_dailyflux14_2023(10,i_record) = mat_x(5) ! QC(5)
-                ! ! Simu_dailyflux14_2023(11,i_record) = mat_x(6) ! QC(6)
-                ! ! Simu_dailyflux14_2023(12,i_record) = mat_x(7) ! QC(7)
-                ! ! Simu_dailyflux14_2023(13,i_record) = mat_x(8) ! QC(8)!*0.48
-                ! Simu_dailyflux14_2023(14,i_record) = rh_d_old
-                ! Simu_dailyflux14_2023(15,i_record) = ta       ! for environmental scalar
-                ! Simu_dailyflux14_2023(16,i_record) = omega_d  !  
-                ! Simu_dailyflux14_2023(17,i_record) = mat_B(1,1)
-                ! Simu_dailyflux14_2023(18,i_record) = mat_B(2,1)       ! for environmental scalar
-                ! Simu_dailyflux14_2023(19,i_record) = mat_B(3,1)  !  
-                ! Simu_dailyflux14_2023(20,i_record) = mat_x(1,1) ! QC(1)
-                ! Simu_dailyflux14_2023(21,i_record) = mat_x(2,1) ! QC(2)
-                ! Simu_dailyflux14_2023(22,i_record) = mat_x(3,1) ! QC(3)
-                ! Simu_dailyflux14_2023(23,i_record) = mat_x(4,1) ! QC(4)
-                ! Simu_dailyflux14_2023(24,i_record) = mat_x(5,1) ! QC(5)
-                ! Simu_dailyflux14_2023(25,i_record) = mat_x(6,1) ! QC(6)
-                ! Simu_dailyflux14_2023(26,i_record) = mat_x(7,1) ! QC(7)
-                ! Simu_dailyflux14_2023(27,i_record) = mat_x(8,1) ! QC(8)!*0.48
-                ! Simu_dailyflux14_2023(28,i_record) = mat_Rh_d   
-                ! ! record_yr(i_record) = iyear
-                ! i_record = i_record+1
             end if
             call update_summary_monthly()
             

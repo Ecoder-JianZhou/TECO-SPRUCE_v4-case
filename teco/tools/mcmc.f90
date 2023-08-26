@@ -2,24 +2,26 @@ module mod_mcmc
     use driver
     use mod_data
     use mcmc_functions
+    use MCMC_outputs
 
     implicit none
-    integer npar4DA, nDAsimu, do_cov4newpar, covexist, iDAsimu, upgraded, ipar
+
+    ! integer nDAsimu
+    ! real search_scale
+
+    integer npar4DA, iDAsimu, upgraded, ipar, covexist
     real, allocatable :: DAparmin(:), DAparmax(:),  DAparidx(:),  DApar(:), DApar_old(:)
     real, allocatable :: MDparval(:), gamma(:,:), gamnew(:,:), coefhistory(:,:), coefnorm(:), coefac(:)
-    real search_scale, fact_rejet
-    real J_last, J_new
+    real fact_rejet
+    real J_last, J_new, accept_rate
     integer new, reject
-    integer, parameter :: nc = 100, ncov = 500
+    logical do_cov2createNewPars
+    ! integer, parameter :: nc = 100, ncov = 500
 
     contains
-    ! subroutine init_mcmc(npar, parmin, parmax, parval)!, df_search_scale)
     subroutine init_mcmc()
         implicit none
-        ! integer ipar
-        ! real, dimension(npar) :: parmin, parmax, parval
         real, allocatable :: temp_parmin(:), temp_parmax(:), temp_paridx(:), temp_parval(:)
-        ! real df_search_scale
 
         ! read the nml file of MCMC configs (eg. TECO_MCMC_configs.nml)
         call readConfsNml()
@@ -55,10 +57,7 @@ module mod_mcmc
         deallocate(temp_parmin, temp_parmax, temp_parval, temp_paridx)
 
         ! give some values to the parameters for MCMC
-        search_scale  = 0.05                 ! df_search_scale
-        nDAsimu       = 50000                ! how many time to do data assimilation
         covexist      = 0
-        do_cov4newpar = 1
         fact_rejet    = 2.4/sqrt(real(npar4DA))
 
         ! record
@@ -67,10 +66,13 @@ module mod_mcmc
         allocate(coefnorm(npar4DA)) 
         allocate(coefac(npar4DA))
         do ipar = 1, npar4DA
-            coefnorm(ipar)=0.5
-            coefac(ipar)=coefnorm(ipar)
+            coefnorm(ipar) = 0.5
+            coefac(ipar)   = coefnorm(ipar)
         enddo
-
+        allocate(gamnew(npar4DA, npar4DA))
+        J_last = 9000000.0
+        ! init the outputs
+        call init_mcmc_outputs(nDAsimu, npar4DA)
     end subroutine init_mcmc
 
     subroutine run_mcmc()
@@ -78,81 +80,54 @@ module mod_mcmc
         integer temp_upgraded
         real rand
         
-        write(*,*)"Start to run mcmc ..."
+        print *, "# Start to run mcmc ..."
 
         do iDAsimu = 1, nDAsimu
-            write(*,*) iDAsimu, "/", nDAsimu
+            write(*,*) iDAsimu, "/", nDAsimu, J_last, J_new, upgraded, accept_rate
             call mcmc_functions_init()  ! initialize the mc_itime ... variables
-            write(*,*) "after mcmc_functions_init"
             call initialize()           ! initialize the TECO model 
-            write(*,*) "after initialize"
             ! generate parameters 
             call generate_newPar()
-            write(*,*) "generate_newPar"
             ! update the parameters
             do ipar = 1, npar4DA
                 parval(DAparidx(ipar)) = DApar(ipar)
             enddo
-            ! call update parameters in TECO model
-            call renewMDpars()
+            
+            call renewMDpars()          ! call update parameters in TECO model
 
-            ! run the model
-            call teco_simu()
+            call teco_simu()            ! run the model
             
             temp_upgraded = upgraded
-            call costFuncObs()
+            call costFuncObs()          ! calculate the cost between observations and simulations
 
+            ! if upgraded is updated in costFuncObs
             if (upgraded .gt. temp_upgraded) then
                 new =  new + 1  ! new is for what?
                 if (covexist .eq. 1)then
-                    coefac = coefnorm
-                    coefhistory(new, :) = coefnorm
+                    coefac = coefnorm                           ! coefac is old parameter sets? coef is the new one; coefnorm 
+                    coefhistory(new, :) = coefnorm              ! coefhistory used to create new coef matrix
                 else
-                    ! coefac = coef
                     do ipar = 1, npar4DA
-                        ! coefnorm(ipar) = (coef(ipar)-coefmin(ipar))/(coefmax(ipar)-coefmin(ipar))
                         coefnorm(ipar) = (DApar(ipar)-DAparmin(ipar))/(DAparmax(ipar)-DAparmin(ipar))
                     enddo
                 endif
                 coefhistory(new, :) = coefnorm 
                 if(new .ge. ncov)new=0
-
-                ! if(upgraded .gt. 1500 .and. k3 .lt. 800) then ! k3 is for what?
-                !     call random_number(rand)  ! get a rand number
-                !     if(rand .gt. 0.95) then
-                !         k3 = k3 + 1
-                !         if (do_methane_da) then
-
-                !         elseif (do_da)then
-                        
-                !         endif
-
-                !     endif
-
-                ! endif
+                ! update the parameters sets
+                tot_paramsets(upgraded,:) = DApar
             else
                 reject = reject + 1
             endif
-            ! return the initial value after each run
-            ! fwsoil  = fwsoil_initial
-            ! topfws  = topfws_initial
-            ! omega   = omega_initial
-            ! wcl     = wcl_initial
-            ! Storage = Storage_initial
-            ! nsc     = nsc_initial
-            ! QC      = QC_initial
-            ! Maybe need to add other method to return the initial values
-            
 
             ! updates of the covariance matrix
-            if (covexist .eq. 0 .and. mod(upgraded, ncov).eq.0 .and. upgraded .ne. 0)then
-                covexist = 1
-                coefac   = coefnorm ! coefnorm: normized values between min and max values
+            if (.not. do_cov2createNewPars .and. mod(upgraded, ncov).eq.0 .and. upgraded .ne. 0)then
+                do_cov2createNewPars = .True.
+                coefac   = coefnorm          ! coefnorm: normized values between min and max values
                 call varcov(coefhistory, gamnew, npar4DA, ncov) !
                 if(.not.(all(gamnew==0.)))then
                     gamma = gamnew
                     call racine_mat(gamma, gamnew, npar4DA)
-                    gamma=gamnew
+                    gamma = gamnew
                 endif
             endif
 
@@ -180,52 +155,49 @@ module mod_mcmc
         integer igenPar, parflag
         real rand_harvest, rand
 
-        DApar_old = DApar               ! mark as old parameters   
+        DApar_old = DApar                   ! mark as old parameters 
         
-        if (do_cov4newpar .eq. 1)then 
-            write(*,*) "run covexist ..."
-            if (covexist .eq. 1)then
-                parflag = 1                 ! mark            
-                do while(parflag .gt. 0)
-                    call gengaussvect(fact_rejet*gamma, coefac, coefnorm, npar4DA)          ! generate the new cov parameters
-                    parflag = 0                                                         
-                    do igenPar = 1, npar4DA                                                 ! check the cov 
-                        if(coefnorm(igenPar).lt.0. .or. coefnorm(ipar).gt.1.)then
-                            parflag=parflag+1
-                            write(*,*)'out of range',parflag
-                        endif
-                    enddo
-                enddo
-                do ipar = 1, npar4DA
-                    DApar(ipar) = DAparmin(ipar) + coefnorm(ipar) * (DAparmax(ipar)-DAparmin(ipar))
-                enddo
-            else
-                write (*,*) "covexist=0"
-                write(*,*) DAparmax-DAparmin
-                do igenPar = 1, npar4DA     ! for each parameters
-999                 continue
-                    call random_number(rand_harvest)    
-                    rand = rand_harvest - 0.5           ! create a random number in [-0.5, 0.5]
-                    DApar(igenPar) = DApar_old(igenPar) + rand*(DAparmax(igenPar) - DAparmin(igenPar)) * search_scale   ! create new parameter
-                    ! write(*,*)"new_here", Daparmax-DAparmin !DApar(igenPar)
-                    if((DApar(igenPar) .gt. DAparmax(igenPar)) &
-                        &   .or. (DApar(igenPar) .lt. DAparmin(igenPar))) then 
-                            write(*,*) igenPar, DApar(igenPar), DAparmin(igenPar), DAparmax(igenPar)
-                            goto 999                  ! judge the range of new parameter
+        if (do_cov2createNewPars) then
+            parflag = 1                 ! mark
+            do while(parflag .gt. 0)    ! create the new coefnorm
+                ! create the new coefnorm based on old one of coefac
+                call gengaussvect(fact_rejet*gamma, coefac, coefnorm, npar4DA)          ! generate the new cov parameters
+                parflag = 0
+                do igenPar = 1, npar4DA                                                 ! check the cov 
+                    if(coefnorm(igenPar).lt.0. .or. coefnorm(igenPar).gt.1.)then
+                        parflag=parflag+1
+                        write(*,*)'out of range',parflag
                     endif
                 enddo
-            endif
+            enddo
+            ! create the new parameters from 
+            do ipar = 1, npar4DA
+                DApar(ipar) = DAparmin(ipar) + coefnorm(ipar) * (DAparmax(ipar)-DAparmin(ipar))
+            enddo
+        else ! do not run cov to create new parameters, just random selections
+            do igenPar = 1, npar4DA     ! for each parameters
+999             continue
+                call random_number(rand_harvest)    
+                rand = rand_harvest - 0.5           ! create a random number in [-0.5, 0.5]
+                DApar(igenPar) = DApar_old(igenPar) + rand*(DAparmax(igenPar) - DAparmin(igenPar)) * search_scale   ! create new parameter
+                if((DApar(igenPar) .gt. DAparmax(igenPar)) &
+                    &   .or. (DApar(igenPar) .lt. DAparmin(igenPar))) then 
+                    goto 999                  ! judge the range of new parameter
+                endif
+            enddo
         endif
-        return
+        return   ! mainly return the DApar, meanwhile update the coefnorm
     end subroutine generate_newPar
 
     subroutine costFuncObs()
         implicit none
-        real J_cost, delta_J, cs_rand, accept_rate
+        real J_cost, delta_J, cs_rand
         J_new = 0
         ! vars4MCMC
         ! gpp_d
         if(vars4MCMC%gpp_d%existOrNot)then
+            write(*,*) "testMD: ", vars4MCMC%gpp_d%mdData(:,4)
+            write(*,*) "testOD: ", vars4MCMC%gpp_d%obsData(:,4)
             call CalculateCost(vars4MCMC%gpp_d%mdData(:,4), vars4MCMC%gpp_d%obsData(:,4),&
                  vars4MCMC%gpp_d%obsData(:,5), J_cost)
             J_new = J_new + J_cost
@@ -284,6 +256,7 @@ module mod_mcmc
         else
             delta_J = J_new - J_last
         endif
+
         call random_number(cs_rand)
         if(AMIN1(1.0, exp(-delta_J)) .gt. cs_rand)then
             upgraded = upgraded + 1
@@ -304,7 +277,7 @@ module mod_mcmc
         JCost = 0.
 
         do iLine = 1, nLine
-            if(datObs4MCMC(iLine) .gt. -9999)then
+            if(datObs4MCMC(iLine) .gt. -999 .and. datMod4MCMC(iLine) .gt. -999)then
                 nCost    = nCost + 1   
                 dObsSimu = datMod4MCMC(iLine) - datObs4MCMC(iLine) 
                 JCost    = JCost + (dObsSimu*dObsSimu)/(2*stdObs4MCMC(iLine))
@@ -313,16 +286,6 @@ module mod_mcmc
         if(nCost .gt. 0) JCost=JCost/real(nCost)
         return ! JCost
     end subroutine CalculateCost
-
-    ! subroutine generate_newPar_cov()
-    !     implicit none
-    !     integer parflag
-    !     fact_rejet = 2.4/squrt
-    !     do while(parflag .gt. 0)
-    !         call gengaussvect()
-    !     enddo
-    ! end subroutine generate_newPar_cov
-    
 
     subroutine racine_mat(M, Mrac,npara)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -550,7 +513,7 @@ module mod_mcmc
     !     real tab(ncov)
     ! end function mean
     
-    subroutine check_mcmc()
+    subroutine deallocate_mcmc()
     ! deallocate some variables and summary the information of MCMC
         implicit none
         if(allocated(DAparmin)) deallocate(DAparmin)
@@ -585,8 +548,17 @@ module mod_mcmc
         if(allocated(vars4MCMC%cwood%mdData))  deallocate(vars4MCMC%cwood%mdData)
 
         if(allocated(coefhistory)) deallocate(coefhistory)
-        if(allocated(coefnorm)) deallocate(coefnorm)
-        if(allocated(coefac)) deallocate(coefac)
+        if(allocated(coefnorm))    deallocate(coefnorm)
+        if(allocated(coefac))      deallocate(coefac)
 
-    end subroutine check_mcmc
+        if(allocated(gamnew))   deallocate(gamnew)
+        if(allocated(parnames)) deallocate(parnames)
+
+        ! in MCMC_outputs module
+        if(allocated(tot_paramsets)) deallocate(tot_paramsets)
+        if(allocated(sel_paramsets)) deallocate(sel_paramsets)
+        call deallocate_mcmc_outs_type(sel_paramsets_outs_h)
+        call deallocate_mcmc_outs_type(sel_paramsets_outs_d)
+        call deallocate_mcmc_outs_type(sel_paramsets_outs_m)
+    end subroutine deallocate_mcmc
 end module mod_mcmc

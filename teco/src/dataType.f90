@@ -14,6 +14,7 @@ module mod_data
     logical :: do_leap          ! judge leap year or not
 
     integer :: dtimes                 ! 24: hourly simulation
+    integer :: nSpecParams            ! How many special parameters
     character(200) :: filepath_in     ! input file path
     character(300) :: climfile        ! climate file name
     character(300) :: snowdepthfile   ! snow depthfile
@@ -32,6 +33,7 @@ module mod_data
     character(250) :: outfile_restart = "restart.nc"
     character(250) :: outDir_spinup   = "results_spinup"
     character(250) :: outfile_spinup  = "results_spinup.nc"
+    character(250) :: outDir_mcmc     = "results_MCMC"
     
     ! experiment settings
     real :: Ttreat     = 0.        ! Temperature treatment, warming in air and soil temperature
@@ -507,7 +509,7 @@ module mod_data
 
         namelist /nml_simu_settings/ simu_name, do_spinup, do_mcmc, do_snow,         & 
             do_soilphy, do_matrix, do_EBG, do_restart, do_ndep, do_simu, do_leap,    &
-            dtimes, filepath_in,  climfile, snowdepthfile, watertablefile,           &
+            dtimes,nSpecParams, filepath_in,  climfile, snowdepthfile, watertablefile,           &
             restartfile, outdir 
         namelist /nml_exps/ Ttreat, CO2treat, N_fert
         namelist /nml_params/ lat, lon, wsmax, wsmin, LAIMAX, LAIMIN, rdepth,        & 
@@ -530,7 +532,7 @@ module mod_data
             init_bubble_methane_tot, init_Nbub, init_depth_1
         namelist /nml_spinup/ nloops 
 
-        print *, "read config nml..."
+        print *, "# read config nml..."
         open(388, file="TECO_model_configs.nml")
         read(388, nml=nml_simu_settings, iostat=io)
         read(388, nml=nml_exps, iostat=io)
@@ -972,7 +974,7 @@ module mod_data
         read(1,'(a160)') commts
         DO WHILE (.TRUE.)
             COUNT=COUNT+1
-            READ(1,*,IOSTAT=STAT) tmp_yr, tmp_doy, tmp_h,             &
+            READ(1,*,IOSTAT=STAT, end=993) tmp_yr, tmp_doy, tmp_h,             &
                 tmp_Ta,  tmp_Ts,  tmp_rh, tmp_vpd, tmp_rain, tmp_ws, & 
                 tmp_par, tmp_co2, tmp_pbot, tmp_ndep
             IF(STAT .NE. 0) EXIT
@@ -990,6 +992,7 @@ module mod_data
             forcing(COUNT)%PBOT  = tmp_pbot
             forcing(COUNT)%Ndep  = tmp_ndep
         ENDDO
+993     continue
         CLOSE(1)
     end subroutine get_forcingdata
 
@@ -1011,10 +1014,11 @@ module mod_data
         COUNT = 0
         do
             COUNT = COUNT + 1
-            read (11,*,IOSTAT=STAT) tmp_yr,tmp_doy,tmp_hr,snow_depth_read
+            read (11,*,IOSTAT=STAT, end=1018) tmp_yr,tmp_doy,tmp_hr,snow_depth_read
             IF(STAT .NE. 0) EXIT
             snow_in(COUNT)=snow_depth_read     
         enddo
+1018    continue
         close(11)    ! close snow depth file
         return
     end subroutine get_snowdepth
@@ -1035,7 +1039,6 @@ module mod_data
         enddo
         return
     end subroutine ReadLineNumFromFile
-
 
 
     subroutine assign_all_results(hours, days, months, years)
