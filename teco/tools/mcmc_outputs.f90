@@ -79,6 +79,7 @@ module MCMC_outputs
     type(mcmc_outVars_type) sel_paramsets_outs_h
     type(mcmc_outVars_type) sel_paramsets_outs_d
     type(mcmc_outVars_type) sel_paramsets_outs_m
+    integer, dimension(100) :: rand_number
 
 contains
 
@@ -91,13 +92,12 @@ contains
         call allocate_mcmc_outs_type(100, nHours,  sel_paramsets_outs_h)
         call allocate_mcmc_outs_type(100, nDays,   sel_paramsets_outs_d)
         call allocate_mcmc_outs_type(100, nMonths, sel_paramsets_outs_m)
-
     end subroutine init_mcmc_outputs
 
     subroutine mcmc_param_outputs(nUpgraded, npar4DA, parnames, DAparidx)
         implicit none
         integer, intent(in) :: nUpgraded, npar4DA
-        integer nBuilt_in, ipar, nline, iline
+        integer nBuilt_in, ipar, nline, iline, inum
         character(250) :: outfile_mc_ParamSets
         character(*), intent(in) :: parnames(:)
         integer, intent(in) :: DAparidx(:)
@@ -125,19 +125,64 @@ contains
         enddo
         close(118)
 
-        ! 
+        ! choose the random 100 parameter sets
+        call generate_random_numbers(1, nUpgraded - nBuilt_in, rand_number)
+        do inum = 1, 100
+            sel_paramsets(inum, :) = upg_paramsets(rand_number(inum),:)
+        enddo
+
+        outfile_mc_ParamSets = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim("sel_parameter_sets.txt"))
+        open(137, file=outfile_mc_ParamSets, status='replace')
+        write(137, *) header_line(2:)
+        do iline = 1, 100
+            write(137, '(*(ES10.3,:,","))') sel_paramsets(iline,:)
+        enddo
+        close(137)
 
         ! deallocate
         deallocate(DA_parname)
+        deallocate(upg_paramsets)
     end subroutine
 
     subroutine mcmc_simu_outputs()
         implicit none
         character(250) :: outfile_totparamset, outfile_selparamset, outfile_simu
-        ! outdir_mcmc
-        ! open(293, file=)
+
+        outfile_totparamset = "total_parameters_sets.csv"
+        outfile_selparamset = "sel_parameters_sets.csv"
+        
+        outfile_totparamset = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outfile_totparamset))
 
     end subroutine mcmc_outputs
+
+    subroutine generate_random_numbers(min_value, max_value, rand_number)
+        implicit none
+        integer, dimension(:), intent(out) :: rand_number
+        integer, intent(in) :: min_value, max_value
+        integer :: i, j, temp, range_size, available_numbers
+        integer, dimension(max_value - min_value + 1) :: all_numbers
+        real :: r
+
+        ! initialize the random
+        call random_seed()
+
+        ! initilize all_numbers array
+        do i = 1, size(all_numbers)
+            all_numbers(i) = min_value - 1 + i
+        end do
+
+        ! using Fisher-Yates method
+        do i = size(all_numbers), 2, -1
+            call random_number(r)
+            j = int(r * i) + 1
+            temp = all_numbers(i)
+            all_numbers(i) = all_numbers(j)
+            all_numbers(j) = temp
+        end do
+
+        ! get the before N random number 
+        rand_number = all_numbers(1:size(rand_number))
+    end subroutine generate_random_numbers
 
     subroutine allocate_mcmc_outs_type(ntime, nSimuLen, dataType)
         implicit none
