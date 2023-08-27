@@ -115,6 +115,9 @@ module mod_mcmc
                 if(new .ge. ncov)new=0
                 ! update the parameters sets
                 tot_paramsets(upgraded,:) = DApar
+                call mcmc_update_outputs(upgraded, tot_paramsets_outs_h, tot_outVars_h)
+                call mcmc_update_outputs(upgraded, tot_paramsets_outs_d, tot_outVars_d)
+                call mcmc_update_outputs(upgraded, tot_paramsets_outs_m, tot_outVars_m)
             else
                 reject = reject + 1
             endif
@@ -140,6 +143,10 @@ module mod_mcmc
                 endif
             endif
         enddo
+
+        ! summary
+        call mcmc_param_outputs(upgraded, npar4DA, parnames, DAparidx)
+        call 
 
         ! deallocate
         deallocate(DAparmin)
@@ -560,5 +567,8 @@ module mod_mcmc
         call deallocate_mcmc_outs_type(sel_paramsets_outs_h)
         call deallocate_mcmc_outs_type(sel_paramsets_outs_d)
         call deallocate_mcmc_outs_type(sel_paramsets_outs_m)
+        call deallocate_mcmc_outs_type(tot_paramsets_outs_h)
+        call deallocate_mcmc_outs_type(tot_paramsets_outs_d)
+        call deallocate_mcmc_outs_type(tot_paramsets_outs_m)
     end subroutine deallocate_mcmc
 end module mod_mcmc

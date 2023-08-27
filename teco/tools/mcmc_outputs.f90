@@ -79,6 +79,10 @@ module MCMC_outputs
     type(mcmc_outVars_type) sel_paramsets_outs_h
     type(mcmc_outVars_type) sel_paramsets_outs_d
     type(mcmc_outVars_type) sel_paramsets_outs_m
+    ! total simulation outputs
+    type(mcmc_outVars_type) tot_paramsets_outs_h
+    type(mcmc_outVars_type) tot_paramsets_outs_d
+    type(mcmc_outVars_type) tot_paramsets_outs_m
     integer, dimension(100) :: rand_number
 
 contains
@@ -92,6 +96,10 @@ contains
         call allocate_mcmc_outs_type(100, nHours,  sel_paramsets_outs_h)
         call allocate_mcmc_outs_type(100, nDays,   sel_paramsets_outs_d)
         call allocate_mcmc_outs_type(100, nMonths, sel_paramsets_outs_m)
+        ! allocate the total simulation results
+        call allocate_mcmc_outs_type(nDAsimu, nHours,  tot_paramsets_outs_h)
+        call allocate_mcmc_outs_type(nDAsimu, nDays,   tot_paramsets_outs_d)
+        call allocate_mcmc_outs_type(nDAsimu, nMonths, tot_paramsets_outs_m)
     end subroutine init_mcmc_outputs
 
     subroutine mcmc_param_outputs(nUpgraded, npar4DA, parnames, DAparidx)
@@ -125,10 +133,13 @@ contains
         enddo
         close(118)
 
-        ! choose the random 100 parameter sets
+        ! choose the random 100 parameter sets and simulations
         call generate_random_numbers(1, nUpgraded - nBuilt_in, rand_number)
         do inum = 1, 100
             sel_paramsets(inum, :) = upg_paramsets(rand_number(inum),:)
+            call select_mcmc_simu_outputs(rand_number(inum), inum, tot_paramsets_outs_h, sel_paramsets_outs_h)
+            call select_mcmc_simu_outputs(rand_number(inum), inum, tot_paramsets_outs_d, sel_paramsets_outs_d)
+            call select_mcmc_simu_outputs(rand_number(inum), inum, tot_paramsets_outs_m, sel_paramsets_outs_m)
         enddo
 
         outfile_mc_ParamSets = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim("sel_parameter_sets.txt"))
@@ -139,21 +150,387 @@ contains
         enddo
         close(137)
 
+        ! save the selected simulations to nc format results
+        call write_outputs_nc(outDir_mcmc_h, 100, nHours,  sel_paramsets_outs_h, "hourly")
+        call write_outputs_nc(outDir_mcmc_d, 100, nDays,   sel_paramsets_outs_d, "daily")
+        call write_outputs_nc(outDir_mcmc_m, 100, nMonths, sel_paramsets_outs_m, "monthly")
+
         ! deallocate
         deallocate(DA_parname)
         deallocate(upg_paramsets)
-    end subroutine
+    end subroutine mcmc_param_outputs
 
-    subroutine mcmc_simu_outputs()
+    subroutine select_mcmc_simu_outputs(idx_tot, idx_sel, total_simus, selected_simus)
         implicit none
-        character(250) :: outfile_totparamset, outfile_selparamset, outfile_simu
-
-        outfile_totparamset = "total_parameters_sets.csv"
-        outfile_selparamset = "sel_parameters_sets.csv"
+        integer, intent(in) :: idx_tot, idx_sel
+        type(mcmc_outVars_type), intent(in) :: total_simus
+        type(mcmc_outVars_type), intent(out) :: selected_simus
         
-        outfile_totparamset = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outfile_totparamset))
+        selected_simus%gpp(upgraded, :)            = total_simus%gpp(idx_tot, :)   
+        selected_simus%nee(upgraded, :)            = total_simus%nee(idx_tot, :)
+        selected_simus%npp(upgraded, :)            = total_simus%npp(idx_tot, :)
+        selected_simus%nppLeaf(upgraded, :)        = total_simus%nppLeaf(idx_tot, :)
+        selected_simus%nppWood(upgraded, :)        = total_simus%nppWood(idx_tot, :)
+        selected_simus%nppStem(upgraded, :)        = total_simus%nppStem(idx_tot, :)
+        selected_simus%nppRoot(upgraded, :)        = total_simus%nppRoot(idx_tot, :)
+        selected_simus%nppOther(upgraded, :)       = total_simus%nppOther(idx_tot, :)
+        selected_simus%ra(upgraded, :)             = total_simus%ra(idx_tot, :)
+        selected_simus%raLeaf(upgraded, :)         = total_simus%raLeaf(idx_tot, :)
+        selected_simus%raStem(upgraded, :)         = total_simus%raStem(idx_tot, :)
+        selected_simus%raRoot(upgraded, :)         = total_simus%raRoot(idx_tot, :)
+        selected_simus%raOther(upgraded, :)        = total_simus%raOther(idx_tot, :)
+        selected_simus%rMaint(upgraded, :)         = total_simus%rMaint(idx_tot, :)
+        selected_simus%rGrowth(upgraded, :)        = total_simus%rGrowth(idx_tot, :)
+        selected_simus%rh(upgraded, :)             = total_simus%rh(idx_tot, :)
+        selected_simus%nbp(upgraded, :)            = total_simus%nbp(idx_tot, :)
+        selected_simus%wetlandCH4(upgraded, :)     = total_simus%wetlandCH4(idx_tot, :)
+        selected_simus%wetlandCH4prod(upgraded, :) = total_simus%wetlandCH4prod(idx_tot, :)
+        selected_simus%wetlandCH4cons(upgraded, :) = total_simus%wetlandCH4cons(idx_tot, :)
+        ! Carbon Pools  (KgC m-2)
+        selected_simus%cLeaf(upgraded, :)          = total_simus%cLeaf(idx_tot, :)
+        selected_simus%cStem(upgraded, :)          = total_simus%cStem(idx_tot, :)
+        selected_simus%cRoot(upgraded, :)          = total_simus%cRoot(idx_tot, :)
+        selected_simus%cOther(upgraded, :)         = total_simus%cOther(idx_tot, :)
+        selected_simus%cLitter(upgraded, :)        = total_simus%cLitter(idx_tot, :)
+        selected_simus%cLitterCwd(upgraded, :)     = total_simus%cLitterCwd(idx_tot, :)
+        selected_simus%cSoil(upgraded, :)          = total_simus%cSoil(idx_tot, :)
+        selected_simus%cSoilLevels(upgraded, :, :) = total_simus%cSoilLevels(idx_tot, :)
+        selected_simus%cSoilFast(upgraded, :)      = total_simus%cSoilFast(idx_tot, :)
+        selected_simus%cSoilSlow(upgraded, :)      = total_simus%cSoilSlow(idx_tot, :)
+        selected_simus%cSoilPassive(upgraded, :)   = total_simus%cSoilPassive(idx_tot, :)
+        selected_simus%CH4(upgraded, :, :)         = total_simus%CH4(idx_tot, :)
+        ! Nitrogen fluxes (kgN m-2 s-1)
+        selected_simus%fBNF(upgraded, :)           = total_simus%fBNF(idx_tot, :)
+        selected_simus%fN2O(upgraded, :)           = total_simus%fN2O(idx_tot, :)
+        selected_simus%fNloss(upgraded, :)         = total_simus%fNloss(idx_tot, :)
+        selected_simus%fNnetmin(upgraded, :)       = total_simus%fNnetmin(idx_tot, :)
+        selected_simus%fNdep(upgraded, :)          = total_simus% fNdep(idx_tot, :)
+        ! Nitrogen pools (kgN m-2)
+        selected_simus%nLeaf(upgraded, :)          = total_simus%nLeaf(idx_tot, :)
+        selected_simus%nStem(upgraded, :)          = total_simus%nStem(idx_tot, :)
+        selected_simus%nRoot(upgraded, :)          = total_simus%nRoot(idx_tot, :)
+        selected_simus%nOther(upgraded, :)         = total_simus%nOther(idx_tot, :)
+        selected_simus%nLitter(upgraded, :)        = total_simus%nLitter(idx_tot, :)
+        selected_simus%nLitterCwd(upgraded, :)     = total_simus%nLitterCwd(idx_tot, :)
+        selected_simus%nSoil(upgraded, :)          = total_simus%nSoil(idx_tot, :)
+        selected_simus%nMineral(upgraded, :)       = total_simus%nMineral(idx_tot, :)
+        ! energy fluxes (W m-2)
+        selected_simus%hfls(upgraded, :)           = total_simus%hfls(idx_tot, :)
+        selected_simus%hfss(upgraded, :)           = total_simus%hfss(idx_tot, :)
+        selected_simus%SWnet(upgraded, :)          = total_simus%SWnet(idx_tot, :)
+        selected_simus%LWnet(upgraded, :)          = total_simus%LWnet(idx_tot, :)
+        ! water fluxes (kg m-2 s-1)
+        selected_simus%ec(upgraded, :)             = total_simus%ec(idx_tot, :)
+        selected_simus%tran(upgraded, :)           = total_simus%tran(idx_tot, :)
+        selected_simus%es(upgraded, :)             = total_simus%es(idx_tot, :)
+        selected_simus%hfsbl(upgraded, :)          = total_simus%hfsbl(idx_tot, :)
+        selected_simus%mrro(upgraded, :)           = total_simus%mrro(idx_tot, :)
+        selected_simus%mrros(upgraded, :)          = total_simus%mrros(idx_tot, :)
+        selected_simus%mrrob(upgraded, :)          = total_simus%mrrob(idx_tot, :)
+        ! other
+        selected_simus%mrso(upgraded, :, :)        = total_simus%mrso(idx_tot, :)
+        selected_simus%tsl(upgraded, :, :)         = total_simus%tsl(idx_tot, :)
+        selected_simus%tsland(upgraded, :)         = total_simus%tsland(idx_tot, :)
+        selected_simus%wtd(upgraded, :)            = total_simus%wtd(idx_tot, :)
+        selected_simus%snd(upgraded, :)            = total_simus%snd(idx_tot, :)
+        selected_simus%lai(upgraded, :)            = total_simus%lai(idx_tot, :)
+        return
+    end subroutine select_mcmc_simu_outputs
 
-    end subroutine mcmc_outputs
+    subroutine mcmc_update_outputs(upgraded, dataType, simu_outputs)
+        implicit none
+        integer, intent(in) :: upgraded
+        type(mcmc_outVars_type), intent(out)   :: dataType
+        type(tot_output_vars_type), intent(in) :: simu_outputs
+
+        dataType%gpp(upgraded, :)            = simu_outputs%gpp    
+        dataType%nee(upgraded, :)            = simu_outputs%nee
+        dataType%npp(upgraded, :)            = simu_outputs%npp
+        dataType%nppLeaf(upgraded, :)        = simu_outputs%nppLeaf
+        dataType%nppWood(upgraded, :)        = simu_outputs%nppWood
+        dataType%nppStem(upgraded, :)        = simu_outputs%nppStem
+        dataType%nppRoot(upgraded, :)        = simu_outputs%nppRoot
+        dataType%nppOther(upgraded, :)       = simu_outputs%nppOther
+        dataType%ra(upgraded, :)             = simu_outputs%ra
+        dataType%raLeaf(upgraded, :)         = simu_outputs%raLeaf
+        dataType%raStem(upgraded, :)         = simu_outputs%raStem
+        dataType%raRoot(upgraded, :)         = simu_outputs%raRoot
+        dataType%raOther(upgraded, :)        = simu_outputs%raOther
+        dataType%rMaint(upgraded, :)         = simu_outputs%rMaint
+        dataType%rGrowth(upgraded, :)        = simu_outputs%rGrowth
+        dataType%rh(upgraded, :)             = simu_outputs%rh
+        dataType%nbp(upgraded, :)            = simu_outputs%nbp
+        dataType%wetlandCH4(upgraded, :)     = simu_outputs%wetlandCH4
+        dataType%wetlandCH4prod(upgraded, :) = simu_outputs%wetlandCH4prod
+        dataType%wetlandCH4cons(upgraded, :) = simu_outputs%wetlandCH4cons
+        ! Carbon Pools  (KgC m-2)
+        dataType%cLeaf(upgraded, :)          = simu_outputs%cLeaf
+        dataType%cStem(upgraded, :)          = simu_outputs%cStem
+        dataType%cRoot(upgraded, :)          = simu_outputs%cRoot
+        dataType%cOther(upgraded, :)         = simu_outputs%cOther
+        dataType%cLitter(upgraded, :)        = simu_outputs%cLitter
+        dataType%cLitterCwd(upgraded, :)     = simu_outputs%cLitterCwd
+        dataType%cSoil(upgraded, :)          = simu_outputs%cSoil
+        dataType%cSoilLevels(upgraded, :, :) = simu_outputs%cSoilLevels
+        dataType%cSoilFast(upgraded, :)      = simu_outputs%cSoilFast
+        dataType%cSoilSlow(upgraded, :)      = simu_outputs%cSoilSlow
+        dataType%cSoilPassive(upgraded, :)   = simu_outputs%cSoilPassive
+        dataType%CH4(upgraded, :, :)         = simu_outputs%CH4
+        ! Nitrogen fluxes (kgN m-2 s-1)
+        dataType%fBNF(upgraded, :)           = simu_outputs%fBNF
+        dataType%fN2O(upgraded, :)           = simu_outputs%fN2O
+        dataType%fNloss(upgraded, :)         = simu_outputs%fNloss
+        dataType%fNnetmin(upgraded, :)       = simu_outputs%fNnetmin
+        dataType%fNdep(upgraded, :)          = simu_outputs% fNdep
+        ! Nitrogen pools (kgN m-2)
+        dataType%nLeaf(upgraded, :)          = simu_outputs%nLeaf
+        dataType%nStem(upgraded, :)          = simu_outputs%nStem
+        dataType%nRoot(upgraded, :)          = simu_outputs%nRoot
+        dataType%nOther(upgraded, :)         = simu_outputs%nOther
+        dataType%nLitter(upgraded, :)        = simu_outputs%nLitter
+        dataType%nLitterCwd(upgraded, :)     = simu_outputs%nLitterCwd
+        dataType%nSoil(upgraded, :)          = simu_outputs%nSoil
+        dataType%nMineral(upgraded, :)       = simu_outputs%nMineral
+        ! energy fluxes (W m-2)
+        dataType%hfls(upgraded, :)           = simu_outputs%hfls
+        dataType%hfss(upgraded, :)           = simu_outputs%hfss
+        dataType%SWnet(upgraded, :)          = simu_outputs%SWnet
+        dataType%LWnet(upgraded, :)          = simu_outputs%LWnet
+        ! water fluxes (kg m-2 s-1)
+        dataType%ec(upgraded, :)             = simu_outputs%ec
+        dataType%tran(upgraded, :)           = simu_outputs%tran
+        dataType%es(upgraded, :)             = simu_outputs%es
+        dataType%hfsbl(upgraded, :)          = simu_outputs%hfsbl
+        dataType%mrro(upgraded, :)           = simu_outputs%mrro
+        dataType%mrros(upgraded, :)          = simu_outputs%mrros
+        dataType%mrrob(upgraded, :)          = simu_outputs%mrrob
+        ! other
+        dataType%mrso(upgraded, :, :)        = simu_outputs%mrso
+        dataType%tsl(upgraded, :, :)         = simu_outputs%tsl
+        dataType%tsland(upgraded, :)         = simu_outputs%tsland
+        dataType%wtd(upgraded, :)            = simu_outputs%wtd
+        dataType%snd(upgraded, :)            = simu_outputs%snd
+        dataType%lai(upgraded, :)            = simu_outputs%lai
+        return
+    end subroutine mcmc_update_outputs
+
+    subroutine write_outputs_nc(mc_outdir, ntime, nSimuLen, write_data, str_freq)
+        implicit none
+        character(*), intent(in) :: mc_outdir, str_freq
+        integer, intent(in) :: ntime, nSimuLen
+        type(mcmc_outVars_type), intent(in) :: write_data
+
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%gpp,    &
+            "gpp",     "kgC m-2 s-1", "gross primary productivity", str_freq, 1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%npp,    &
+            "npp",     "kgC m-2 s-1", "Total net primary productivity",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nppLeaf, &
+            "nppLeaf", "kgC m-2 s-1", "NPP allocated to leaf tissues",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nppWood, &
+            "nppWood", "kgC m-2 s-1", "NPP allocated to above ground woody tissues",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nppStem, &
+            "nppStem","kgC m-2 s-1", "NPP allocated to stem tissues",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nppRoot, &
+            "nppRoot","kgC m-2 s-1", "NPP allocated to root tissues",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nppOther, &
+            "nppOther","kgC m-2 s-1", "NPP allocated to other plant organs (reserves, fruits, exudates)",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%ra,       &
+            "ra","kgC m-2 s-1", "Plant Autotrophic Respiration",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%raLeaf,   &
+            "raLeaf","kgC m-2 s-1", "Ra from leaves",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%raStem,   &
+            "raStem","kgC m-2 s-1", "Ra from above ground woody tissues",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%raRoot,   &
+            "raRoot","kgC m-2 s-1", "Ra from fine roots",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%raOther,  &
+            "raOther","kgC m-2 s-1", "Ra from other plant organs (reserves, fruits, exudates)",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%rMaint,         &
+            "rMaint","kgC m-2 s-1", "Maintenance respiration",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%rGrowth,        &
+            "rGrowth","kgC m-2 s-1", "Growth respiration",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%rh,             &
+            "rh","kgC m-2 s-1", "Heterotrophic respiration rate",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nbp,            &
+            "nbp","kgC m-2 s-1", "Net Biome productivity (NBP = GPP - Rh - Ra - other losses)",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%wetlandCH4,     &
+            "wetlandCH4","kgC m-2 s-1", "Net fluxes of CH4",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%wetlandCH4prod, &
+            "wetlandCH4prod","kgC m-2 s-1", "CH4 production",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%wetlandCH4cons, &
+            "wetlandCH4cons","kgC m-2 s-1", "CH4 consumption",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cLeaf,          &
+            "cLeaf","kgC m-2", "Carbon biomass in leaves",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cStem,          &
+            "cStem","kgC m-2", "Carbon above ground woody biomass",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cRoot,          &
+            "cRoot","kgC m-2", "Carbon biomass in roots",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cOther,         &
+            "cOther","kgC m-2", "Carbon biomass in other plant organs (reserves, fruits)",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cLitter,        &
+            "cLitter","kgC m-2", "Carbon in litter (excluding coarse woody debris)",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cLitterCwd,     &
+            "cLitterCwd","kgC m-2", "Carbon in coarse woody debris",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cSoil,          &
+            "cSoil","kgC m-2", "Total soil organic carbon",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cSoilLevels,    &
+            "cSoilLevels","kgC m-2", "Depth-specific soil organic carbon",str_freq,nlayers)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cSoilFast,      &
+            "cSoilFast","kgC m-2", "Fast soil organic carbon",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cSoilSlow,      &
+            "cSoilSlow","kgC m-2 s-1", "Slow soil organic carbon",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%cSoilPassive,   &
+            "cSoilPassive","kgC m-2 s-1", "Passive soil organic carbon",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%CH4,            &
+            "CH4","kgC m-2 s-1", "Methane concentration",str_freq,nlayers)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%fBNF,           &
+            "fBNF","kgN m-2 s-1", "biological nitrogen fixation",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%fN2O,           &
+            "fN2O","kgN m-2 s-1", "loss of nitrogen through emission of N2O",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%fNloss,         &
+            "fNloss","kgN m-2 s-1", "Total loss of nitrogen to the atmosphere and from leaching",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%fNnetmin,       &
+            "fNnetmin","kgN m-2 s-1", "net mineralization of N",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%fNdep,          &
+            "fNdep","kgN m-2 s-1", "Nitrogen deposition",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nLeaf,          &
+            "nLeaf","kgN m-2", "Nitrogen in leaves",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nStem,          &
+            "nStem","kgN m-2", "Nitrogen in stems",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nRoot,          &
+            "nRoot","kgN m-2", "Nirogen in roots",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nOther,         &
+            "nOther","kgN m-2", "nitrogen in other plant organs (reserves, fruits)",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nLitter,        &
+            "nLitter","kgN m-2", "Nitrogen in litter (excluding coarse woody debris)",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nLitterCwd,     &
+            "nLitterCwd","kgN m-2", "Nitrogen in coarse woody debris",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nSoil,     &
+            "nSoil","kgN m-2", "Nitrogen in soil organic matter",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%nMineral,  &
+            "nMineral","kgN m-2", "Mineral nitrogen pool",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%hfls,    &
+            "hfls","W m-2", "Sensible heat flux",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%hfss,    &
+            "hfss","W m-2", "Latent heat flux",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%SWnet,   &
+            "SWnet","W m-2", "Net shortwave radiation",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%LWnet,   &
+            "LWnet","W m-2", "Net longwave radiation",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%ec,      &
+            "ec","kg m-2 s-1", "Canopy evaporation",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%tran,    &
+            "tran","kg m-2 s-1", "Canopy transpiration",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%es,      &
+            "es","kg m-2 s-1", "Soil evaporation",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%hfsbl,   &
+            "hfsbl","kg m-2 s-1", "Snow sublimation",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%mrro,    &
+            "mrro","kg m-2 s-1", "Total runoff",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%mrros,   &
+            "mrros","kg m-2 s-1", "Surface runoff",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%mrrob,   &
+            "mrrob","kg m-2 s-1", "Subsurface runoff",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%mrso,    &
+            "mrso","kg m-2", "soil moisture in each soil layer",str_freq,nlayers)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%tsl,     &
+            "tsl","K", "soil temperature in each soil layer",str_freq,nlayers)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%tsland,  &
+            "tsland","K", "surface temperature",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%wtd,     &
+            "wtd","m", "Water table depth",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%snd,     &
+            "snd","m", "Total snow depth",str_freq,1)
+        call write_mcmc_nc(mc_outdir, ntime, nSimuLen, write_data%lai,     &
+            "lai","m2 m-2", "Leaf area index",str_freq,1)
+
+    end subroutine write_outputs_nc
+
+    subroutine write_mcmc_nc(outfile, ntime, nSimuLen, data, varName, unit, description, freq, nSoilLayer)
+        IMPLICIT NONE
+        real(kind=4), Dimension(ntime, nSimuLen, nSoilLayer), intent(in) :: data
+        integer(kind=4) :: nSoilLayer
+        integer(KIND=4) :: ncid, simuid, timid, dp_dimid, simuvarid, timvarid
+        integer(kind=4) :: varid
+        integer(kind=4), intent(in) :: ntime, nSimuLen
+        CHARACTER(LEN=*), INTENT(IN) :: outfile, freq
+        CHARACTER(len=*), intent(in) :: varName, unit, description
+        character(len=:), allocatable :: nc_fileName
+        character(len=100) :: timeUnit
+        integer itime
+        real, dimension(nSimuLen) :: time_values 
+        integer nsimu_values(100)
+        integer :: start(1), count(1)
+        
+        allocate(character(len=200+len(outfile)) :: nc_fileName)
+        nc_fileName = adjustl(trim(outfile))//"/"//adjustl(trim(varName))//"_"//freq//"_TECO-SPRUCE_"//&
+            & adjustl(trim(simu_name))//"_"//adjustl(trim(str_startyr))//"-"//adjustl(trim(str_endyr))//".nc"   
+        
+        !Create the netCDF file.
+        CALL check_mc(nf90_create(nc_fileName, NF90_CLOBBER, ncid))
+
+        !Define the dimensions.
+        CALL check_mc(nf90_def_dim(ncid, "nSimu", ntime,    simuid))
+        CALL check_mc(nf90_def_dim(ncid, "time",  nSimuLen, timid))
+    
+        if (nSoilLayer>1)then
+            call check_mc(nf90_def_dim(ncid, "depth", nSoilLayer, dp_dimid))
+            CALL check_mc(nf90_def_var(ncid = ncid, name = varName,  xtype = NF90_FLOAT, &
+                & dimids = (/simuid, timid, dp_dimid/),  varID =varid))
+        else
+            CALL check_mc(nf90_def_var(ncid = ncid, name = varName,  xtype = NF90_FLOAT, &
+                & dimids = (/simuid, timid/),  varID =varid))
+        endif
+        call check_mc(nf90_def_var(ncid, "nSimu", NF90_DOUBLE, simuid, simuvarid))
+        call check_mc(nf90_def_var(ncid, "time",  NF90_DOUBLE, timid,  timvarid))
+        !Define data variable
+        
+        !Add attributes
+        if (freq .eq. "hourly") then
+            timeUnit = "hours since "//adjustl(trim(str_startyr))//"-01-01 00:00:00"
+        else if (freq .eq. "daily") then
+            timeUnit = "days since "//adjustl(trim(str_startyr))//"-01-01 00:00:00"
+        else if (freq .eq. "monthly") then
+            timeUnit = "months since "//adjustl(trim(str_startyr))//"-01-01 00:00:00"
+        end if
+        
+        ! call check_mc(nf90_put_att(ncid,simuvarid,"",adjustl(trim(timeUnit))))
+        call check_mc(nf90_put_att(ncid,timvarid,"units",adjustl(trim(timeUnit))))
+        CALL check_mc(nf90_put_att(ncid,varid,"units",unit))
+        CALL check_mc(nf90_put_att(ncid,varid,"description",description))
+        CALL check_mc(nf90_enddef(ncid)) 
+        !End Definitions
+
+        !Write Data
+        ! if (nSoilLayer>1)then
+        !     do i = 1, nSoilLayer
+        !         CALL check(nf90_put_var(ncid, varid, data, start=[1,i], count=[nSimuLen,1]))
+        !     enddo
+        ! else
+
+        do itime = 1, nSimuLen
+            time_values(itime) = itime-1
+        enddo
+        start = 1
+        count = nSimuLen
+        do itime = 1, 100
+            nsimu_values(itime) = itime
+        enddo
+        call check_mc(nf90_put_var(ncid, timvarid, nsimu_values))
+        CALL check_mc(nf90_put_var(ncid, timvarid, time_values,start,count))
+        CALL check_mc(nf90_put_var(ncid, varid, data))
+        
+        CALL check_mc(nf90_close(ncid))
+    end subroutine write_mcmc_nc
+
+    ! check (ever so slightly modified from www.unidata.ucar.edu)
+    subroutine check_mc(istatus)
+        ! use netcdf
+        implicit none
+        integer, intent(in) :: istatus
+        if(istatus /= nf90_noerr) then
+            write(*,*) trim(adjustl(nf90_strerror(istatus)))
+        end if
+    end subroutine check_mc
 
     subroutine generate_random_numbers(min_value, max_value, rand_number)
         implicit none
@@ -294,7 +671,7 @@ contains
         if (allocated(dataType%cSoilFast))    deallocate(dataType%cSoilFast)
         if (allocated(dataType%cSoilSlow))    deallocate(dataType%cSoilSlow)
         if (allocated(dataType%cSoilPassive)) deallocate(dataType%cSoilPassive)
-        if (allocated(dataType%CH4))         deallocate(dataType%CH4)
+        if (allocated(dataType%CH4))          deallocate(dataType%CH4)
         ! Nitrogen fluxes (kgN m-2 s-1)
         if (allocated(dataType%fBNF))         deallocate(dataType%fBNF)
         if (allocated(dataType%fN2O))         deallocate(dataType%fN2O)

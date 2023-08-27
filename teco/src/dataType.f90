@@ -34,6 +34,10 @@ module mod_data
     character(250) :: outDir_spinup   = "results_spinup"
     character(250) :: outfile_spinup  = "results_spinup.nc"
     character(250) :: outDir_mcmc     = "results_MCMC"
+    character(250) :: outDir_mcmc_h   = "results_MCMC_hourly"
+    character(250) :: outDir_mcmc_d   = "results_MCMC_daily"
+    character(250) :: outDir_mcmc_m   = "results_MCMC_monthly"
+
     
     ! experiment settings
     real :: Ttreat     = 0.        ! Temperature treatment, warming in air and soil temperature

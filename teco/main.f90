@@ -124,6 +124,12 @@ subroutine createNewCase()
     if (do_mcmc)then
         outDir_mcmc = adjustl(trim(outdir_case))//"/"//adjustl(trim(outDir_mcmc))
         call CreateFolder(adjustl(trim(outDir_mcmc)))
+        outDir_mcmc_h = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_h))
+        outDir_mcmc_d = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_d))
+        outDir_mcmc_m = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_m))
+        call CreateFolder(adjustl(trim(outDir_mcmc_h)))
+        call CreateFolder(adjustl(trim(outDir_mcmc_d)))
+        call CreateFolder(adjustl(trim(outDir_mcmc_m)))
     endif
 
     if(do_restart)then
