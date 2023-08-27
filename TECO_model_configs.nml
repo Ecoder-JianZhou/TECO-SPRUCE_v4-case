@@ -11,6 +11,11 @@
     do_ndep    = False
     do_leap    = False
 
+    do_out_hr  = False
+    do_out_day = True
+    do_out_mon = True
+    do_out_yr  = False
+
     dtimes     = 24                          ! hourly simulation
     nSpecParams = 60
     ! input path and files (input files must be put in the input filepath)

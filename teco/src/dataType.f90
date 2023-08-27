@@ -12,6 +12,10 @@ module mod_data
     logical :: do_ndep          ! N deposit
     logical :: do_simu          ! ?
     logical :: do_leap          ! judge leap year or not
+    logical :: do_out_hr
+    logical :: do_out_day
+    logical :: do_out_mon
+    logical :: do_out_yr
 
     integer :: dtimes                 ! 24: hourly simulation
     integer :: nSpecParams            ! How many special parameters
@@ -511,14 +515,15 @@ module mod_data
         implicit none
         integer io
 
-        namelist /nml_simu_settings/ simu_name, do_spinup, do_mcmc, do_snow,         & 
-            do_soilphy, do_matrix, do_EBG, do_restart, do_ndep, do_simu, do_leap,    &
-            dtimes,nSpecParams, filepath_in,  climfile, snowdepthfile, watertablefile,           &
+        namelist /nml_simu_settings/ simu_name, do_spinup, do_mcmc, do_snow,          & 
+            do_soilphy, do_matrix, do_EBG, do_restart, do_ndep, do_simu, do_leap,     &
+            do_out_hr, do_out_day, do_out_mon, do_out_yr,                             &
+            dtimes,nSpecParams, filepath_in, climfile, snowdepthfile, watertablefile, &
             restartfile, outdir 
         namelist /nml_exps/ Ttreat, CO2treat, N_fert
         namelist /nml_params/ lat, lon, wsmax, wsmin, LAIMAX, LAIMIN, rdepth,        & 
             Rootmax, Stemmax, SapR, SapS, SLAx, GLmax, GRmax, Gsmax, stom_n,         &
-            a1, Ds0, Vcmax0, extkU, xfang, alpha, Tau_Leaf, Tau_Wood, Tau_Root,       &
+            a1, Ds0, Vcmax0, extkU, xfang, alpha, Tau_Leaf, Tau_Wood, Tau_Root,      &
             Tau_F, Tau_C, Tau_Micro, Tau_SlowSOM, Tau_Passive, gddonset, Q10,Q10rh,  &
             Rl0, Rs0, Rr0, r_me, Q10pro, kCH4, Omax, CH4_thre, Tveg, Tpro_me,        & 
             Toxi, f, bubprob, Vmaxfraction, JV, Entrpy, etaL, etaW, etaR, f_F2M,     &

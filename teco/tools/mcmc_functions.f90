@@ -7,6 +7,7 @@ module mcmc_functions
 
     integer npar, nDAsimu, ncov
     real search_scale
+    logical :: do_mc_out_hr, do_mc_out_day, do_mc_out_mon, do_mc_out_yr
 
     real mc_lat, mc_Longitude, mc_wsmax, mc_wsmin
     real mc_LAIMAX, mc_LAIMIN, mc_rdepth, mc_Rootmax, mc_Stemmax
@@ -82,13 +83,29 @@ module mcmc_functions
         mc_iyear = 1
         mc_iday  = 1
         mc_ihour = 1
-        npar     = nSpecParams
-        allocate(parnames(npar))
     end subroutine mcmc_functions_init
 
     subroutine readConfsNml()
     ! default nml file name of "TECO_MCMC_configs.nml"
         implicit none
+        character(20) :: parnames_1, parnames_2, parnames_3, parnames_4, parnames_5 
+        character(20) :: parnames_6, parnames_7, parnames_8, parnames_9, parnames_10
+
+        character(20) :: parnames_11, parnames_12, parnames_13, parnames_14, parnames_15 
+        character(20) :: parnames_16, parnames_17, parnames_18, parnames_19, parnames_20
+
+        character(20) :: parnames_21, parnames_22, parnames_23, parnames_24, parnames_25 
+        character(20) :: parnames_26, parnames_27, parnames_28, parnames_29, parnames_30
+
+        character(20) :: parnames_31, parnames_32, parnames_33, parnames_34, parnames_35 
+        character(20) :: parnames_36, parnames_37, parnames_38, parnames_39, parnames_40
+
+        character(20) :: parnames_41, parnames_42, parnames_43, parnames_44, parnames_45 
+        character(20) :: parnames_46, parnames_47, parnames_48, parnames_49, parnames_50
+
+        character(20) :: parnames_51, parnames_52, parnames_53, parnames_54, parnames_55 
+        character(20) :: parnames_56, parnames_57, parnames_58, parnames_59, parnames_60 
+
         namelist /nml_parval/ mc_lat, mc_Longitude, mc_wsmax, mc_wsmin,            &                                                    
                 mc_LAIMAX, mc_LAIMIN, mc_rdepth, mc_Rootmax, mc_Stemmax,           &                        
                 mc_SapR, mc_SapS, mc_SLA, mc_GLmax, mc_GRmax, mc_Gsmax, mc_stom_n, &            
@@ -135,11 +152,23 @@ module mcmc_functions
                 obsfile_gpp_h, obsfile_nee_h, obsfile_reco_h, obsfile_ch4_h, &
                 obsfile_cleaf, obsfile_cwood
 
-        namelist /nml_param_names/parnames
+        namelist /nml_param_names/parnames_1, parnames_2, parnames_3, parnames_4, parnames_5, & 
+                parnames_6, parnames_7, parnames_8, parnames_9, parnames_10, &
+                parnames_11, parnames_12, parnames_13, parnames_14, parnames_15, & 
+                parnames_16, parnames_17, parnames_18, parnames_19, parnames_20, &
+                parnames_21, parnames_22, parnames_23, parnames_24, parnames_25, &
+                parnames_26, parnames_27, parnames_28, parnames_29, parnames_30, &
+                parnames_31, parnames_32, parnames_33, parnames_34, parnames_35, &
+                parnames_36, parnames_37, parnames_38, parnames_39, parnames_40, &
+                parnames_41, parnames_42, parnames_43, parnames_44, parnames_45, & 
+                parnames_46, parnames_47, parnames_48, parnames_49, parnames_50, &
+                parnames_51, parnames_52, parnames_53, parnames_54, parnames_55, &
+                parnames_56, parnames_57, parnames_58, parnames_59, parnames_60
 
-        namelist /nml_mcmc_settings/ nDAsimu, search_scale, ncov
-
+        namelist /nml_mcmc_settings/ nDAsimu, search_scale, ncov, &
+                do_mc_out_hr, do_mc_out_day, do_mc_out_mon, do_mc_out_yr
         
+        allocate(parnames(npar))
 
         allocate(parval(npar), parmin(npar), parmax(npar))
         open(83, file="TECO_MCMC_configs.nml")
@@ -154,6 +183,68 @@ module mcmc_functions
         call giveValues2par(parmax)
         
         close(83)
+
+        parnames(1)  = parnames_1
+        parnames(2)  = parnames_2
+        parnames(3)  = parnames_3
+        parnames(4)  = parnames_4
+        parnames(5)  = parnames_5 
+        parnames(6)  = parnames_6
+        parnames(7)  = parnames_7
+        parnames(8)  = parnames_8
+        parnames(9)  = parnames_9
+        parnames(10) = parnames_10
+        parnames(11)  = parnames_11
+        parnames(12)  = parnames_12
+        parnames(13)  = parnames_13
+        parnames(14)  = parnames_14
+        parnames(15)  = parnames_15 
+        parnames(16)  = parnames_16
+        parnames(17)  = parnames_17
+        parnames(18)  = parnames_18
+        parnames(19)  = parnames_19
+        parnames(20)  = parnames_20
+        parnames(21)  = parnames_21
+        parnames(22)  = parnames_22
+        parnames(23)  = parnames_23
+        parnames(24)  = parnames_24
+        parnames(25)  = parnames_25 
+        parnames(26)  = parnames_26
+        parnames(27)  = parnames_27
+        parnames(28)  = parnames_28
+        parnames(29)  = parnames_29
+        parnames(30)  = parnames_30
+        parnames(31)  = parnames_31
+        parnames(32)  = parnames_32
+        parnames(33)  = parnames_33
+        parnames(34)  = parnames_34
+        parnames(35)  = parnames_35 
+        parnames(36)  = parnames_36
+        parnames(37)  = parnames_37
+        parnames(38)  = parnames_38
+        parnames(39)  = parnames_39
+        parnames(40)  = parnames_40
+        parnames(41)  = parnames_41
+        parnames(42)  = parnames_42
+        parnames(43)  = parnames_43
+        parnames(44)  = parnames_44
+        parnames(45)  = parnames_45 
+        parnames(46)  = parnames_46
+        parnames(47)  = parnames_47
+        parnames(48)  = parnames_48
+        parnames(49)  = parnames_49
+        parnames(50)  = parnames_50        
+        parnames(51)  = parnames_51
+        parnames(52)  = parnames_52
+        parnames(53)  = parnames_53
+        parnames(54)  = parnames_54
+        parnames(55)  = parnames_55 
+        parnames(56)  = parnames_56
+        parnames(57)  = parnames_57
+        parnames(58)  = parnames_58
+        parnames(59)  = parnames_59
+        parnames(60)  = parnames_60
+
 
         ! give the filepath to each variable
         vars4MCMC%gpp_d%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_gpp_d))
@@ -343,7 +434,7 @@ module mcmc_functions
 
     subroutine giveValues2par(arr_par)
         implicit none
-        real, dimension(npar) :: arr_par
+        real, intent(inout) :: arr_par(:)
 
         arr_par(1)  = mc_lat
         arr_par(2)  = mc_Longitude 

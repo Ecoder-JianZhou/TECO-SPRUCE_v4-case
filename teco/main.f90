@@ -110,6 +110,7 @@ subroutine createNewCase()
     outDir_d = adjustl(trim(outdir_nc))//"/"//adjustl(trim(outDir_d))
     outDir_m = adjustl(trim(outdir_nc))//"/"//adjustl(trim(outDir_m))
     outDir_y = adjustl(trim(outdir_nc))//"/"//adjustl(trim(outDir_y))
+    
     call CreateFolder(adjustl(trim(outDir_h)))
     call CreateFolder(adjustl(trim(outDir_d)))
     call CreateFolder(adjustl(trim(outDir_m)))
@@ -124,12 +125,18 @@ subroutine createNewCase()
     if (do_mcmc)then
         outDir_mcmc = adjustl(trim(outdir_case))//"/"//adjustl(trim(outDir_mcmc))
         call CreateFolder(adjustl(trim(outDir_mcmc)))
-        outDir_mcmc_h = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_h))
-        outDir_mcmc_d = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_d))
-        outDir_mcmc_m = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_m))
-        call CreateFolder(adjustl(trim(outDir_mcmc_h)))
-        call CreateFolder(adjustl(trim(outDir_mcmc_d)))
-        call CreateFolder(adjustl(trim(outDir_mcmc_m)))
+        if (do_mc_out_hr)then
+            outDir_mcmc_h = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_h))
+            call CreateFolder(adjustl(trim(outDir_mcmc_h)))
+        endif
+        if (do_mc_out_day) then
+            outDir_mcmc_d = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_d))
+            call CreateFolder(adjustl(trim(outDir_mcmc_d)))
+        endif
+        if (do_mc_out_mon) then
+            outDir_mcmc_m = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_m))
+            call CreateFolder(adjustl(trim(outDir_mcmc_m)))
+        endif
     endif
 
     if(do_restart)then

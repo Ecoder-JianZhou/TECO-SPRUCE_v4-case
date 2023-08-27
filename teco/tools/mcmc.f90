@@ -10,7 +10,8 @@ module mod_mcmc
     ! real search_scale
 
     integer npar4DA, iDAsimu, upgraded, ipar, covexist
-    real, allocatable :: DAparmin(:), DAparmax(:),  DAparidx(:),  DApar(:), DApar_old(:)
+    real, allocatable :: DAparmin(:), DAparmax(:), DApar(:), DApar_old(:)
+    integer, allocatable :: DAparidx(:)
     real, allocatable :: MDparval(:), gamma(:,:), gamnew(:,:), coefhistory(:,:), coefnorm(:), coefac(:)
     real fact_rejet
     real J_last, J_new, accept_rate
@@ -21,7 +22,10 @@ module mod_mcmc
     contains
     subroutine init_mcmc()
         implicit none
-        real, allocatable :: temp_parmin(:), temp_parmax(:), temp_paridx(:), temp_parval(:)
+        real, allocatable :: temp_parmin(:), temp_parmax(:), temp_parval(:)
+        integer, allocatable :: temp_paridx(:)
+
+        npar     = nSpecParams
 
         ! read the nml file of MCMC configs (eg. TECO_MCMC_configs.nml)
         call readConfsNml()
@@ -82,6 +86,8 @@ module mod_mcmc
         
         print *, "# Start to run mcmc ..."
 
+        call generate_newPar()
+
         do iDAsimu = 1, nDAsimu
             write(*,*) iDAsimu, "/", nDAsimu, J_last, J_new, upgraded, accept_rate
             call mcmc_functions_init()  ! initialize the mc_itime ... variables
@@ -115,9 +121,15 @@ module mod_mcmc
                 if(new .ge. ncov)new=0
                 ! update the parameters sets
                 tot_paramsets(upgraded,:) = DApar
-                call mcmc_update_outputs(upgraded, tot_paramsets_outs_h, tot_outVars_h)
-                call mcmc_update_outputs(upgraded, tot_paramsets_outs_d, tot_outVars_d)
-                call mcmc_update_outputs(upgraded, tot_paramsets_outs_m, tot_outVars_m)
+                if (do_mc_out_hr) then
+                    call mcmc_update_outputs(upgraded, tot_paramsets_outs_h, tot_outVars_h)
+                endif
+                if (do_mc_out_day)then
+                    call mcmc_update_outputs(upgraded, tot_paramsets_outs_d, tot_outVars_d)
+                endif
+                if (do_mc_out_mon) then
+                    call mcmc_update_outputs(upgraded, tot_paramsets_outs_m, tot_outVars_m)
+                endif
             else
                 reject = reject + 1
             endif
@@ -146,7 +158,6 @@ module mod_mcmc
 
         ! summary
         call mcmc_param_outputs(upgraded, npar4DA, parnames, DAparidx)
-        call 
 
         ! deallocate
         deallocate(DAparmin)
@@ -203,8 +214,8 @@ module mod_mcmc
         ! vars4MCMC
         ! gpp_d
         if(vars4MCMC%gpp_d%existOrNot)then
-            write(*,*) "testMD: ", vars4MCMC%gpp_d%mdData(:,4)
-            write(*,*) "testOD: ", vars4MCMC%gpp_d%obsData(:,4)
+            ! write(*,*) "testMD: ", vars4MCMC%gpp_d%mdData(:,4)
+            ! write(*,*) "testOD: ", vars4MCMC%gpp_d%obsData(:,4)
             call CalculateCost(vars4MCMC%gpp_d%mdData(:,4), vars4MCMC%gpp_d%obsData(:,4),&
                  vars4MCMC%gpp_d%obsData(:,5), J_cost)
             J_new = J_new + J_cost
@@ -564,11 +575,17 @@ module mod_mcmc
         ! in MCMC_outputs module
         if(allocated(tot_paramsets)) deallocate(tot_paramsets)
         if(allocated(sel_paramsets)) deallocate(sel_paramsets)
-        call deallocate_mcmc_outs_type(sel_paramsets_outs_h)
-        call deallocate_mcmc_outs_type(sel_paramsets_outs_d)
-        call deallocate_mcmc_outs_type(sel_paramsets_outs_m)
-        call deallocate_mcmc_outs_type(tot_paramsets_outs_h)
-        call deallocate_mcmc_outs_type(tot_paramsets_outs_d)
-        call deallocate_mcmc_outs_type(tot_paramsets_outs_m)
+        if (do_mc_out_hr)then
+            call deallocate_mcmc_outs_type(sel_paramsets_outs_h)
+            call deallocate_mcmc_outs_type(tot_paramsets_outs_h)
+        endif
+        if (do_mc_out_day)then
+            call deallocate_mcmc_outs_type(sel_paramsets_outs_d)
+            call deallocate_mcmc_outs_type(tot_paramsets_outs_d)
+        endif
+        if (do_mc_out_mon)then
+            call deallocate_mcmc_outs_type(sel_paramsets_outs_m)
+            call deallocate_mcmc_outs_type(tot_paramsets_outs_m)
+        endif
     end subroutine deallocate_mcmc
 end module mod_mcmc

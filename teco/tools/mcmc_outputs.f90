@@ -1,5 +1,7 @@
 module MCMC_outputs
+    use netcdf
     use mod_data
+    use mcmc_functions
     implicit none
     ! This part of results will be stored in CSV-format
 
@@ -75,7 +77,7 @@ module MCMC_outputs
         real, allocatable :: lai(:, :)                     ! m2 m-2, Leaf area index            
     end type mcmc_outVars_type
 
-    real, allocatable :: tot_paramsets(:,:), upg_paramsets(:,:) sel_paramsets(:,:) 
+    real, allocatable :: tot_paramsets(:,:), upg_paramsets(:,:), sel_paramsets(:,:) 
     type(mcmc_outVars_type) sel_paramsets_outs_h
     type(mcmc_outVars_type) sel_paramsets_outs_d
     type(mcmc_outVars_type) sel_paramsets_outs_m
@@ -83,7 +85,10 @@ module MCMC_outputs
     type(mcmc_outVars_type) tot_paramsets_outs_h
     type(mcmc_outVars_type) tot_paramsets_outs_d
     type(mcmc_outVars_type) tot_paramsets_outs_m
-    integer, dimension(100) :: rand_number
+    
+    CHARACTER(len=4) :: str_startyr, str_endyr
+    integer, parameter :: nRand = 20
+    integer, dimension(nRand) :: rand_number
 
 contains
 
@@ -91,15 +96,24 @@ contains
         implicit none
         integer, intent(in) :: nDAsimu, npar4DA
 
+        write(str_startyr,"(I4)")forcing(1)%year
+        write(str_endyr,"(I4)")forcing(nforcing)%year
+
         allocate(tot_paramsets(nDAsimu,npar4DA))
-        allocate(sel_paramsets(100, npar4DA))    ! select 500 parameter sets
-        call allocate_mcmc_outs_type(100, nHours,  sel_paramsets_outs_h)
-        call allocate_mcmc_outs_type(100, nDays,   sel_paramsets_outs_d)
-        call allocate_mcmc_outs_type(100, nMonths, sel_paramsets_outs_m)
+        allocate(sel_paramsets(nRand, npar4DA))    ! select 500 parameter sets
+        if (do_mc_out_hr) then
+            call allocate_mcmc_outs_type(nRand, nHours,  sel_paramsets_outs_h)
+            call allocate_mcmc_outs_type(nDAsimu, nHours,  tot_paramsets_outs_h)
+        endif
+        if (do_mc_out_day) then
+            call allocate_mcmc_outs_type(nRand, nDays,   sel_paramsets_outs_d)
+            call allocate_mcmc_outs_type(nDAsimu, nDays,   tot_paramsets_outs_d)
+        endif
+        if (do_mc_out_mon) then
+            call allocate_mcmc_outs_type(nRand, nMonths, sel_paramsets_outs_m)
+            call allocate_mcmc_outs_type(nDAsimu, nMonths, tot_paramsets_outs_m)
+        endif
         ! allocate the total simulation results
-        call allocate_mcmc_outs_type(nDAsimu, nHours,  tot_paramsets_outs_h)
-        call allocate_mcmc_outs_type(nDAsimu, nDays,   tot_paramsets_outs_d)
-        call allocate_mcmc_outs_type(nDAsimu, nMonths, tot_paramsets_outs_m)
     end subroutine init_mcmc_outputs
 
     subroutine mcmc_param_outputs(nUpgraded, npar4DA, parnames, DAparidx)
@@ -121,7 +135,9 @@ contains
 
         ! delete the built-in
         nBuilt_in = int(0.1*nUpgraded)
+        if (nBuilt_in .lt. 1) nBuilt_in = 1
         allocate(upg_paramsets(nUpgraded - nBuilt_in, npar4DA))
+        write(*,*)"test_all", nBuilt_in, nUpgraded, size(tot_paramsets,1), size(tot_paramsets,2)
         upg_paramsets = tot_paramsets(nBuilt_in:nUpgraded, :)
 
         outfile_mc_ParamSets = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim("total_parameter_sets.txt"))
@@ -135,25 +151,37 @@ contains
 
         ! choose the random 100 parameter sets and simulations
         call generate_random_numbers(1, nUpgraded - nBuilt_in, rand_number)
-        do inum = 1, 100
+        do inum = 1, nRand
             sel_paramsets(inum, :) = upg_paramsets(rand_number(inum),:)
-            call select_mcmc_simu_outputs(rand_number(inum), inum, tot_paramsets_outs_h, sel_paramsets_outs_h)
-            call select_mcmc_simu_outputs(rand_number(inum), inum, tot_paramsets_outs_d, sel_paramsets_outs_d)
-            call select_mcmc_simu_outputs(rand_number(inum), inum, tot_paramsets_outs_m, sel_paramsets_outs_m)
+            if (do_mc_out_hr) then
+                call select_mcmc_simu_outputs(rand_number(inum), inum, tot_paramsets_outs_h, sel_paramsets_outs_h)
+            endif
+            if (do_mc_out_day) then
+                call select_mcmc_simu_outputs(rand_number(inum), inum, tot_paramsets_outs_d, sel_paramsets_outs_d)
+            endif
+            if (do_mc_out_mon) then
+                call select_mcmc_simu_outputs(rand_number(inum), inum, tot_paramsets_outs_m, sel_paramsets_outs_m)
+            endif
         enddo
 
         outfile_mc_ParamSets = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim("sel_parameter_sets.txt"))
         open(137, file=outfile_mc_ParamSets, status='replace')
         write(137, *) header_line(2:)
-        do iline = 1, 100
+        do iline = 1, nRand
             write(137, '(*(ES10.3,:,","))') sel_paramsets(iline,:)
         enddo
         close(137)
 
         ! save the selected simulations to nc format results
-        call write_outputs_nc(outDir_mcmc_h, 100, nHours,  sel_paramsets_outs_h, "hourly")
-        call write_outputs_nc(outDir_mcmc_d, 100, nDays,   sel_paramsets_outs_d, "daily")
-        call write_outputs_nc(outDir_mcmc_m, 100, nMonths, sel_paramsets_outs_m, "monthly")
+        if (do_mc_out_hr) then
+            call write_outputs_nc(outDir_mcmc_h, nRand, nHours,  sel_paramsets_outs_h, "hourly")
+        endif
+        if (do_mc_out_day) then
+            call write_outputs_nc(outDir_mcmc_d, nRand, nDays,   sel_paramsets_outs_d, "daily")
+        endif
+        if (do_mc_out_mon) then
+            call write_outputs_nc(outDir_mcmc_m, nRand, nMonths, sel_paramsets_outs_m, "monthly")
+        endif
 
         ! deallocate
         deallocate(DA_parname)
@@ -164,83 +192,83 @@ contains
         implicit none
         integer, intent(in) :: idx_tot, idx_sel
         type(mcmc_outVars_type), intent(in) :: total_simus
-        type(mcmc_outVars_type), intent(out) :: selected_simus
+        type(mcmc_outVars_type), intent(inout) :: selected_simus
         
-        selected_simus%gpp(upgraded, :)            = total_simus%gpp(idx_tot, :)   
-        selected_simus%nee(upgraded, :)            = total_simus%nee(idx_tot, :)
-        selected_simus%npp(upgraded, :)            = total_simus%npp(idx_tot, :)
-        selected_simus%nppLeaf(upgraded, :)        = total_simus%nppLeaf(idx_tot, :)
-        selected_simus%nppWood(upgraded, :)        = total_simus%nppWood(idx_tot, :)
-        selected_simus%nppStem(upgraded, :)        = total_simus%nppStem(idx_tot, :)
-        selected_simus%nppRoot(upgraded, :)        = total_simus%nppRoot(idx_tot, :)
-        selected_simus%nppOther(upgraded, :)       = total_simus%nppOther(idx_tot, :)
-        selected_simus%ra(upgraded, :)             = total_simus%ra(idx_tot, :)
-        selected_simus%raLeaf(upgraded, :)         = total_simus%raLeaf(idx_tot, :)
-        selected_simus%raStem(upgraded, :)         = total_simus%raStem(idx_tot, :)
-        selected_simus%raRoot(upgraded, :)         = total_simus%raRoot(idx_tot, :)
-        selected_simus%raOther(upgraded, :)        = total_simus%raOther(idx_tot, :)
-        selected_simus%rMaint(upgraded, :)         = total_simus%rMaint(idx_tot, :)
-        selected_simus%rGrowth(upgraded, :)        = total_simus%rGrowth(idx_tot, :)
-        selected_simus%rh(upgraded, :)             = total_simus%rh(idx_tot, :)
-        selected_simus%nbp(upgraded, :)            = total_simus%nbp(idx_tot, :)
-        selected_simus%wetlandCH4(upgraded, :)     = total_simus%wetlandCH4(idx_tot, :)
-        selected_simus%wetlandCH4prod(upgraded, :) = total_simus%wetlandCH4prod(idx_tot, :)
-        selected_simus%wetlandCH4cons(upgraded, :) = total_simus%wetlandCH4cons(idx_tot, :)
+        selected_simus%gpp(idx_sel, :)            = total_simus%gpp(idx_tot, :)   
+        selected_simus%nee(idx_sel, :)            = total_simus%nee(idx_tot, :)
+        selected_simus%npp(idx_sel, :)            = total_simus%npp(idx_tot, :)
+        selected_simus%nppLeaf(idx_sel, :)        = total_simus%nppLeaf(idx_tot, :)
+        selected_simus%nppWood(idx_sel, :)        = total_simus%nppWood(idx_tot, :)
+        selected_simus%nppStem(idx_sel, :)        = total_simus%nppStem(idx_tot, :)
+        selected_simus%nppRoot(idx_sel, :)        = total_simus%nppRoot(idx_tot, :)
+        selected_simus%nppOther(idx_sel, :)       = total_simus%nppOther(idx_tot, :)
+        selected_simus%ra(idx_sel, :)             = total_simus%ra(idx_tot, :)
+        selected_simus%raLeaf(idx_sel, :)         = total_simus%raLeaf(idx_tot, :)
+        selected_simus%raStem(idx_sel, :)         = total_simus%raStem(idx_tot, :)
+        selected_simus%raRoot(idx_sel, :)         = total_simus%raRoot(idx_tot, :)
+        selected_simus%raOther(idx_sel, :)        = total_simus%raOther(idx_tot, :)
+        selected_simus%rMaint(idx_sel, :)         = total_simus%rMaint(idx_tot, :)
+        selected_simus%rGrowth(idx_sel, :)        = total_simus%rGrowth(idx_tot, :)
+        selected_simus%rh(idx_sel, :)             = total_simus%rh(idx_tot, :)
+        selected_simus%nbp(idx_sel, :)            = total_simus%nbp(idx_tot, :)
+        selected_simus%wetlandCH4(idx_sel, :)     = total_simus%wetlandCH4(idx_tot, :)
+        selected_simus%wetlandCH4prod(idx_sel, :) = total_simus%wetlandCH4prod(idx_tot, :)
+        selected_simus%wetlandCH4cons(idx_sel, :) = total_simus%wetlandCH4cons(idx_tot, :)
         ! Carbon Pools  (KgC m-2)
-        selected_simus%cLeaf(upgraded, :)          = total_simus%cLeaf(idx_tot, :)
-        selected_simus%cStem(upgraded, :)          = total_simus%cStem(idx_tot, :)
-        selected_simus%cRoot(upgraded, :)          = total_simus%cRoot(idx_tot, :)
-        selected_simus%cOther(upgraded, :)         = total_simus%cOther(idx_tot, :)
-        selected_simus%cLitter(upgraded, :)        = total_simus%cLitter(idx_tot, :)
-        selected_simus%cLitterCwd(upgraded, :)     = total_simus%cLitterCwd(idx_tot, :)
-        selected_simus%cSoil(upgraded, :)          = total_simus%cSoil(idx_tot, :)
-        selected_simus%cSoilLevels(upgraded, :, :) = total_simus%cSoilLevels(idx_tot, :)
-        selected_simus%cSoilFast(upgraded, :)      = total_simus%cSoilFast(idx_tot, :)
-        selected_simus%cSoilSlow(upgraded, :)      = total_simus%cSoilSlow(idx_tot, :)
-        selected_simus%cSoilPassive(upgraded, :)   = total_simus%cSoilPassive(idx_tot, :)
-        selected_simus%CH4(upgraded, :, :)         = total_simus%CH4(idx_tot, :)
+        selected_simus%cLeaf(idx_sel, :)          = total_simus%cLeaf(idx_tot, :)
+        selected_simus%cStem(idx_sel, :)          = total_simus%cStem(idx_tot, :)
+        selected_simus%cRoot(idx_sel, :)          = total_simus%cRoot(idx_tot, :)
+        selected_simus%cOther(idx_sel, :)         = total_simus%cOther(idx_tot, :)
+        selected_simus%cLitter(idx_sel, :)        = total_simus%cLitter(idx_tot, :)
+        selected_simus%cLitterCwd(idx_sel, :)     = total_simus%cLitterCwd(idx_tot, :)
+        selected_simus%cSoil(idx_sel, :)          = total_simus%cSoil(idx_tot, :)
+        selected_simus%cSoilLevels(idx_sel, :, :) = total_simus%cSoilLevels(idx_tot,:, :)
+        selected_simus%cSoilFast(idx_sel, :)      = total_simus%cSoilFast(idx_tot, :)
+        selected_simus%cSoilSlow(idx_sel, :)      = total_simus%cSoilSlow(idx_tot, :)
+        selected_simus%cSoilPassive(idx_sel, :)   = total_simus%cSoilPassive(idx_tot, :)
+        selected_simus%CH4(idx_sel, :, :)         = total_simus%CH4(idx_tot, :, :)
         ! Nitrogen fluxes (kgN m-2 s-1)
-        selected_simus%fBNF(upgraded, :)           = total_simus%fBNF(idx_tot, :)
-        selected_simus%fN2O(upgraded, :)           = total_simus%fN2O(idx_tot, :)
-        selected_simus%fNloss(upgraded, :)         = total_simus%fNloss(idx_tot, :)
-        selected_simus%fNnetmin(upgraded, :)       = total_simus%fNnetmin(idx_tot, :)
-        selected_simus%fNdep(upgraded, :)          = total_simus% fNdep(idx_tot, :)
+        selected_simus%fBNF(idx_sel, :)           = total_simus%fBNF(idx_tot, :)
+        selected_simus%fN2O(idx_sel, :)           = total_simus%fN2O(idx_tot, :)
+        selected_simus%fNloss(idx_sel, :)         = total_simus%fNloss(idx_tot, :)
+        selected_simus%fNnetmin(idx_sel, :)       = total_simus%fNnetmin(idx_tot, :)
+        selected_simus%fNdep(idx_sel, :)          = total_simus% fNdep(idx_tot, :)
         ! Nitrogen pools (kgN m-2)
-        selected_simus%nLeaf(upgraded, :)          = total_simus%nLeaf(idx_tot, :)
-        selected_simus%nStem(upgraded, :)          = total_simus%nStem(idx_tot, :)
-        selected_simus%nRoot(upgraded, :)          = total_simus%nRoot(idx_tot, :)
-        selected_simus%nOther(upgraded, :)         = total_simus%nOther(idx_tot, :)
-        selected_simus%nLitter(upgraded, :)        = total_simus%nLitter(idx_tot, :)
-        selected_simus%nLitterCwd(upgraded, :)     = total_simus%nLitterCwd(idx_tot, :)
-        selected_simus%nSoil(upgraded, :)          = total_simus%nSoil(idx_tot, :)
-        selected_simus%nMineral(upgraded, :)       = total_simus%nMineral(idx_tot, :)
+        selected_simus%nLeaf(idx_sel, :)          = total_simus%nLeaf(idx_tot, :)
+        selected_simus%nStem(idx_sel, :)          = total_simus%nStem(idx_tot, :)
+        selected_simus%nRoot(idx_sel, :)          = total_simus%nRoot(idx_tot, :)
+        selected_simus%nOther(idx_sel, :)         = total_simus%nOther(idx_tot, :)
+        selected_simus%nLitter(idx_sel, :)        = total_simus%nLitter(idx_tot, :)
+        selected_simus%nLitterCwd(idx_sel, :)     = total_simus%nLitterCwd(idx_tot, :)
+        selected_simus%nSoil(idx_sel, :)          = total_simus%nSoil(idx_tot, :)
+        selected_simus%nMineral(idx_sel, :)       = total_simus%nMineral(idx_tot, :)
         ! energy fluxes (W m-2)
-        selected_simus%hfls(upgraded, :)           = total_simus%hfls(idx_tot, :)
-        selected_simus%hfss(upgraded, :)           = total_simus%hfss(idx_tot, :)
-        selected_simus%SWnet(upgraded, :)          = total_simus%SWnet(idx_tot, :)
-        selected_simus%LWnet(upgraded, :)          = total_simus%LWnet(idx_tot, :)
+        selected_simus%hfls(idx_sel, :)           = total_simus%hfls(idx_tot, :)
+        selected_simus%hfss(idx_sel, :)           = total_simus%hfss(idx_tot, :)
+        selected_simus%SWnet(idx_sel, :)          = total_simus%SWnet(idx_tot, :)
+        selected_simus%LWnet(idx_sel, :)          = total_simus%LWnet(idx_tot, :)
         ! water fluxes (kg m-2 s-1)
-        selected_simus%ec(upgraded, :)             = total_simus%ec(idx_tot, :)
-        selected_simus%tran(upgraded, :)           = total_simus%tran(idx_tot, :)
-        selected_simus%es(upgraded, :)             = total_simus%es(idx_tot, :)
-        selected_simus%hfsbl(upgraded, :)          = total_simus%hfsbl(idx_tot, :)
-        selected_simus%mrro(upgraded, :)           = total_simus%mrro(idx_tot, :)
-        selected_simus%mrros(upgraded, :)          = total_simus%mrros(idx_tot, :)
-        selected_simus%mrrob(upgraded, :)          = total_simus%mrrob(idx_tot, :)
+        selected_simus%ec(idx_sel, :)             = total_simus%ec(idx_tot, :)
+        selected_simus%tran(idx_sel, :)           = total_simus%tran(idx_tot, :)
+        selected_simus%es(idx_sel, :)             = total_simus%es(idx_tot, :)
+        selected_simus%hfsbl(idx_sel, :)          = total_simus%hfsbl(idx_tot, :)
+        selected_simus%mrro(idx_sel, :)           = total_simus%mrro(idx_tot, :)
+        selected_simus%mrros(idx_sel, :)          = total_simus%mrros(idx_tot, :)
+        selected_simus%mrrob(idx_sel, :)          = total_simus%mrrob(idx_tot, :)
         ! other
-        selected_simus%mrso(upgraded, :, :)        = total_simus%mrso(idx_tot, :)
-        selected_simus%tsl(upgraded, :, :)         = total_simus%tsl(idx_tot, :)
-        selected_simus%tsland(upgraded, :)         = total_simus%tsland(idx_tot, :)
-        selected_simus%wtd(upgraded, :)            = total_simus%wtd(idx_tot, :)
-        selected_simus%snd(upgraded, :)            = total_simus%snd(idx_tot, :)
-        selected_simus%lai(upgraded, :)            = total_simus%lai(idx_tot, :)
+        selected_simus%mrso(idx_sel, :, :)        = total_simus%mrso(idx_tot,:, :)
+        selected_simus%tsl(idx_sel, :, :)         = total_simus%tsl(idx_tot,:, :)
+        selected_simus%tsland(idx_sel, :)         = total_simus%tsland(idx_tot, :)
+        selected_simus%wtd(idx_sel, :)            = total_simus%wtd(idx_tot, :)
+        selected_simus%snd(idx_sel, :)            = total_simus%snd(idx_tot, :)
+        selected_simus%lai(idx_sel, :)            = total_simus%lai(idx_tot, :)
         return
     end subroutine select_mcmc_simu_outputs
 
     subroutine mcmc_update_outputs(upgraded, dataType, simu_outputs)
         implicit none
         integer, intent(in) :: upgraded
-        type(mcmc_outVars_type), intent(out)   :: dataType
+        type(mcmc_outVars_type), intent(inout)   :: dataType
         type(tot_output_vars_type), intent(in) :: simu_outputs
 
         dataType%gpp(upgraded, :)            = simu_outputs%gpp    
@@ -458,7 +486,7 @@ contains
         character(len=100) :: timeUnit
         integer itime
         real, dimension(nSimuLen) :: time_values 
-        integer nsimu_values(100)
+        integer nsimu_values(nRand)
         integer :: start(1), count(1)
         
         allocate(character(len=200+len(outfile)) :: nc_fileName)
@@ -512,10 +540,10 @@ contains
         enddo
         start = 1
         count = nSimuLen
-        do itime = 1, 100
+        do itime = 1, nRand
             nsimu_values(itime) = itime
         enddo
-        call check_mc(nf90_put_var(ncid, timvarid, nsimu_values))
+        call check_mc(nf90_put_var(ncid, simuvarid, nsimu_values))
         CALL check_mc(nf90_put_var(ncid, timvarid, time_values,start,count))
         CALL check_mc(nf90_put_var(ncid, varid, data))
         
@@ -532,9 +560,9 @@ contains
         end if
     end subroutine check_mc
 
-    subroutine generate_random_numbers(min_value, max_value, rand_number)
+    subroutine generate_random_numbers(min_value, max_value, res_rand)
         implicit none
-        integer, dimension(:), intent(out) :: rand_number
+        integer, dimension(:), intent(inout) :: res_rand
         integer, intent(in) :: min_value, max_value
         integer :: i, j, temp, range_size, available_numbers
         integer, dimension(max_value - min_value + 1) :: all_numbers
@@ -558,7 +586,7 @@ contains
         end do
 
         ! get the before N random number 
-        rand_number = all_numbers(1:size(rand_number))
+        res_rand = all_numbers(1:size(res_rand,1))
     end subroutine generate_random_numbers
 
     subroutine allocate_mcmc_outs_type(ntime, nSimuLen, dataType)
