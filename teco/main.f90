@@ -77,6 +77,7 @@ end program TECO
 
 subroutine createNewCase()
     use mod_data
+    use mcmc_functions
     implicit none
     ! create a new case to run the TECO model
     !   * create the output path
