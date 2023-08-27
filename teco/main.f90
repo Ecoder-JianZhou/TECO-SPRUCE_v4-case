@@ -4,6 +4,7 @@ program TECO
     use mod_mcmc
     use driver
     use mod_ncd_io
+    use mcmc_functions
 
     implicit none
     integer :: count_mode 
