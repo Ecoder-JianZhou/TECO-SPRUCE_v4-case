@@ -1,5 +1,5 @@
 &nml_simu_settings
-    simu_name  = "run_MCMC_SPRUCE_test"
+    simu_name  = "run_MCMC_SPRUCE_test_1"
     do_simu    = False
     do_spinup  = False                     ! run spinup or not
     do_mcmc    = True                     ! run mcmc or not

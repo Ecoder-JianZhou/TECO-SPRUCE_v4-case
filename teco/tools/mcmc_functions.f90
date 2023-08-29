@@ -5,7 +5,7 @@ module mcmc_functions
 
     ! parameters and observation files
 
-    integer npar, nDAsimu, ncov
+    integer npar, nDAsimu, ncov, nRand
     real search_scale
     logical :: do_mc_out_hr, do_mc_out_day, do_mc_out_mon, do_mc_out_yr
 
@@ -165,7 +165,7 @@ module mcmc_functions
                 parnames_51, parnames_52, parnames_53, parnames_54, parnames_55, &
                 parnames_56, parnames_57, parnames_58, parnames_59, parnames_60
 
-        namelist /nml_mcmc_settings/ nDAsimu, search_scale, ncov, &
+        namelist /nml_mcmc_settings/ nDAsimu, search_scale, ncov, nRand, &
                 do_mc_out_hr, do_mc_out_day, do_mc_out_mon, do_mc_out_yr
         
         allocate(parnames(npar))

@@ -28,8 +28,8 @@ module mod_data
     character(200) :: outdir          ! output path
     character(250) :: outdir_case
     ! fixed output path 
-    character(250) :: outDir_nc       = "results_nc_format"
-    character(250) :: outDir_csv      = "results_csv_format"
+    character(250) :: outDir_nc       = "results_simu_nc_format"
+    character(250) :: outDir_csv      = "results_simu_csv_format"
     character(250) :: outDir_h        = "Hourly"
     character(250) :: outDir_d        = "Daily"
     character(250) :: outDir_m        = "Monthly"

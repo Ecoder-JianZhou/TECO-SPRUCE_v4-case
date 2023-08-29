@@ -87,14 +87,17 @@ module MCMC_outputs
     type(mcmc_outVars_type) tot_paramsets_outs_m
     
     CHARACTER(len=4) :: str_startyr, str_endyr
-    integer, parameter :: nRand = 20
-    integer, dimension(nRand) :: rand_number
+    ! integer, parameter :: nRand = 20
+    ! integer, dimension(nRand) :: rand_number
+    integer, allocatable :: rand_number(:)
 
 contains
 
     subroutine init_mcmc_outputs(nDAsimu, npar4DA)
         implicit none
         integer, intent(in) :: nDAsimu, npar4DA
+
+        allocate(rand_number(nRand))
 
         write(str_startyr,"(I4)")forcing(1)%year
         write(str_endyr,"(I4)")forcing(nforcing)%year
@@ -666,6 +669,8 @@ contains
 
     subroutine deallocate_mcmc_outs_type(dataType)
         type(mcmc_outVars_type), intent(inout) :: dataType
+
+        if(allocated(rand_number)) deallocate(rand_number)
 
         if (allocated(dataType%gpp))            deallocate(dataType%gpp)
         if (allocated(dataType%nee))            deallocate(dataType%nee)

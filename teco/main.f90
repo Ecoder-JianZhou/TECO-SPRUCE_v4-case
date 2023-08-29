@@ -77,7 +77,8 @@ end program TECO
 
 subroutine createNewCase()
     use mod_data
-    use mcmc_functions
+    ! use mcmc_functions
+    ! use mod_mcmc
     implicit none
     ! create a new case to run the TECO model
     !   * create the output path
@@ -127,18 +128,18 @@ subroutine createNewCase()
     if (do_mcmc)then
         outDir_mcmc = adjustl(trim(outdir_case))//"/"//adjustl(trim(outDir_mcmc))
         call CreateFolder(adjustl(trim(outDir_mcmc)))
-        if (do_mc_out_hr)then
+        ! if (do_mc_out_hr)then
             outDir_mcmc_h = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_h))
             call CreateFolder(adjustl(trim(outDir_mcmc_h)))
-        endif
-        if (do_mc_out_day) then
+        ! endif
+        ! if (do_mc_out_day) then
             outDir_mcmc_d = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_d))
             call CreateFolder(adjustl(trim(outDir_mcmc_d)))
-        endif
-        if (do_mc_out_mon) then
+        ! endif
+        ! if (do_mc_out_mon) then
             outDir_mcmc_m = adjustl(trim(outDir_mcmc))//"/"//adjustl(trim(outDir_mcmc_m))
             call CreateFolder(adjustl(trim(outDir_mcmc_m)))
-        endif
+        ! endif
     endif
 
     if(do_restart)then
