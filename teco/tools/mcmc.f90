@@ -248,11 +248,11 @@ module mod_mcmc
         ! write(*,*) "here4",J_new
         ! reco_h
         if(vars4MCMC%reco_h%existOrNot)then
-            ! write(*,*)vars4MCMC%reco_h%filepath
-            ! write(*,*)vars4MCMC%reco_h%mdData(:,4)
-            ! write(*,*)vars4MCMC%reco_h%obsData(:,4)
-            ! write(*,*)vars4MCMC%reco_h%obsData(:,5)
-            ! stop
+            write(*,*)vars4MCMC%reco_h%filepath
+            write(*,*)vars4MCMC%reco_h%mdData(:,4)
+            write(*,*)vars4MCMC%reco_h%obsData(:,4)
+            write(*,*)vars4MCMC%reco_h%obsData(:,5)
+            stop
             call CalculateCost(vars4MCMC%reco_h%mdData(:,4), vars4MCMC%reco_h%obsData(:,4),&
                  vars4MCMC%reco_h%obsData(:,5), J_cost)
             J_new = J_new + J_cost
