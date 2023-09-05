@@ -14,19 +14,13 @@
     obsfile_nee_d   = "observation_files/obsfile_nee_d.txt"
     obsfile_reco_d  = "observation_files/obsfile_reco_d.txt"
     obsfile_gpp_h   = "observation_files/obsfile_gpp_h.txt"
-    obsfile_nee_h   = "observation_files/obsfile_NEE_h.txt"
-    obsfile_reco_h  = "observation_files/obsfile_Reco_h.txt"
+    obsfile_nee_h   = "observation_files/obsfile_nee_h.txt"
+    obsfile_reco_h  = "observation_files/obsfile_reco_h.txt"
     ! methane   
-    obsfile_ch4_h   = "observation_files/obsfile_CH4_h.txt"
+    obsfile_ch4_h   = "observation_files/obsfile_ch4_h.txt"
     ! c pools
     obsfile_cleaf   = "observation_files/obsfile_cleaf_d.txt" ! foliage
     obsfile_cwood   = "observation_files/obsfile_cwood_d.txt"
-
-    obsfile_anpp_y  = "observation_files/obsfile_ANPP.txt"  !"observation_files/obsfile_ANPP_Tree.txt"
-    obsfile_bnpp_y  = "observation_files/obsfile_BNPP_t.txt"  ! "observation_files/obsfile_BNPP.txt"
-    obsfile_lai_h   = "observation_files/obsfile_LAI_h.txt"
-    obsfile_npp_y   = "observation_files/obsfile_NPP.txt"
-    obsfile_reco_y  = "observation_files/obsfile_RHCO2_t.txt"
 &end
 
 &nml_param_names

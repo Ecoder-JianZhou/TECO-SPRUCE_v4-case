@@ -1,5 +1,5 @@
 &nml_simu_settings
-    simu_name  = "run_MCMC_SPRUCE_test_1"
+    simu_name  = "run_MCMC_SPRUCE_P06"
     do_simu    = False
     do_spinup  = False                     ! run spinup or not
     do_mcmc    = True                     ! run mcmc or not
@@ -19,9 +19,9 @@
     dtimes     = 24                          ! hourly simulation
     nSpecParams = 60
     ! input path and files (input files must be put in the input filepath)
-    ! filepath_in    = "/home/zhou_j/docs_spruce/1_TECO_model/inputs"! ! keep the length of it under 200 characters
-    filepath_in    = "/mnt/d/3_case_SPRUCE_data_analysis/2_TECO-SPRUCE_data_assimilation/2_code_based_on_Ma/inputs"
-    climfile       = "SPRUCE_forcing.txt"          ! less than 100 characters
+    ! filepath_in    = "/home/zhou_j/docs_spruce/1_TECO_model/inputs/P06"! ! keep the length of it under 200 characters
+    filepath_in    = "/mnt/d/3_case_SPRUCE_data_analysis/2_TECO-SPRUCE_data_assimilation/2_code_based_on_Ma/inputs/P06"
+    climfile       = "SPRUCE_forcing_plot07.txt"          ! less than 100 characters
     snowdepthfile  = "SPRUCE_Snow_Depth_2011-2014.txt"   ! less than 100 characters
     watertablefile = "watertablefile.txt" 
     restartfile    = "restart.nc"                        ! less than 100 characters

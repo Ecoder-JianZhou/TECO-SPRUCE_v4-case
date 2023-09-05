@@ -35,6 +35,9 @@ module mcmc_functions
     ! c pools
     character(500) :: obsfile_cleaf, obsfile_cwood 
 
+    character(500) :: obsfile_anpp_y, obsfile_bnpp_y 
+    character(500) :: obsfile_lai_h, obsfile_npp_y, obsfile_reco_y 
+
     ! variables for calculating the cost in MCMC processes
     type interCostVariable
         character(300) :: filepath
@@ -57,6 +60,12 @@ module mcmc_functions
         ! c pools
         type(interCostVariable) :: cleaf    ! foliage
         type(interCostVariable) :: cwood
+        ! for different species
+        type(interCostVariable) :: anpp_y
+        type(interCostVariable) :: bnpp_y
+        type(interCostVariable) :: lai_h
+        type(interCostVariable) :: npp_y
+        type(interCostVariable) :: reco_y
     end type allCostVariables
 
     type(allCostVariables) :: vars4MCMC      ! define a allCostVariables first
@@ -65,6 +74,8 @@ module mcmc_functions
     integer mc_itime_gpp_d, mc_itime_nee_d, mc_itime_reco_d
     integer mc_itime_gpp_h, mc_itime_nee_h, mc_itime_reco_h
     integer mc_itime_ch4_h, mc_itime_cleaf, mc_itime_cwood
+    integer mc_itime_anpp_y, mc_itime_bnpp_y, mc_itime_lai_h
+    integer mc_itime_npp_y, mc_itime_reco_y
     integer mc_iyear,  mc_iday, mc_ihour
 
     contains
@@ -80,6 +91,13 @@ module mcmc_functions
         mc_itime_ch4_h  = 1
         mc_itime_cleaf  = 1
         mc_itime_cwood  = 1
+
+        mc_itime_anpp_y = 1
+        mc_itime_bnpp_y = 1 
+        mc_itime_lai_h  = 1
+        mc_itime_npp_y  = 1
+        mc_itime_reco_y = 1
+
         mc_iyear = 1
         mc_iday  = 1
         mc_ihour = 1
@@ -150,7 +168,8 @@ module mcmc_functions
                 mc_f_M2P, mc_f_S2P, mc_f_S2M, mc_f_P2M
         namelist /nml_obsfiles/ obsfile_gpp_d, obsfile_nee_d, obsfile_reco_d, &
                 obsfile_gpp_h, obsfile_nee_h, obsfile_reco_h, obsfile_ch4_h, &
-                obsfile_cleaf, obsfile_cwood
+                obsfile_cleaf, obsfile_cwood, obsfile_anpp_y, obsfile_bnpp_y, & 
+                obsfile_lai_h, obsfile_npp_y, obsfile_reco_y 
 
         namelist /nml_param_names/parnames_1, parnames_2, parnames_3, parnames_4, parnames_5, & 
                 parnames_6, parnames_7, parnames_8, parnames_9, parnames_10, &
@@ -254,10 +273,16 @@ module mcmc_functions
         vars4MCMC%nee_h%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_nee_h))
         vars4MCMC%reco_h%filepath = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_reco_h))
         ! methane   
-        vars4MCMC%ch4_h%filepath  = trim(obsfile_ch4_h)
+        vars4MCMC%ch4_h%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_ch4_h))
         ! c pools
-        vars4MCMC%cleaf%filepath  = trim(obsfile_cleaf) ! foliage
-        vars4MCMC%cwood%filepath  = trim(obsfile_cwood)
+        vars4MCMC%cleaf%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_cleaf)) ! foliage
+        vars4MCMC%cwood%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_cwood))
+
+        vars4MCMC%anpp_y%filepath = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_anpp_y))
+        vars4MCMC%bnpp_y%filepath = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_bnpp_y))
+        vars4MCMC%lai_h%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_lai_h))
+        vars4MCMC%npp_y%filepath  = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_npp_y))
+        vars4MCMC%reco_y%filepath = adjustl(trim(filepath_in))//"/"//adjustl(trim(obsfile_reco_y))
         
     end subroutine readConfsNml
 
@@ -348,7 +373,57 @@ module mcmc_functions
             call ReadObsDataFromFile(vars4MCMC%cwood%filepath, toCountLines, vars4MCMC%cwood%obsData)
             allocate(vars4MCMC%cwood%mdData(toCountLines, 4))
         endif
-        
+
+        ! anpp_y
+        INQUIRE(FILE=vars4MCMC%anpp_y%filepath, EXIST=toExistOrNot)
+        vars4MCMC%anpp_y%existOrNot = toExistOrNot
+        if (vars4MCMC%anpp_y%existOrNot) then
+            call ReadLineNumFromFile(vars4MCMC%anpp_y%filepath, toCountLines)
+            allocate(vars4MCMC%anpp_y%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%anpp_y%filepath, toCountLines, vars4MCMC%anpp_y%obsData)
+            allocate(vars4MCMC%anpp_y%mdData(toCountLines, 4))
+        endif
+
+        ! bnpp_y
+        INQUIRE(FILE=vars4MCMC%bnpp_y%filepath, EXIST=toExistOrNot)
+        vars4MCMC%bnpp_y%existOrNot = toExistOrNot
+        if (vars4MCMC%bnpp_y%existOrNot) then
+            call ReadLineNumFromFile(vars4MCMC%bnpp_y%filepath, toCountLines)
+            allocate(vars4MCMC%bnpp_y%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%bnpp_y%filepath, toCountLines, vars4MCMC%bnpp_y%obsData)
+            allocate(vars4MCMC%bnpp_y%mdData(toCountLines, 4))
+        endif
+
+        ! lai_h
+        INQUIRE(FILE=vars4MCMC%lai_h%filepath, EXIST=toExistOrNot)
+        vars4MCMC%lai_h%existOrNot = toExistOrNot
+        if (vars4MCMC%lai_h%existOrNot) then
+            call ReadLineNumFromFile(vars4MCMC%lai_h%filepath, toCountLines)
+            allocate(vars4MCMC%lai_h%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%lai_h%filepath, toCountLines, vars4MCMC%lai_h%obsData)
+            allocate(vars4MCMC%lai_h%mdData(toCountLines, 4))
+        endif
+
+        ! npp_y
+        INQUIRE(FILE=vars4MCMC%npp_y%filepath, EXIST=toExistOrNot)
+        vars4MCMC%npp_y%existOrNot = toExistOrNot
+        if (vars4MCMC%npp_y%existOrNot) then
+            call ReadLineNumFromFile(vars4MCMC%npp_y%filepath, toCountLines)
+            allocate(vars4MCMC%npp_y%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%npp_y%filepath, toCountLines, vars4MCMC%npp_y%obsData)
+            allocate(vars4MCMC%npp_y%mdData(toCountLines, 4))
+        endif
+
+        ! reco_y
+        INQUIRE(FILE=vars4MCMC%reco_y%filepath, EXIST=toExistOrNot)
+        vars4MCMC%reco_y%existOrNot = toExistOrNot
+        if (vars4MCMC%reco_y%existOrNot) then
+            call ReadLineNumFromFile(vars4MCMC%reco_y%filepath, toCountLines)
+            allocate(vars4MCMC%reco_y%obsData(toCountLines, 5))
+            call ReadObsDataFromFile(vars4MCMC%reco_y%filepath, toCountLines, vars4MCMC%reco_y%obsData)
+            allocate(vars4MCMC%reco_y%mdData(toCountLines, 4))
+        endif
+
     end subroutine readObsData
 
     subroutine renewMDpars()
@@ -520,10 +595,11 @@ module mcmc_functions
         if(vars4MCMC%gpp_d%existOrNot)then
             ! write(*,*) "test here: ", vars4MCMC%gpp_d%obsData
             if(mc_itime_gpp_d<=size(vars4MCMC%gpp_d%obsData, dim=1))then
-            do while(vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 1) .lt. forcing(1)%year)
-                vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 4) = -9999
-                mc_itime_gpp_d = mc_itime_gpp_d + 1
-            enddo
+                do while(vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 1) .lt. forcing(1)%year)
+                    vars4MCMC%gpp_d%mdData(mc_itime_gpp_d, 4) = -9999
+                    mc_itime_gpp_d = mc_itime_gpp_d + 1
+                enddo
+
                 if(vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 1) .eq. mc_iyear .and. &
                 vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 2) .eq. mc_iday  .and. &
                 vars4MCMC%gpp_d%obsData(mc_itime_gpp_d, 3) .eq. mc_ihour) then
@@ -538,6 +614,10 @@ module mcmc_functions
         ! nee_d
         if(vars4MCMC%nee_d%existOrNot)then
             if(mc_itime_nee_d <= size(vars4MCMC%nee_d%obsData,dim=1))then
+                do while(vars4MCMC%nee_d%obsData(mc_itime_nee_d, 1) .lt. forcing(1)%year)
+                    vars4MCMC%nee_d%mdData(mc_itime_nee_d, 4) = -9999
+                    mc_itime_nee_d = mc_itime_nee_d + 1
+                enddo
                 if(vars4MCMC%nee_d%obsData(mc_itime_nee_d, 1) .eq. mc_iyear .and. &
                 vars4MCMC%nee_d%obsData(mc_itime_nee_d, 2) .eq. mc_iday  .and. &
                 vars4MCMC%nee_d%obsData(mc_itime_nee_d, 3) .eq. mc_ihour) then
@@ -552,6 +632,11 @@ module mcmc_functions
         ! reco_d
         if(vars4MCMC%reco_d%existOrNot)then
             if(mc_itime_reco_d <= size(vars4MCMC%reco_d%obsData, dim=1))then
+                do while(vars4MCMC%reco_d%obsData(mc_itime_reco_d, 1) .lt. forcing(1)%year)
+                    vars4MCMC%reco_d%mdData(mc_itime_reco_d, 4) = -9999
+                    mc_itime_reco_d = mc_itime_reco_d + 1
+                enddo
+
                 if(vars4MCMC%reco_d%obsData(mc_itime_reco_d, 1) .eq. mc_iyear .and. &
                 vars4MCMC%reco_d%obsData(mc_itime_reco_d, 2) .eq. mc_iday  .and. &
                 vars4MCMC%reco_d%obsData(mc_itime_reco_d, 3) .eq. mc_ihour) then
@@ -566,6 +651,11 @@ module mcmc_functions
         ! gpp_h
         if(vars4MCMC%gpp_h%existOrNot)then
             if(mc_itime_gpp_h <= size(vars4MCMC%gpp_h%obsData, dim=1) )then
+                do while(vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 1) .lt. forcing(1)%year)
+                    vars4MCMC%gpp_h%mdData(mc_itime_gpp_h, 4) = -9999
+                    mc_itime_gpp_h = mc_itime_gpp_h + 1
+                enddo
+
                 if(vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 1) .eq. mc_iyear .and. &
                 vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 2) .eq. mc_iday  .and. &
                 vars4MCMC%gpp_h%obsData(mc_itime_gpp_h, 3) .eq. mc_ihour) then
@@ -586,6 +676,10 @@ module mcmc_functions
         ! nee_h
         if(vars4MCMC%nee_h%existOrNot)then
             if(mc_itime_nee_h <= size(vars4MCMC%nee_h%obsData, dim=1)) then
+                do while(vars4MCMC%nee_h%obsData(mc_itime_nee_h, 1) .lt. forcing(1)%year)
+                    vars4MCMC%nee_h%mdData(mc_itime_nee_h, 4) = -9999
+                    mc_itime_nee_h = mc_itime_nee_h + 1
+                enddo
                 if(vars4MCMC%nee_h%obsData(mc_itime_nee_h, 1) .eq. mc_iyear .and. &
                 vars4MCMC%nee_h%obsData(mc_itime_nee_h, 2) .eq. mc_iday  .and. &
                 vars4MCMC%nee_h%obsData(mc_itime_nee_h, 3) .eq. mc_ihour) then
@@ -600,6 +694,11 @@ module mcmc_functions
         ! reco_h
         if(vars4MCMC%reco_h%existOrNot)then
             if(mc_itime_reco_h <= size(vars4MCMC%reco_h%obsData, dim=1))then
+                do while(vars4MCMC%reco_h%obsData(mc_itime_reco_h, 1) .lt. forcing(1)%year)
+                    vars4MCMC%reco_h%mdData(mc_itime_reco_h, 4) = -9999
+                    mc_itime_reco_h = mc_itime_reco_h + 1
+                enddo
+
                 if(vars4MCMC%reco_h%obsData(mc_itime_reco_h, 1) .eq. mc_iyear .and. &
                 vars4MCMC%reco_h%obsData(mc_itime_reco_h, 2) .eq. mc_iday  .and. &
                 vars4MCMC%reco_h%obsData(mc_itime_reco_h, 3) .eq. mc_ihour) then
@@ -614,6 +713,11 @@ module mcmc_functions
         ! ch4_h
         if(vars4MCMC%ch4_h%existOrNot)then
             if(mc_itime_ch4_h <= size(vars4MCMC%ch4_h%obsData, dim=1))then
+                do while(vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 1) .lt. forcing(1)%year)
+                    vars4MCMC%ch4_h%mdData(mc_itime_ch4_h, 4) = -9999
+                    mc_itime_ch4_h = mc_itime_ch4_h + 1
+                enddo
+
                 if(vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 1) .eq. mc_iyear .and. &
                 vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 2) .eq. mc_iday  .and. &
                 vars4MCMC%ch4_h%obsData(mc_itime_ch4_h, 3) .eq. mc_ihour) then
@@ -628,6 +732,11 @@ module mcmc_functions
         ! cleaf
         if(vars4MCMC%cleaf%existOrNot)then
             if(mc_itime_cleaf <= size(vars4MCMC%cleaf%obsData, dim=1))then
+                do while(vars4MCMC%cleaf%obsData(mc_itime_cleaf, 1) .lt. forcing(1)%year)
+                    vars4MCMC%cleaf%mdData(mc_itime_cleaf, 4) = -9999
+                    mc_itime_cleaf = mc_itime_cleaf + 1
+                enddo
+
                 if(vars4MCMC%cleaf%obsData(mc_itime_cleaf, 1) .eq. mc_iyear .and. &
                 vars4MCMC%cleaf%obsData(mc_itime_cleaf, 2) .eq. mc_iday  .and. &
                 vars4MCMC%cleaf%obsData(mc_itime_cleaf, 3) .eq. mc_ihour) then
@@ -642,6 +751,10 @@ module mcmc_functions
         ! cwood
         if(vars4MCMC%cwood%existOrNot)then
             if(mc_itime_cwood <= size(vars4MCMC%cwood%obsData, dim=1)) then
+                do while(vars4MCMC%cwood%obsData(mc_itime_cwood, 1) .lt. forcing(1)%year)
+                    vars4MCMC%cwood%mdData(mc_itime_cwood, 4) = -9999
+                    mc_itime_cwood = mc_itime_cwood + 1
+                enddo
                 if(vars4MCMC%cwood%obsData(mc_itime_cwood, 1) .eq. mc_iyear .and. &
                 vars4MCMC%cwood%obsData(mc_itime_cwood, 2) .eq. mc_iday  .and. &
                 vars4MCMC%cwood%obsData(mc_itime_cwood, 3) .eq. mc_ihour) then
@@ -650,6 +763,107 @@ module mcmc_functions
                     vars4MCMC%cwood%mdData(mc_itime_cwood, 3) = mc_ihour
                     vars4MCMC%cwood%mdData(mc_itime_cwood, 4) = QC(2)
                     mc_itime_cwood = mc_itime_cwood + 1
+                endif
+            endif
+        endif
+
+        ! anpp_y
+        if(vars4MCMC%anpp_y%existOrNot)then
+            if(mc_itime_anpp_y <= size(vars4MCMC%anpp_y%obsData, dim=1)) then
+                do while(vars4MCMC%anpp_y%obsData(mc_itime_anpp_y, 1) .lt. forcing(1)%year)
+                    vars4MCMC%anpp_y%mdData(mc_itime_anpp_y, 4) = -9999
+                    mc_itime_anpp_y = mc_itime_anpp_y + 1
+                enddo
+                if (vars4MCMC%anpp_y%obsData(mc_itime_anpp_y, 2) .lt. 0) then 
+                    vars4MCMC%anpp_y%obsData(mc_itime_anpp_y, 2) = 365
+                endif
+                if(vars4MCMC%anpp_y%obsData(mc_itime_anpp_y, 1) .eq. mc_iyear .and. &
+                vars4MCMC%anpp_y%obsData(mc_itime_anpp_y, 2) .eq. mc_iday  .and. &
+                vars4MCMC%anpp_y%obsData(mc_itime_anpp_y, 3) .eq. mc_ihour) then
+                    vars4MCMC%anpp_y%mdData(mc_itime_anpp_y, 1) = mc_iyear
+                    vars4MCMC%anpp_y%mdData(mc_itime_anpp_y, 2) = mc_iday
+                    vars4MCMC%anpp_y%mdData(mc_itime_anpp_y, 3) = mc_ihour
+                    vars4MCMC%anpp_y%mdData(mc_itime_anpp_y, 4) = (outVars_y%nppLeaf + outVars_y%nppStem)*3600000*365*24
+                    mc_itime_anpp_y = mc_itime_anpp_y + 1
+                endif
+            endif
+        endif
+
+        ! bnpp_y
+        if(vars4MCMC%bnpp_y%existOrNot)then
+            if(mc_itime_bnpp_y <= size(vars4MCMC%bnpp_y%obsData, dim=1)) then
+                do while(vars4MCMC%bnpp_y%obsData(mc_itime_bnpp_y, 1) .lt. forcing(1)%year)
+                    vars4MCMC%bnpp_y%mdData(mc_itime_bnpp_y, 4) = -9999
+                    mc_itime_bnpp_y = mc_itime_bnpp_y + 1
+                enddo
+                if (vars4MCMC%bnpp_y%obsData(mc_itime_bnpp_y, 2) .lt. 0) then 
+                    vars4MCMC%bnpp_y%obsData(mc_itime_bnpp_y, 2) = 365
+                endif
+                if(vars4MCMC%bnpp_y%obsData(mc_itime_bnpp_y, 1) .eq. mc_iyear .and. &
+                vars4MCMC%bnpp_y%obsData(mc_itime_bnpp_y, 2) .eq. mc_iday  .and. &
+                vars4MCMC%bnpp_y%obsData(mc_itime_bnpp_y, 3) .eq. mc_ihour) then
+                    vars4MCMC%bnpp_y%mdData(mc_itime_bnpp_y, 1) = mc_iyear
+                    vars4MCMC%bnpp_y%mdData(mc_itime_bnpp_y, 2) = mc_iday
+                    vars4MCMC%bnpp_y%mdData(mc_itime_bnpp_y, 3) = mc_ihour
+                    vars4MCMC%bnpp_y%mdData(mc_itime_bnpp_y, 4) = outVars_y%nppRoot*3600000*365*24
+                    mc_itime_bnpp_y = mc_itime_bnpp_y + 1
+                endif
+            endif
+        endif
+
+        ! lai_h
+        if(vars4MCMC%lai_h%existOrNot)then
+            if(mc_itime_lai_h <= size(vars4MCMC%lai_h%obsData, dim=1)) then
+                do while(vars4MCMC%lai_h%obsData(mc_itime_lai_h, 1) .lt. forcing(1)%year)
+                    vars4MCMC%lai_h%mdData(mc_itime_lai_h, 4) = -9999
+                    mc_itime_lai_h = mc_itime_lai_h + 1
+                enddo
+                if(vars4MCMC%lai_h%obsData(mc_itime_lai_h, 1) .eq. mc_iyear .and. &
+                vars4MCMC%lai_h%obsData(mc_itime_lai_h, 2) .eq. mc_iday  .and. &
+                vars4MCMC%lai_h%obsData(mc_itime_lai_h, 3) .eq. mc_ihour) then
+                    vars4MCMC%lai_h%mdData(mc_itime_lai_h, 1) = mc_iyear
+                    vars4MCMC%lai_h%mdData(mc_itime_lai_h, 2) = mc_iday
+                    vars4MCMC%lai_h%mdData(mc_itime_lai_h, 3) = mc_ihour
+                    vars4MCMC%lai_h%mdData(mc_itime_lai_h, 4) = outVars_h%lai
+                    mc_itime_lai_h = mc_itime_lai_h + 1
+                endif
+            endif
+        endif
+
+        ! npp_y
+        if(vars4MCMC%npp_y%existOrNot)then
+            if(mc_itime_npp_y <= size(vars4MCMC%npp_y%obsData, dim=1)) then
+                do while(vars4MCMC%npp_y%obsData(mc_itime_npp_y, 1) .lt. forcing(1)%year)
+                    vars4MCMC%npp_y%mdData(mc_itime_npp_y, 4) = -9999
+                    mc_itime_npp_y = mc_itime_npp_y + 1
+                enddo
+                if(vars4MCMC%npp_y%obsData(mc_itime_npp_y, 1) .eq. mc_iyear .and. &
+                vars4MCMC%npp_y%obsData(mc_itime_npp_y, 2) .eq. mc_iday  .and. &
+                vars4MCMC%npp_y%obsData(mc_itime_npp_y, 3) .eq. mc_ihour) then
+                    vars4MCMC%npp_y%mdData(mc_itime_npp_y, 1) = mc_iyear
+                    vars4MCMC%npp_y%mdData(mc_itime_npp_y, 2) = mc_iday
+                    vars4MCMC%npp_y%mdData(mc_itime_npp_y, 3) = mc_ihour
+                    vars4MCMC%npp_y%mdData(mc_itime_npp_y, 4) = QC(2)
+                    mc_itime_npp_y = mc_itime_npp_y + 1
+                endif
+            endif
+        endif
+
+        ! reco_y
+        if(vars4MCMC%reco_y%existOrNot)then
+            if(mc_itime_reco_y <= size(vars4MCMC%reco_y%obsData, dim=1)) then
+                do while(vars4MCMC%reco_y%obsData(mc_itime_reco_y, 1) .lt. forcing(1)%year)
+                    vars4MCMC%reco_y%mdData(mc_itime_reco_y, 4) = -9999
+                    mc_itime_reco_y = mc_itime_reco_y + 1
+                enddo
+                if(vars4MCMC%reco_y%obsData(mc_itime_reco_y, 1) .eq. mc_iyear .and. &
+                vars4MCMC%reco_y%obsData(mc_itime_reco_y, 2) .eq. mc_iday  .and. &
+                vars4MCMC%reco_y%obsData(mc_itime_reco_y, 3) .eq. mc_ihour) then
+                    vars4MCMC%reco_y%mdData(mc_itime_reco_y, 1) = mc_iyear
+                    vars4MCMC%reco_y%mdData(mc_itime_reco_y, 2) = mc_iday
+                    vars4MCMC%reco_y%mdData(mc_itime_reco_y, 3) = mc_ihour
+                    vars4MCMC%reco_y%mdData(mc_itime_reco_y, 4) = QC(2)
+                    mc_itime_reco_y = mc_itime_reco_y + 1
                 endif
             endif
         endif

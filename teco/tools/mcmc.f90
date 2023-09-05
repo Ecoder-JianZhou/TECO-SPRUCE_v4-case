@@ -74,7 +74,7 @@ module mod_mcmc
             coefac(ipar)   = coefnorm(ipar)
         enddo
         allocate(gamnew(npar4DA, npar4DA))
-        J_last = 9000000.0
+        J_last = 9000.0
         ! init the outputs
         call init_mcmc_outputs(nDAsimu, npar4DA)
     end subroutine init_mcmc
@@ -238,42 +238,96 @@ module mod_mcmc
                  vars4MCMC%gpp_h%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
+        write(*,*) "here3",J_new
         ! nee_h
         if(vars4MCMC%nee_h%existOrNot)then
             call CalculateCost(vars4MCMC%nee_h%mdData(:,4), vars4MCMC%nee_h%obsData(:,4),&
                  vars4MCMC%nee_h%obsData(:,5), J_cost)
-            J_new = J_new + J_cost
+            J_new = J_new + J_cost*100
         endif
+        write(*,*) "here4",J_new
         ! reco_h
         if(vars4MCMC%reco_h%existOrNot)then
+            ! write(*,*)vars4MCMC%reco_h%filepath
+            ! write(*,*)vars4MCMC%reco_h%mdData(:,4)
+            ! write(*,*)vars4MCMC%reco_h%obsData(:,4)
+            ! write(*,*)vars4MCMC%reco_h%obsData(:,5)
+            ! stop
             call CalculateCost(vars4MCMC%reco_h%mdData(:,4), vars4MCMC%reco_h%obsData(:,4),&
                  vars4MCMC%reco_h%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
+        write(*,*) "here5",J_new
         ! ch4_h
+        ! write(*,*)vars4MCMC%ch4_h%mdData(:,4)
+        !     write(*,*)vars4MCMC%ch4_h%obsData(:,4)
+        !     write(*,*)vars4MCMC%ch4_h%obsData(:,5)
         if(vars4MCMC%ch4_h%existOrNot)then
             call CalculateCost(vars4MCMC%ch4_h%mdData(:,4), vars4MCMC%ch4_h%obsData(:,4),&
                  vars4MCMC%ch4_h%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
+        write(*,*) "here6",J_new
         ! cleaf
         if(vars4MCMC%cleaf%existOrNot)then
             call CalculateCost(vars4MCMC%cleaf%mdData(:,4), vars4MCMC%cleaf%obsData(:,4),&
                  vars4MCMC%cleaf%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
+        write(*,*) "here7",J_new
         ! cwood
         if(vars4MCMC%cwood%existOrNot)then
             call CalculateCost(vars4MCMC%cwood%mdData(:,4), vars4MCMC%cwood%obsData(:,4),&
                  vars4MCMC%cwood%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
+        write(*,*) "here1",J_new
+        ! anpp_y
+        ! write(*,*)vars4MCMC%anpp_y%mdData(:,4)
+        !     write(*,*)vars4MCMC%anpp_y%obsData(:,4)
+        !     write(*,*)vars4MCMC%anpp_y%obsData(:,5)
+        if(vars4MCMC%anpp_y%existOrNot)then
+            call CalculateCost(vars4MCMC%anpp_y%mdData(:,4), vars4MCMC%anpp_y%obsData(:,4),&
+                 vars4MCMC%anpp_y%obsData(:,5), J_cost)
+            J_new = J_new + J_cost/2000
+        endif
+        write(*,*) "here10",J_new
 
+        ! bnpp_y
+        if(vars4MCMC%bnpp_y%existOrNot)then
+            call CalculateCost(vars4MCMC%bnpp_y%mdData(:,4), vars4MCMC%bnpp_y%obsData(:,4),&
+                 vars4MCMC%bnpp_y%obsData(:,5), J_cost)
+            J_new = J_new + J_cost/1000
+        endif
+        write(*,*) "here9",J_new
+        ! lai_h
+        if(vars4MCMC%lai_h%existOrNot)then
+            call CalculateCost(vars4MCMC%lai_h%mdData(:,4), vars4MCMC%lai_h%obsData(:,4),&
+                 vars4MCMC%lai_h%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        write(*,*) "here8",J_new
+        ! npp_y
+        if(vars4MCMC%npp_y%existOrNot)then
+            call CalculateCost(vars4MCMC%npp_y%mdData(:,4), vars4MCMC%npp_y%obsData(:,4),&
+                 vars4MCMC%npp_y%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        write(*,*) "here7",J_new
+        ! reco_y
+        if(vars4MCMC%reco_y%existOrNot)then
+            call CalculateCost(vars4MCMC%reco_y%mdData(:,4), vars4MCMC%reco_y%obsData(:,4),&
+                 vars4MCMC%reco_y%obsData(:,5), J_cost)
+            J_new = J_new + J_cost
+        endif
+        write(*,*) "here2",J_new
         if(J_new .eq. 0) then ! no data is available
             delta_J = -0.1
         else
             delta_J = J_new - J_last
         endif
+
+        delta_J = delta_J*10
 
         call random_number(cs_rand)
         if(AMIN1(1.0, exp(-delta_J)) .gt. cs_rand)then
@@ -288,7 +342,7 @@ module mod_mcmc
         implicit none
         real, intent(in) :: datMod4MCMC(:), datObs4MCMC(:), stdObs4MCMC(:)
         integer nLine, iLine, nCost
-        real JCost, dObsSimu
+        real JCost, dObsSimu, std4cal
 
         nLine = size(datObs4MCMC)
         nCost = 0
@@ -298,7 +352,12 @@ module mod_mcmc
             if(datObs4MCMC(iLine) .gt. -999 .and. datMod4MCMC(iLine) .gt. -999)then
                 nCost    = nCost + 1   
                 dObsSimu = datMod4MCMC(iLine) - datObs4MCMC(iLine) 
-                JCost    = JCost + (dObsSimu*dObsSimu)/(2*stdObs4MCMC(iLine))
+                if (stdObs4MCMC(iLine) < 0.001) then 
+                    std4cal = 0.5
+                else
+                    std4cal = stdObs4MCMC(iLine)
+                endif
+                JCost    = JCost + (dObsSimu*dObsSimu)/(2*std4cal)
             endif
         enddo
         if(nCost .gt. 0) JCost=JCost/real(nCost)
@@ -555,6 +614,12 @@ module mod_mcmc
         if(allocated(vars4MCMC%cleaf%obsData))  deallocate(vars4MCMC%cleaf%obsData)
         if(allocated(vars4MCMC%cwood%obsData))  deallocate(vars4MCMC%cwood%obsData)
 
+        if(allocated(vars4MCMC%anpp_y%obsData))  deallocate(vars4MCMC%anpp_y%obsData)
+        if(allocated(vars4MCMC%bnpp_y%obsData))  deallocate(vars4MCMC%bnpp_y%obsData)
+        if(allocated(vars4MCMC%lai_h%obsData))  deallocate(vars4MCMC%lai_h%obsData)
+        if(allocated(vars4MCMC%npp_y%obsData))  deallocate(vars4MCMC%npp_y%obsData)
+        if(allocated(vars4MCMC%reco_y%obsData))  deallocate(vars4MCMC%reco_y%obsData)
+
         if(allocated(vars4MCMC%gpp_d%mdData))  deallocate(vars4MCMC%gpp_d%mdData)
         if(allocated(vars4MCMC%nee_d%mdData))  deallocate(vars4MCMC%nee_d%mdData)
         if(allocated(vars4MCMC%reco_d%mdData)) deallocate(vars4MCMC%reco_d%mdData)
@@ -564,6 +629,13 @@ module mod_mcmc
         if(allocated(vars4MCMC%ch4_h%mdData))  deallocate(vars4MCMC%ch4_h%mdData)
         if(allocated(vars4MCMC%cleaf%mdData))  deallocate(vars4MCMC%cleaf%mdData)
         if(allocated(vars4MCMC%cwood%mdData))  deallocate(vars4MCMC%cwood%mdData)
+
+        if(allocated(vars4MCMC%anpp_y%mdData))  deallocate(vars4MCMC%anpp_y%mdData)
+        if(allocated(vars4MCMC%bnpp_y%mdData))  deallocate(vars4MCMC%bnpp_y%mdData)
+        if(allocated(vars4MCMC%lai_h%mdData))  deallocate(vars4MCMC%lai_h%mdData)
+        if(allocated(vars4MCMC%npp_y%mdData))  deallocate(vars4MCMC%npp_y%mdData)
+        if(allocated(vars4MCMC%reco_y%mdData))  deallocate(vars4MCMC%reco_y%mdData)
+
 
         if(allocated(coefhistory)) deallocate(coefhistory)
         if(allocated(coefnorm))    deallocate(coefnorm)
