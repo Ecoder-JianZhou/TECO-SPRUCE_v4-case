@@ -22,8 +22,8 @@
     obsfile_cleaf   = "observation_files/obsfile_cleaf_d.txt" ! foliage
     obsfile_cwood   = "observation_files/obsfile_cwood_d.txt"
 
-    obsfile_anpp_y  = "observation_files/obsfile_ANPP.txt"  !"observation_files/obsfile_ANPP_Tree.txt"
-    obsfile_bnpp_y  = "observation_files/obsfile_BNPP_t.txt"  ! "observation_files/obsfile_BNPP.txt"
+    obsfile_anpp_y  = "observation_files/obsfile_ANPP_Shrub.txt"
+    obsfile_bnpp_y  = "observation_files/obsfile_BNPP.txt"
     obsfile_lai_h   = "observation_files/obsfile_LAI_h.txt"
     obsfile_npp_y   = "observation_files/obsfile_NPP.txt"
     obsfile_reco_y  = "observation_files/obsfile_RHCO2_t.txt"

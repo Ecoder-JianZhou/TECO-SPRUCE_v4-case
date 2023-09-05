@@ -837,13 +837,16 @@ module mcmc_functions
                     vars4MCMC%npp_y%mdData(mc_itime_npp_y, 4) = -9999
                     mc_itime_npp_y = mc_itime_npp_y + 1
                 enddo
+                if (vars4MCMC%npp_y%obsData(mc_itime_npp_y, 2) .lt. 0) then 
+                    vars4MCMC%npp_y%obsData(mc_itime_npp_y, 2) = 365
+                endif
                 if(vars4MCMC%npp_y%obsData(mc_itime_npp_y, 1) .eq. mc_iyear .and. &
                 vars4MCMC%npp_y%obsData(mc_itime_npp_y, 2) .eq. mc_iday  .and. &
                 vars4MCMC%npp_y%obsData(mc_itime_npp_y, 3) .eq. mc_ihour) then
                     vars4MCMC%npp_y%mdData(mc_itime_npp_y, 1) = mc_iyear
                     vars4MCMC%npp_y%mdData(mc_itime_npp_y, 2) = mc_iday
                     vars4MCMC%npp_y%mdData(mc_itime_npp_y, 3) = mc_ihour
-                    vars4MCMC%npp_y%mdData(mc_itime_npp_y, 4) = QC(2)
+                    vars4MCMC%npp_y%mdData(mc_itime_npp_y, 4) = outVars_y%npp*3600000*365*24
                     mc_itime_npp_y = mc_itime_npp_y + 1
                 endif
             endif

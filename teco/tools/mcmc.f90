@@ -74,7 +74,7 @@ module mod_mcmc
             coefac(ipar)   = coefnorm(ipar)
         enddo
         allocate(gamnew(npar4DA, npar4DA))
-        J_last = 9000.0
+        J_last = 900000.0
         ! init the outputs
         call init_mcmc_outputs(nDAsimu, npar4DA)
     end subroutine init_mcmc
@@ -238,14 +238,14 @@ module mod_mcmc
                  vars4MCMC%gpp_h%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
-        write(*,*) "here3",J_new
+        ! write(*,*) "here3",J_new
         ! nee_h
         if(vars4MCMC%nee_h%existOrNot)then
             call CalculateCost(vars4MCMC%nee_h%mdData(:,4), vars4MCMC%nee_h%obsData(:,4),&
                  vars4MCMC%nee_h%obsData(:,5), J_cost)
             J_new = J_new + J_cost*100
         endif
-        write(*,*) "here4",J_new
+        ! write(*,*) "here4",J_new
         ! reco_h
         if(vars4MCMC%reco_h%existOrNot)then
             ! write(*,*)vars4MCMC%reco_h%filepath
@@ -257,7 +257,7 @@ module mod_mcmc
                  vars4MCMC%reco_h%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
-        write(*,*) "here5",J_new
+        ! write(*,*) "here5",J_new
         ! ch4_h
         ! write(*,*)vars4MCMC%ch4_h%mdData(:,4)
         !     write(*,*)vars4MCMC%ch4_h%obsData(:,4)
@@ -267,21 +267,21 @@ module mod_mcmc
                  vars4MCMC%ch4_h%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
-        write(*,*) "here6",J_new
+        ! write(*,*) "here6",J_new
         ! cleaf
         if(vars4MCMC%cleaf%existOrNot)then
             call CalculateCost(vars4MCMC%cleaf%mdData(:,4), vars4MCMC%cleaf%obsData(:,4),&
                  vars4MCMC%cleaf%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
-        write(*,*) "here7",J_new
+        ! write(*,*) "here7",J_new
         ! cwood
         if(vars4MCMC%cwood%existOrNot)then
             call CalculateCost(vars4MCMC%cwood%mdData(:,4), vars4MCMC%cwood%obsData(:,4),&
                  vars4MCMC%cwood%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
-        write(*,*) "here1",J_new
+        ! write(*,*) "here1",J_new
         ! anpp_y
         ! write(*,*)vars4MCMC%anpp_y%mdData(:,4)
         !     write(*,*)vars4MCMC%anpp_y%obsData(:,4)
@@ -291,36 +291,39 @@ module mod_mcmc
                  vars4MCMC%anpp_y%obsData(:,5), J_cost)
             J_new = J_new + J_cost/2000
         endif
-        write(*,*) "here10",J_new
+        ! write(*,*) "here10",J_new
 
         ! bnpp_y
         if(vars4MCMC%bnpp_y%existOrNot)then
             call CalculateCost(vars4MCMC%bnpp_y%mdData(:,4), vars4MCMC%bnpp_y%obsData(:,4),&
                  vars4MCMC%bnpp_y%obsData(:,5), J_cost)
-            J_new = J_new + J_cost/1000
+            J_new = J_new + J_cost/100
         endif
-        write(*,*) "here9",J_new
+        ! write(*,*) "here9",J_new
         ! lai_h
         if(vars4MCMC%lai_h%existOrNot)then
             call CalculateCost(vars4MCMC%lai_h%mdData(:,4), vars4MCMC%lai_h%obsData(:,4),&
                  vars4MCMC%lai_h%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
-        write(*,*) "here8",J_new
+        ! write(*,*) "here8",J_new
         ! npp_y
+        ! write(*,*)vars4MCMC%npp_y%mdData(:,4)
+        !     write(*,*)vars4MCMC%npp_y%obsData(:,4)
+        !     write(*,*)vars4MCMC%npp_y%obsData(:,5)
         if(vars4MCMC%npp_y%existOrNot)then
             call CalculateCost(vars4MCMC%npp_y%mdData(:,4), vars4MCMC%npp_y%obsData(:,4),&
                  vars4MCMC%npp_y%obsData(:,5), J_cost)
-            J_new = J_new + J_cost
+            J_new = J_new + J_cost/1000
         endif
-        write(*,*) "here7",J_new
+        ! write(*,*) "here7",J_new
         ! reco_y
         if(vars4MCMC%reco_y%existOrNot)then
             call CalculateCost(vars4MCMC%reco_y%mdData(:,4), vars4MCMC%reco_y%obsData(:,4),&
                  vars4MCMC%reco_y%obsData(:,5), J_cost)
             J_new = J_new + J_cost
         endif
-        write(*,*) "here2",J_new
+        ! write(*,*) "here2",J_new
         if(J_new .eq. 0) then ! no data is available
             delta_J = -0.1
         else
