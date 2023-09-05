@@ -1,6 +1,7 @@
 module mod_data
     implicit none
     ! run simulation settings 
+    character(100) :: config_file
     character(100) :: simu_name ! define the case name of the simulation 
     logical :: do_spinup        ! run spinup or not
     logical :: do_mcmc          ! run mcmc or not
@@ -27,6 +28,7 @@ module mod_data
    
     character(200) :: outdir          ! output path
     character(250) :: outdir_case
+    character(100) :: mcmc_conf_file
     ! fixed output path 
     character(250) :: outDir_nc       = "results_simu_nc_format"
     character(250) :: outDir_csv      = "results_simu_csv_format"
@@ -519,7 +521,7 @@ module mod_data
             do_soilphy, do_matrix, do_EBG, do_restart, do_ndep, do_simu, do_leap,     &
             do_out_hr, do_out_day, do_out_mon, do_out_yr,                             &
             dtimes,nSpecParams, filepath_in, climfile, snowdepthfile, watertablefile, &
-            restartfile, outdir 
+            restartfile, outdir, mcmc_conf_file
         namelist /nml_exps/ Ttreat, CO2treat, N_fert
         namelist /nml_params/ lat, lon, wsmax, wsmin, LAIMAX, LAIMIN, rdepth,        & 
             Rootmax, Stemmax, SapR, SapS, SLAx, GLmax, GRmax, Gsmax, stom_n,         &
@@ -542,7 +544,7 @@ module mod_data
         namelist /nml_spinup/ nloops 
 
         print *, "# read config nml..."
-        open(388, file="TECO_model_configs.nml")
+        open(388, file=config_file)
         read(388, nml=nml_simu_settings, iostat=io)
         read(388, nml=nml_exps, iostat=io)
         read(388, nml=nml_params, iostat=io)

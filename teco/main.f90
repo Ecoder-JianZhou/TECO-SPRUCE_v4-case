@@ -9,9 +9,25 @@ program TECO
     implicit none
     integer :: count_mode 
     character(50) :: str_mode
+    integer num_args, ierr
+    print *, ""
+    write(*,*) "# -----------------------------------------"
+    ! get the count of command
+    num_args = COMMAND_ARGUMENT_COUNT()
+    ! check if have the file
+    if (num_args /= 1) then
+        write(*,*) "Usage: ./my_program <config_file>"
+        stop
+    end if
+    ! read the command
+    call GET_COMMAND_ARGUMENT(1, config_file, ierr)
+    config_file = adjustl(trim("configs/"))//adjustl(trim(config_file))
+    write(*,*) "Reading the file of ", config_file
+
     
     print *, ""
     write(*,*) "# -----------------------------------------"
+    
     call read_TECO_model_configs()  ! get the file of "TECO_model_configs.nml", including parameters
 
     ! check the three mode: do_simu; do_mcmc; do_spinup

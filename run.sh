@@ -19,5 +19,5 @@ fi
 
 rm *.mod
 
-./run_teco
+./run_teco TECO_model_configs.nml
 rm run_teco

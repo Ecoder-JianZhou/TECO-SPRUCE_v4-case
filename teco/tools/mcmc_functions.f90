@@ -171,7 +171,7 @@ module mcmc_functions
         allocate(parnames(npar))
 
         allocate(parval(npar), parmin(npar), parmax(npar))
-        open(83, file="TECO_MCMC_configs.nml")
+        open(83, file=mcmc_conf_file)
         read(83, nml=nml_mcmc_settings)
         read(83, nml=nml_obsfiles)
         read(83, nml=nml_param_names)

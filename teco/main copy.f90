@@ -8,6 +8,9 @@ program TECO
     implicit none
     ! ! character(len=32) :: cmdChar_folder, out_csv, out_nc, out_nc_daily, out_nc_hourly, out_nc_monthly
     ! character(len=1000) :: outDir_nc, outfile 
+    
+
+
 
     call read_TECO_model_configs()  ! get the file of "TECO_model_configs.nml", including parameters
 
