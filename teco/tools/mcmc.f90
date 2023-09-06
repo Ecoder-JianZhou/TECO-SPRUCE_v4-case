@@ -330,7 +330,7 @@ module mod_mcmc
             delta_J = J_new - J_last
         endif
 
-        delta_J = delta_J*10
+        delta_J = delta_J
 
         call random_number(cs_rand)
         if(AMIN1(1.0, exp(-delta_J)) .gt. cs_rand)then

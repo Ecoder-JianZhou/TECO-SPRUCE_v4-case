@@ -1,8 +1,8 @@
 &nml_mcmc_settings
     nDAsimu        = 20000                ! how many time to do data assimilation
-    search_scale   = 0.1               ! modify the scale of searching the new parameters
-    ncov           = 500                ! how many times of upgraded that change to use coveriance to create new parameters
-    nRand          = 100
+    search_scale   = 0.015               ! modify the scale of searching the new parameters
+    ncov           = 200                ! how many times of upgraded that change to use coveriance to create new parameters
+    nRand          = 50
     do_mc_out_hr   = False
     do_mc_out_day  = True
     do_mc_out_mon  = False
