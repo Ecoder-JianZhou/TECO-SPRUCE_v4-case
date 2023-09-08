@@ -1,4 +1,4 @@
-module mod_data
+module mod_data_a
     implicit none
     ! run simulation settings 
     character(100) :: config_file

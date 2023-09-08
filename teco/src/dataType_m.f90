@@ -54,6 +54,14 @@ module mod_data
     integer :: nloops                 ! the times of cycling the forcing to reach ss
 
     ! special parameters from reading file
+    type site_data_type
+        real :: lat
+        real :: lon
+        real :: extkU
+    end type site_data_type
+    
+    type(site_data_type) :: st
+
     ! type spec_data_type
     real :: lat
     real :: lon
@@ -152,7 +160,9 @@ module mod_data
     type spec_data_type
         real :: LAI
         real :: xfang      ! Ross-Goudriaan function for G(u); leaf-angle distribution; xfang =0 for spherically arranged leaves, +1 for horizontal leaves; -1 for vertical leaves
-    
+        real :: Vcmx0      ! used to calculate, changing in cycle
+        real :: Vcmax0     ! fix Vcmax
+        real :: eJmx0      ! used in cycle
     end type spec_data_type
 
     type vegn_tile_type 
@@ -428,7 +438,7 @@ module mod_data
     real    :: raero                                   ! aerodynamic resistance
     real    :: Rsoilab1, Rsoilab2, Rsoilab3, Rsoilabs  ! calculate in xlayer and used in soil module, QLsoil and Rsoilab3, Rsoilabs seem be calculated both xlayers and soil T dynamic?
     real    :: QLair, QLleaf, QLsoil
-    real    :: H2OLv, slope, psyc, Cmolar, fw1  ! thermodynamic parameters for air. Maybe calculate in module (veg and soil)?
+    real    ::  slope, psyc, fw1  ! thermodynamic parameters for air. Maybe calculate in module (veg and soil)?
     ! real    :: rhocp, H2OLv, slope, psyc, Cmolar, fw1
     real    :: Rsoil, rLAI
     real    :: Hsoil, Hcanop                           ! Sensible heat flux; Hcanop seems not used?
@@ -438,8 +448,8 @@ module mod_data
     real    :: Tsoill(10), rain_d
     ! vegetation
     ! photosynsis
-    real :: eJmx0   != Vcmax0*2.7                   ! @20C Leuning 1996 from Wullschleger (1993)
-    real :: Vcmx0    
+    ! real :: eJmx0   != Vcmax0*2.7                   ! @20C Leuning 1996 from Wullschleger (1993)
+    ! real :: Vcmx0    
     ! phonology related parameters
     integer :: pheno
     real    :: GDD5
